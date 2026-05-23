@@ -16,9 +16,10 @@ namespace VIRENDRA.App_Start
 
             var userRepository    = new UserRepository(connectionString);
             var packageRepository = new PackageRepository();
+            var walletRepository  = new WalletRepository();
 
             ControllerBuilder.Current.SetControllerFactory(
-                new CustomControllerFactory(userRepository, packageRepository));
+                new CustomControllerFactory(userRepository, packageRepository, walletRepository));
         }
     }
 
@@ -26,11 +27,13 @@ namespace VIRENDRA.App_Start
     {
         private readonly IUserRepository    _userRepo;
         private readonly IPackageRepository _pkgRepo;
+        private readonly IWalletRepository  _walletRepo;
 
-        public CustomControllerFactory(IUserRepository userRepo, IPackageRepository pkgRepo)
+        public CustomControllerFactory(IUserRepository userRepo, IPackageRepository pkgRepo, IWalletRepository walletRepo)
         {
-            _userRepo = userRepo;
-            _pkgRepo  = pkgRepo;
+            _userRepo   = userRepo;
+            _pkgRepo    = pkgRepo;
+            _walletRepo = walletRepo;
         }
 
         protected override IController GetControllerInstance(
@@ -54,6 +57,9 @@ namespace VIRENDRA.App_Start
 
             if (controllerType == typeof(PackageCommController))
                 return new PackageCommController(_pkgRepo);
+
+            if (controllerType == typeof(WalletController))
+                return new WalletController(_walletRepo, _userRepo);
 
             return base.GetControllerInstance(requestContext, controllerType);
         }

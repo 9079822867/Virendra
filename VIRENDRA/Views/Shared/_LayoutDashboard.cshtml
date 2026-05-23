@@ -339,14 +339,14 @@
                 @* Payment: SuperAdmin + Admin + Retailer *@
                 @if (isSuperAdmin || isAdmin || isRetailer)
                 {
-                    <li>
-                        <a href="javascript:void(0);" class="has-arrow">
-                            <i class="fas fa-dollar-sign"></i>
+                    <li class="@(currentController == "Wallet" ? "mm-active" : "")">
+                        <a href="javascript:void(0);" class="has-arrow @(currentController == "Wallet" ? "active" : "")">
+                            <i class="fas fa-wallet"></i>
                             <span>Payment</span>
                         </a>
-                        <ul class="sub-menu mm-collapse" aria-expanded="false">
+                        <ul class="sub-menu mm-collapse @(currentController == "Wallet" ? "mm-show" : "")" aria-expanded="@(currentController == "Wallet" ? "true" : "false")">
                             <li><a href="javascript:void(0);">Payment Request</a></li>
-                            <li><a href="javascript:void(0);">Add Money</a></li>
+                            <li><a href="@Url.Action("AddMoney", "Wallet")">Add Money</a></li>
                         </ul>
                     </li>
                 }

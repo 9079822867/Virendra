@@ -166,12 +166,15 @@
     <Compile Include="Controllers\PackageController.cs" />
     <Compile Include="Controllers\OperatorController.cs" />
     <Compile Include="Controllers\PackageCommController.cs" />
+    <Compile Include="Controllers\WalletController.cs" />
     <Compile Include="Data\DashboardRepository.cs" />
     <Compile Include="Data\IDashboardRepository.cs" />
     <Compile Include="Data\IUserRepository.cs" />
     <Compile Include="Data\UserRepository.cs" />
     <Compile Include="Data\IPackageRepository.cs" />
     <Compile Include="Data\PackageRepository.cs" />
+    <Compile Include="Data\IWalletRepository.cs" />
+    <Compile Include="Data\WalletRepository.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -184,6 +187,7 @@
     <Compile Include="Models\Role.cs" />
     <Compile Include="Models\RoleConstants.cs" />
     <Compile Include="Models\User.cs" />
+    <Compile Include="Models\WalletTransaction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
