@@ -1,0 +1,144 @@
+@model VIRENDRA.Models.OperatorwiseReportViewModel
+@{
+    ViewBag.Title = "Operatorwise Report";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="page-content operator-report-page">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0 font-size-18">Operatorwise Report</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="javascript:void(0);">Reports</a></li>
+                            <li class="breadcrumb-item active">Operatorwise Report</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form class="report-filter" method="get" action="@Url.Action("OperatorwiseReport", "Reports")">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <input type="date" name="reportDate" class="form-control" value="@Model.ReportDate.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-report-search w-100">Search</button>
+                </div>
+                <div class="col-md-2">
+                    <a href="@Url.Action("OperatorwiseReport", "Reports")" class="btn btn-report-reset w-100">Reset</a>
+                </div>
+            </div>
+        </form>
+
+        <hr class="report-divider" />
+
+        <div class="table-responsive report-table-wrap">
+            <table class="table report-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Sr.No</th>
+                        <th>Operator</th>
+                        <th>Count</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-end">Commission</th>
+                        <th class="text-end">Surcharge</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.SrNo</td>
+                            <td>@item.Operator</td>
+                            <td>@item.Count</td>
+                            <td class="text-end">@item.Amount.ToString("0.00")</td>
+                            <td class="text-end">@item.Commission.ToString("0.00")</td>
+                            <td class="text-end">@item.Surcharge.ToString("0.00")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2" class="text-success fw-semibold">Row Count @Model.Items.Count</td>
+                        <td>@Model.TotalCount</td>
+                        <td class="text-end">&#8377; @Model.TotalAmount.ToString("0.00")</td>
+                        <td class="text-end text-success">&#8377; @Model.TotalCommission.ToString("0.00")</td>
+                        <td class="text-end text-danger">&#8377; @Model.TotalSurcharge.ToString("0.00")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .operator-report-page {
+        color: #111827;
+    }
+
+    .operator-report-page .page-title-box {
+        margin-bottom: 2rem;
+    }
+
+    .report-filter .form-control {
+        border: 0;
+        border-radius: 4px;
+        height: 34px;
+        background: #fff;
+        box-shadow: none;
+    }
+
+    .btn-report-search {
+        height: 34px;
+        border: 0;
+        border-radius: 4px;
+        color: #fff;
+        background: #74798e;
+        box-shadow: 0 2px 6px rgba(41, 47, 66, 0.25);
+    }
+
+    .btn-report-reset {
+        height: 34px;
+        border: 1px solid #ff4d4f;
+        border-radius: 4px;
+        color: #ff4d4f;
+        background: transparent;
+        line-height: 20px;
+    }
+
+    .report-divider {
+        margin: 18px 0;
+        border-color: #b9bdc8;
+        opacity: 1;
+    }
+
+    .report-table-wrap {
+        background: #fff;
+    }
+
+    .report-table {
+        background: #fff;
+        font-size: 15px;
+    }
+
+    .report-table th {
+        padding: 16px 14px;
+        font-weight: 700;
+        border-bottom: 1px solid #e1e5ec;
+    }
+
+    .report-table td {
+        padding: 16px 14px;
+        vertical-align: middle;
+        border-bottom: 1px solid #e1e5ec;
+    }
+
+    .report-table tfoot td {
+        font-weight: 500;
+        border-bottom: 0;
+    }
+</style>

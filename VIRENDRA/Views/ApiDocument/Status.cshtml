@@ -1,0 +1,145 @@
+@{
+    ViewBag.Title = "Status - Developer Tool";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Developer Tool - Check Recharge Status</h2>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>API for Checking Recharge Status</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Description</h5>
+                    <p>This API endpoint allows you to check the status of a recharge transaction.</p>
+
+                    <h5 class="mt-4">Request Method</h5>
+                    <p><strong>HTTP GET</strong></p>
+
+                    <h5 class="mt-4">Request Parameters</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>api_key</td>
+                                <td>String</td>
+                                <td>Your API Key</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>api_txn_id</td>
+                                <td>String</td>
+                                <td>Transaction ID from initial request</td>
+                                <td>Yes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h5 class="mt-4">Sample Request</h5>
+                    <pre><code>GET /api/status?api_key=your_api_key&api_txn_id=2023 HTTP/1.1
+Host: api.example.com</code></pre>
+
+                    <h5 class="mt-4">Sample Response</h5>
+                    <pre><code>{
+    "status": 1,
+    "api_txn_id": 2023,
+    "message": "recharge success",
+    "operator_reference": "op_ref1373",
+    "data": {
+        "phone_number": "9876543210",
+        "amount": 100,
+        "operator": "Jio",
+        "transaction_date": "2024-01-15 14:30:00",
+        "completion_date": "2024-01-15 14:31:00",
+        "status": "success"
+    }
+}</code></pre>
+
+                    <h5 class="mt-4">Status Codes</h5>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Status Code</th>
+                                <th>Status</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Success</td>
+                                <td>Recharge completed successfully</td>
+                            </tr>
+                            <tr>
+                                <td>0</td>
+                                <td>Failed</td>
+                                <td>Recharge failed</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Pending</td>
+                                <td>Recharge is pending</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Processing</td>
+                                <td>Recharge is being processed</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h5 class="mt-4">Error Response</h5>
+                    <pre><code>{
+    "status": 0,
+    "message": "Transaction not found",
+    "error_code": "TXN_NOT_FOUND"
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <a href="@Url.Action("Index")" class="btn btn-secondary">Back to Introduction</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+        padding: 15px;
+    }
+    .card-body {
+        padding: 20px;
+    }
+    pre {
+        background-color: #f4f4f4;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+    table {
+        font-size: 0.95rem;
+    }
+</style>

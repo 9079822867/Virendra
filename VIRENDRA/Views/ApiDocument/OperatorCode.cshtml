@@ -1,0 +1,149 @@
+@{
+    ViewBag.Title = "Operator Code - Developer Tool";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Developer Tool - Operator Code</h2>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Get Operator Codes</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Description</h5>
+                    <p>This API endpoint provides a list of all available operators with their respective codes used for recharge operations.</p>
+
+                    <h5 class="mt-4">Request Method</h5>
+                    <p><strong>HTTP GET</strong></p>
+
+                    <h5 class="mt-4">Request Parameters</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>api_key</td>
+                                <td>String</td>
+                                <td>Your API Key</td>
+                                <td>Yes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h5 class="mt-4">Sample Request</h5>
+                    <pre><code>GET /api/operators?api_key=your_api_key HTTP/1.1
+Host: api.example.com</code></pre>
+
+                    <h5 class="mt-4">Sample Response</h5>
+                    <pre><code>{
+    "status": 1,
+    "message": "Operator list fetched successfully",
+    "data": [
+        {
+            "operator_id": 1,
+            "operator_name": "Jio",
+            "operator_code": "JIO"
+        },
+        {
+            "operator_id": 2,
+            "operator_name": "Airtel",
+            "operator_code": "AIRTEL"
+        },
+        {
+            "operator_id": 3,
+            "operator_name": "Vodafone",
+            "operator_code": "VDF"
+        },
+        {
+            "operator_id": 4,
+            "operator_name": "BSNL",
+            "operator_code": "BSNL"
+        }
+    ]
+}</code></pre>
+
+                    <h5 class="mt-4">Operator Codes Reference</h5>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Operator ID</th>
+                                <th>Operator Name</th>
+                                <th>Code</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Jio</td>
+                                <td>JIO</td>
+                                <td>Mobile</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Airtel</td>
+                                <td>AIRTEL</td>
+                                <td>Mobile</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Vodafone</td>
+                                <td>VDF</td>
+                                <td>Mobile</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>BSNL</td>
+                                <td>BSNL</td>
+                                <td>Mobile</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <a href="@Url.Action("Index")" class="btn btn-secondary">Back to Introduction</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+        padding: 15px;
+    }
+    .card-body {
+        padding: 20px;
+    }
+    pre {
+        background-color: #f4f4f4;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+    table {
+        font-size: 0.95rem;
+    }
+</style>

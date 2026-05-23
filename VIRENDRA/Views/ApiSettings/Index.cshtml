@@ -1,0 +1,154 @@
+@model VIRENDRA.Models.ApiKeySettingsViewModel
+@{
+    ViewBag.Title = "API Key & Settings";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0 font-size-18">API Key &amp; Settings</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="javascript:void(0);">Developer Tools</a></li>
+                            <li class="breadcrumb-item active">API Key &amp; Settings</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="apiSettingsAlert" class="alert d-none mt-3" role="alert"></div>
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">IP Address</th>
+                                <th scope="col">Token</th>
+                                <th scope="col">Callback</th>
+                                <th scope="col">Status</th>
+                                <th scope="col" class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td id="apiIpAddress">@Model.IpAddress</td>
+                                <td id="apiToken" class="text-break">@Model.Token</td>
+                                <td id="apiCallback" class="text-break">@Model.CallbackUrl</td>
+                                <td>
+                                    <span id="apiStatus" class="badge @(Model.IsVerified ? "bg-success" : "bg-warning text-dark")">
+                                        @(Model.IsVerified ? "Verified" : "Pending")
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#apiSettingsModal" title="Edit API settings">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="apiSettingsModal" tabindex="-1" aria-labelledby="apiSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="apiSettingsModalLabel">Files.UpdateAPIKeys</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="apiSettingsForm" method="post" action="@Url.Action("UpdateAPIKeys", "ApiSettings")">
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(model => model.UserId)
+                @Html.HiddenFor(model => model.Username)
+                @Html.HiddenFor(model => model.Token)
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <strong>User ID :</strong>
+                        <span class="text-success fw-semibold">@Model.Username</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="IpAddress" class="form-label fw-semibold">IP Address : <span class="text-danger">*</span></label>
+                        @Html.TextBoxFor(model => model.IpAddress, new { @class = "form-control", required = "required", placeholder = "198.38.88.40" })
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="CallbackUrl" class="form-label fw-semibold">Callback Url :</label>
+                        @Html.TextBoxFor(model => model.CallbackUrl, new { @class = "form-control", placeholder = "https://domain.com/api/service/reccallback/token" })
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success" id="saveApiSettings">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var form = document.getElementById('apiSettingsForm');
+        var alertBox = document.getElementById('apiSettingsAlert');
+        var saveButton = document.getElementById('saveApiSettings');
+
+        function showAlert(message, isSuccess) {
+            alertBox.textContent = message;
+            alertBox.className = 'alert mt-3 ' + (isSuccess ? 'alert-success' : 'alert-danger');
+        }
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            saveButton.disabled = true;
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                credentials: 'same-origin'
+            })
+                .then(function (response) {
+                    return response.json().then(function (payload) {
+                        return { ok: response.ok, payload: payload };
+                    });
+                })
+                .then(function (result) {
+                    if (!result.ok || !result.payload.success) {
+                        showAlert(result.payload.message || 'Unable to update API settings.', false);
+                        return;
+                    }
+
+                    document.getElementById('apiIpAddress').textContent = result.payload.data.ipAddress;
+                    document.getElementById('apiToken').textContent = result.payload.data.token;
+                    document.getElementById('apiCallback').textContent = result.payload.data.callbackUrl;
+
+                    var statusBadge = document.getElementById('apiStatus');
+                    statusBadge.textContent = 'Verified';
+                    statusBadge.className = 'badge bg-success';
+
+                    var modalElement = document.getElementById('apiSettingsModal');
+                    var modal = bootstrap.Modal.getInstance(modalElement);
+                    modal.hide();
+
+                    showAlert(result.payload.message, true);
+                })
+                .catch(function () {
+                    showAlert('Unable to update API settings.', false);
+                })
+                .finally(function () {
+                    saveButton.disabled = false;
+                });
+        });
+    })();
+</script>

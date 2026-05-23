@@ -1,0 +1,27 @@
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.rsuser
+
+# Build output
+bin/
+obj/
+
+# NuGet packages
+packages/
+
+# App_Data (local database files)
+App_Data/
+
+# Publish output
+*.pubxml
+*.pubxml.user
+PublishProfiles/
+
+# Sensitive config (copy Web.config.example to Web.config and fill in credentials)
+VIRENDRA/Web.config
+
+# Windows
+Thumbs.db
+Desktop.ini

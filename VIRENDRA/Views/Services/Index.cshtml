@@ -1,0 +1,234 @@
+@{
+    ViewBag.Title = "Products";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+
+    var rechargeServices = new[]
+    {
+        new { Name = "Mobile Prepaid", Icon = "fas fa-mobile-alt", Accent = "#f59e0b" },
+        new { Name = "All Dth Recharge", Icon = "fas fa-satellite-dish", Accent = "#2563eb" },
+        new { Name = "Google Play", Icon = "fab fa-google-play", Accent = "#22c55e" },
+        new { Name = "NPS", Icon = "fas fa-circle-nodes", Accent = "#e11d48" }
+    };
+
+    var billServices = new[]
+    {
+        new { Name = "LandLine Bill Payment", Icon = "fas fa-phone-volume", Accent = "#0f766e" },
+        new { Name = "Electricity Bill Payment", Icon = "fas fa-bolt", Accent = "#facc15" },
+        new { Name = "GAS Payment", Icon = "fas fa-gas-pump", Accent = "#dc2626" },
+        new { Name = "Health Insurance", Icon = "fas fa-umbrella", Accent = "#0ea5e9" },
+        new { Name = "LandLine", Icon = "fas fa-phone", Accent = "#64748b" },
+        new { Name = "Loan Repayment", Icon = "fas fa-wallet", Accent = "#f59e0b" },
+        new { Name = "Water Bill Payment", Icon = "fas fa-faucet-drip", Accent = "#0284c7" },
+        new { Name = "Bhara Gas Bill Payment", Icon = "fas fa-fire-flame-simple", Accent = "#f97316" },
+        new { Name = "Fastag", Icon = "fas fa-car-side", Accent = "#db2777" },
+        new { Name = "Clubs and Associations", Icon = "fas fa-person-running", Accent = "#14b8a6" },
+        new { Name = "Donation", Icon = "fas fa-hand-holding-heart", Accent = "#111827" },
+        new { Name = "Education Fees", Icon = "fas fa-book-open", Accent = "#06b6d4" },
+        new { Name = "Hospital", Icon = "fas fa-hospital", Accent = "#a855f7" },
+        new { Name = "Hospital and Pathology", Icon = "fas fa-shield-heart", Accent = "#60a5fa" },
+        new { Name = "Municipal Services", Icon = "fas fa-building-columns", Accent = "#eab308" },
+        new { Name = "Municipal Taxes", Icon = "fas fa-landmark", Accent = "#eab308" },
+        new { Name = "NCMC", Icon = "fas fa-credit-card", Accent = "#ef4444" },
+        new { Name = "Prepaid meter", Icon = "fas fa-calculator", Accent = "#94a3b8" },
+        new { Name = "Recurring Deposit", Icon = "fas fa-sack-dollar", Accent = "#0ea5e9" },
+        new { Name = "Rental", Icon = "fas fa-house-user", Accent = "#f59e0b" },
+        new { Name = "Subscription", Icon = "fas fa-tv", Accent = "#3b82f6" },
+        new { Name = "Life Insurance", Icon = "fas fa-heart-pulse", Accent = "#ef4444" }
+    };
+}
+
+<div class="products-page">
+    <div class="products-header">
+        <h4>Products</h4>
+        <div class="bharat-connect-mark">
+            <span class="bharat-symbol">B</span>
+            <span>Bharat<br />Connect</span>
+        </div>
+    </div>
+
+    <section class="product-section">
+        <h2>Recharge Services</h2>
+        <div class="product-grid recharge-grid">
+            @foreach (var service in rechargeServices)
+            {
+                <a class="product-tile" href="@Url.Action("Index", "Recharge")">
+                    <span class="product-icon" style="--accent:@service.Accent">
+                        <i class="@service.Icon"></i>
+                    </span>
+                    <span class="product-label">@service.Name</span>
+                </a>
+            }
+        </div>
+    </section>
+
+    <section class="product-section">
+        <h2>Bill Payment Services</h2>
+        <div class="product-grid bill-grid">
+            @foreach (var service in billServices)
+            {
+                <a class="product-tile" href="@Url.Action("Index", "Recharge")">
+                    <span class="product-icon" style="--accent:@service.Accent">
+                        <i class="@service.Icon"></i>
+                    </span>
+                    <span class="product-label">@service.Name</span>
+                </a>
+            }
+        </div>
+    </section>
+</div>
+
+<style>
+    .products-page {
+        min-height: calc(100vh - 144px);
+        color: #111827;
+    }
+
+    .products-header {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 44px;
+    }
+
+    .products-header h4 {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .bharat-connect-mark {
+        align-items: center;
+        color: #f97316;
+        display: flex;
+        font-size: 24px;
+        font-weight: 800;
+        line-height: 0.85;
+    }
+
+    .bharat-symbol {
+        align-items: center;
+        background: #3b64b5;
+        border-radius: 4px;
+        color: #fff;
+        display: inline-flex;
+        font-size: 28px;
+        font-weight: 900;
+        height: 38px;
+        justify-content: center;
+        margin-right: 4px;
+        width: 24px;
+    }
+
+    .product-section {
+        margin-bottom: 28px;
+    }
+
+    .product-section h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0 0 8px;
+    }
+
+    .product-grid {
+        display: grid;
+        gap: 2px;
+    }
+
+    .recharge-grid {
+        grid-template-columns: repeat(4, minmax(132px, 1fr));
+        max-width: 624px;
+    }
+
+    .bill-grid {
+        grid-template-columns: repeat(10, minmax(112px, 1fr));
+    }
+
+    .product-tile {
+        align-items: center;
+        background: #fff;
+        border: 1px solid #e6e9f0;
+        border-radius: 4px;
+        color: #4353c5;
+        display: flex;
+        flex-direction: column;
+        height: 106px;
+        justify-content: center;
+        padding: 10px 8px;
+        text-align: center;
+        text-decoration: none;
+        transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .product-tile:hover {
+        border-color: #cdd4ef;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+        color: #3444b5;
+        transform: translateY(-1px);
+    }
+
+    .product-icon {
+        align-items: center;
+        background: color-mix(in srgb, var(--accent) 16%, #fff);
+        border-radius: 999px;
+        color: var(--accent);
+        display: inline-flex;
+        flex: 0 0 56px;
+        font-size: 30px;
+        height: 56px;
+        justify-content: center;
+        margin-bottom: 10px;
+        width: 56px;
+    }
+
+    .product-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.25;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    @@media (max-width: 1400px) {
+        .bill-grid {
+            grid-template-columns: repeat(6, minmax(112px, 1fr));
+        }
+    }
+
+    @@media (max-width: 992px) {
+        .recharge-grid,
+        .bill-grid {
+            grid-template-columns: repeat(3, minmax(112px, 1fr));
+        }
+
+        .products-header {
+            margin-bottom: 28px;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .products-header {
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .bharat-connect-mark {
+            font-size: 18px;
+        }
+
+        .bharat-symbol {
+            font-size: 22px;
+            height: 30px;
+            width: 20px;
+        }
+
+        .recharge-grid,
+        .bill-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .product-section h2 {
+            font-size: 22px;
+        }
+    }
+</style>

@@ -1,0 +1,166 @@
+@{
+    ViewBag.Title = "Complaint - Developer Tool";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Developer Tool - Complaint Management</h2>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>API for Managing Complaints</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Description</h5>
+                    <p>This API endpoint allows you to file and track complaints related to transactions.</p>
+
+                    <h5 class="mt-4">Request Method</h5>
+                    <p><strong>HTTP POST</strong></p>
+
+                    <h5 class="mt-4">Request Parameters</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>api_key</td>
+                                <td>String</td>
+                                <td>Your API Key</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>api_txn_id</td>
+                                <td>String</td>
+                                <td>Transaction ID to complain about</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>complaint_type</td>
+                                <td>String</td>
+                                <td>Type of complaint (failed_recharge, wrong_number, duplicate, etc.)</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>description</td>
+                                <td>String</td>
+                                <td>Detailed description of the complaint</td>
+                                <td>Yes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h5 class="mt-4">Sample Request</h5>
+                    <pre><code>POST /api/complaint HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+
+{
+    "api_key": "your_api_key",
+    "api_txn_id": "2023",
+    "complaint_type": "failed_recharge",
+    "description": "Recharge failed but amount was deducted"
+}</code></pre>
+
+                    <h5 class="mt-4">Sample Response</h5>
+                    <pre><code>{
+    "status": 1,
+    "message": "Complaint registered successfully",
+    "data": {
+        "complaint_id": "CMP20240115001",
+        "api_txn_id": "2023",
+        "complaint_type": "failed_recharge",
+        "status": "open",
+        "registered_date": "2024-01-15 14:45:00",
+        "resolution_expected": "2024-01-22 14:45:00"
+    }
+}</code></pre>
+
+                    <h5 class="mt-4">Complaint Types</h5>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Complaint Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>failed_recharge</td>
+                                <td>Recharge failed but amount was deducted</td>
+                            </tr>
+                            <tr>
+                                <td>wrong_number</td>
+                                <td>Recharge was done to wrong number</td>
+                            </tr>
+                            <tr>
+                                <td>duplicate</td>
+                                <td>Duplicate recharge occurred</td>
+                            </tr>
+                            <tr>
+                                <td>wrong_amount</td>
+                                <td>Wrong amount was recharged</td>
+                            </tr>
+                            <tr>
+                                <td>operator_issue</td>
+                                <td>Operator did not credit the amount</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h5 class="mt-4">Check Complaint Status</h5>
+                    <p><strong>Request:</strong> GET /api/complaint/status?api_key=your_api_key&complaint_id=CMP20240115001</p>
+
+                    <h5 class="mt-4">Response</h5>
+                    <pre><code>{
+    "status": 1,
+    "complaint_id": "CMP20240115001",
+    "complaint_status": "in_progress",
+    "message": "Your complaint is being reviewed"
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <a href="@Url.Action("Index")" class="btn btn-secondary">Back to Introduction</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+        padding: 15px;
+    }
+    .card-body {
+        padding: 20px;
+    }
+    pre {
+        background-color: #f4f4f4;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+    table {
+        font-size: 0.95rem;
+    }
+</style>

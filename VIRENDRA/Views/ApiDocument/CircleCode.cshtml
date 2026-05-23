@@ -1,0 +1,150 @@
+@{
+    ViewBag.Title = "Circle Code - Developer Tool";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Developer Tool - Circle Code</h2>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Get Circle Codes</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Description</h5>
+                    <p>This API endpoint provides a list of all available telecom circles (regions) with their respective codes.</p>
+
+                    <h5 class="mt-4">Request Method</h5>
+                    <p><strong>HTTP GET</strong></p>
+
+                    <h5 class="mt-4">Request Parameters</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>api_key</td>
+                                <td>String</td>
+                                <td>Your API Key</td>
+                                <td>Yes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h5 class="mt-4">Sample Request</h5>
+                    <pre><code>GET /api/circles?api_key=your_api_key HTTP/1.1
+Host: api.example.com</code></pre>
+
+                    <h5 class="mt-4">Sample Response</h5>
+                    <pre><code>{
+    "status": 1,
+    "message": "Circle list fetched successfully",
+    "data": [
+        {
+            "circle_id": 1,
+            "circle_name": "Delhi",
+            "circle_code": "DL"
+        },
+        {
+            "circle_id": 2,
+            "circle_name": "Mumbai",
+            "circle_code": "MH"
+        },
+        {
+            "circle_id": 3,
+            "circle_name": "Bangalore",
+            "circle_code": "KA"
+        }
+    ]
+}</code></pre>
+
+                    <h5 class="mt-4">Circle Codes Reference</h5>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Circle ID</th>
+                                <th>Circle Name</th>
+                                <th>Code</th>
+                                <th>Region</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Delhi</td>
+                                <td>DL</td>
+                                <td>North</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Mumbai</td>
+                                <td>MH</td>
+                                <td>West</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Bangalore</td>
+                                <td>KA</td>
+                                <td>South</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Kolkata</td>
+                                <td>WB</td>
+                                <td>East</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Chennai</td>
+                                <td>TN</td>
+                                <td>South</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <a href="@Url.Action("Index")" class="btn btn-secondary">Back to Introduction</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+        padding: 15px;
+    }
+    .card-body {
+        padding: 20px;
+    }
+    pre {
+        background-color: #f4f4f4;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+    table {
+        font-size: 0.95rem;
+    }
+</style>

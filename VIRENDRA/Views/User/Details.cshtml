@@ -1,0 +1,43 @@
+@model VIRENDRA.Models.User
+
+@{
+    ViewBag.Title = "User Details";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">User Details</h4>
+                <div class="page-title-right">
+                    <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-primary">Edit</a>
+                    <a href="@Url.Action("Index")" class="btn btn-light">Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0">
+                    <tbody>
+                        <tr><th style="width:220px">Id</th><td>@Model.Id</td></tr>
+                        <tr><th>Username</th><td>@Model.Username</td></tr>
+                        <tr><th>Role</th><td>@Model.RoleId</td></tr>
+                        <tr><th>Status</th><td>@(Model.IsActive ? "Active" : "Inactive")</td></tr>
+                        <tr><th>Locked</th><td>@(Model.IsLocked ? "Yes" : "No")</td></tr>
+                        <tr><th>User Balance</th><td>@((Model.UserBal ?? 0).ToString("0.0000"))</td></tr>
+                        <tr><th>Outstanding Balance</th><td>@((Model.UserOutStandingBal ?? 0).ToString("0.0000"))</td></tr>
+                        <tr><th>API IP Address</th><td>@Model.LoginIP</td></tr>
+                        <tr><th>Callback URL</th><td>@Model.CallbackURL</td></tr>
+                        <tr><th>Complaint Callback URL</th><td>@Model.ComplainCallbackURL</td></tr>
+                        <tr><th>Added Date</th><td>@Model.AddedDate.ToString("dd-MMM-yyyy HH:mm")</td></tr>
+                        <tr><th>Updated Date</th><td>@(Model.UpdatedDate.HasValue ? Model.UpdatedDate.Value.ToString("dd-MMM-yyyy HH:mm") : "-")</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

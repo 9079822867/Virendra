@@ -1,0 +1,490 @@
+@{
+    ViewBag.Title = "Dashboard";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Start page title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0 font-size-18">Dashboard</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="javascript: void(0);">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Overview</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End page title -->
+
+        <!-- Success Alert -->
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> Login Successful..
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Tab Navigation - Bootstrap Native Tabs -->
+        <ul class="nav nav-tabs-custom card-header-tabs border mt-4" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" href="#overview-tab" data-bs-toggle="tab" role="tab" aria-selected="true">
+                    <span>Overview</span>
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="#statistics-tab" data-bs-toggle="tab" role="tab" aria-selected="false" tabindex="-1">
+                    <span>Statistics</span>
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="#transactions-tab" data-bs-toggle="tab" role="tab" aria-selected="false" tabindex="-1">
+                    <span>Transactions</span>
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="#reports-tab" data-bs-toggle="tab" role="tab" aria-selected="false" tabindex="-1">
+                    <span>Reports</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Tab 1: Overview -->
+            <div id="overview-tab" class="tab-pane fade active show" role="tabpanel">
+                <div class="row mt-4">
+                    <!-- Opening Balance Card -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="stat-icon bg-primary rounded-lg p-3 mr-3">
+                                        <i class="fas fa-wallet fa-2x text-white"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted mb-1">Opening Balance</p>
+                                        <h4 class="mb-0">₹ 7239.37</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Closing Balance Card -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="stat-icon bg-danger rounded-lg p-3 mr-3">
+                                        <i class="fas fa-times-circle fa-2x text-white"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted mb-1">Closing Balance</p>
+                                        <h4 class="mb-0">₹ 2292.6</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Success Transaction Card -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="stat-icon bg-success rounded-lg p-3 mr-3">
+                                        <i class="fas fa-check-circle fa-2x text-white"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted mb-1">Success Transaction</p>
+                                        <h4 class="mb-0">₹ 5091</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Failed Transaction Card -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="stat-icon bg-danger rounded-lg p-3 mr-3">
+                                        <i class="fas fa-times fa-2x text-white"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted mb-1">Failed Transaction</p>
+                                        <h4 class="mb-0">₹ 52</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Refund Transaction Card -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="stat-icon bg-warning rounded-lg p-3 mr-3">
+                                        <i class="fas fa-undo fa-2x text-white"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted mb-1">Refund Transaction</p>
+                                        <h4 class="mb-0">₹ 0</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Credit Balance Card -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="stat-icon bg-success rounded-lg p-3 mr-3">
+                                        <i class="fas fa-credit-card fa-2x text-white"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted mb-1">Credit Balance</p>
+                                        <h4 class="mb-0">₹ 196.75</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Today's Earning Card -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="stat-icon bg-success rounded-lg p-3 mr-3">
+                                        <i class="fas fa-chart-line fa-2x text-white"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted mb-1">Today's Earning</p>
+                                        <h4 class="mb-0">₹ 144.75</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Txn Count Card -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="stat-icon bg-secondary rounded-lg p-3 mr-3">
+                                        <i class="fas fa-list fa-2x text-white"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted mb-1">Total Txn Count</p>
+                                        <h4 class="mb-0">22</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Statistics -->
+            <div id="statistics-tab" class="tab-pane fade" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Detailed Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <h6 class="font-weight-bold mb-3">Monthly Breakdown</h6>
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Total Transactions</span>
+                                        <strong>2845</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Success Rate</span>
+                                        <strong>98.5%</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Average Transaction</span>
+                                        <strong>₹ 1,245.50</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Total Volume</span>
+                                        <strong>₹ 35,42,500</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <h6 class="font-weight-bold mb-3">Performance Metrics</h6>
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>API Response Time</span>
+                                        <strong>245ms</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>System Uptime</span>
+                                        <strong>99.9%</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Failed Transactions</span>
+                                        <strong>42</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Pending Requests</span>
+                                        <strong>3</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Transactions Table -->
+            <div id="transactions-tab" class="tab-pane fade" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Transactions</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">Status</th>
+                                        <th>Transaction ID</th>
+                                        <th>Reference ID</th>
+                                        <th>Result</th>
+                                        <th>Name</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Transaction Row 1 - Success -->
+                                    <tr>
+                                        <td class="text-center">
+                                            <i class="fas fa-check-circle text-success fa-lg"></i>
+                                        </td>
+                                        <td>9142687433</td>
+                                        <td>BR000DL9W5L6</td>
+                                        <td><span class="badge bg-success">SUCCESS</span></td>
+                                        <td>
+                                            <div>Reliance Jio</div>
+                                            <small class="text-muted">NE2605221943TEPB2G</small>
+                                        </td>
+                                        <td>349.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" colspan="6">
+                                            <small class="text-muted">22-05-2026 | 07:43:27 PM</small>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Transaction Row 2 - Success -->
+                                    <tr>
+                                        <td class="text-center">
+                                            <i class="fas fa-check-circle text-success fa-lg"></i>
+                                        </td>
+                                        <td>6386970345</td>
+                                        <td>8359839541</td>
+                                        <td><span class="badge bg-success">SUCCESS</span></td>
+                                        <td>
+                                            <div>Reliance Jio</div>
+                                            <small class="text-muted">NE26052219430QZTDM</small>
+                                        </td>
+                                        <td>299.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" colspan="6">
+                                            <small class="text-muted">22-05-2026 | 07:43:04 PM</small>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Transaction Row 3 - Success -->
+                                    <tr>
+                                        <td class="text-center">
+                                            <i class="fas fa-check-circle text-success fa-lg"></i>
+                                        </td>
+                                        <td>9649095619</td>
+                                        <td>RJH2605221933450280</td>
+                                        <td><span class="badge bg-success">SUCCESS</span></td>
+                                        <td>
+                                            <div>VI - Vodafone & Idea</div>
+                                            <small class="text-muted">NE26052219351PW6MB</small>
+                                        </td>
+                                        <td>199.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" colspan="6">
+                                            <small class="text-muted">22-05-2026 | 07:43:51 PM</small>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Transaction Row 4 - Failure -->
+                                    <tr>
+                                        <td class="text-center">
+                                            <i class="fas fa-times-circle text-danger fa-lg"></i>
+                                        </td>
+                                        <td>8808940074</td>
+                                        <td>[]</td>
+                                        <td><span class="badge bg-danger">FAILURE</span></td>
+                                        <td>
+                                            <div>Reliance Jio</div>
+                                            <small class="text-muted">NE2605221926E8FCYGT</small>
+                                        </td>
+                                        <td>26.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" colspan="6">
+                                            <small class="text-muted">22-05-2026 | 07:26:58 PM</small>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Transaction Row 5 - Success -->
+                                    <tr>
+                                        <td class="text-center">
+                                            <i class="fas fa-check-circle text-success fa-lg"></i>
+                                        </td>
+                                        <td>8318514642</td>
+                                        <td>2605221908962261711</td>
+                                        <td><span class="badge bg-success">SUCCESS</span></td>
+                                        <td>
+                                            <div>Reliance Jio</div>
+                                            <small class="text-muted">NE2605221908OQPZK0D</small>
+                                        </td>
+                                        <td>299.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" colspan="6">
+                                            <small class="text-muted">22-05-2026 | 07:08:00 PM</small>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Reports -->
+            <div id="reports-tab" class="tab-pane fade" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Reports & Analytics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h6 class="font-weight-bold mb-3">Export Options</h6>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-primary">
+                                        <i class="fas fa-file-pdf"></i> Export PDF
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary">
+                                        <i class="fas fa-file-excel"></i> Export Excel
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary">
+                                        <i class="fas fa-file-csv"></i> Export CSV
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="font-weight-bold mb-3">Date Range</h6>
+                                <div class="form-group">
+                                    <label>From Date:</label>
+                                    <input type="date" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>To Date:</label>
+                                    <input type="date" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="font-weight-bold mb-3">Report Type</h6>
+                                <div class="form-group">
+                                    <select class="form-control">
+                                        <option>All Transactions</option>
+                                        <option>Success Transactions</option>
+                                        <option>Failed Transactions</option>
+                                        <option>Pending Transactions</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" style="margin-top: 1.5rem;">
+                                    <i class="fas fa-search"></i> Generate Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-icon {
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 70px;
+        height: 70px;
+        font-size: 2rem;
+    }
+
+    .card {
+        border: none;
+        border-radius: 8px;
+    }
+
+    .badge {
+        padding: 0.5rem 0.75rem;
+        font-weight: 500;
+    }
+
+    .table tbody tr {
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .list-group-item {
+        border-left: 3px solid #0066ff;
+    }
+
+    .nav-tabs-custom {
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .nav-tabs-custom .nav-link {
+        color: #495057;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .nav-tabs-custom .nav-link:hover {
+        color: #212529;
+        border-bottom-color: #dee2e6;
+    }
+
+    .nav-tabs-custom .nav-link.active {
+        color: #0066ff;
+        border-bottom-color: #0066ff;
+        background: transparent;
+    }
+</style>

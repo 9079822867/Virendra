@@ -1,0 +1,66 @@
+@{
+    ViewBag.Title = "Create Service";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">Create Service</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="@Url.Action("Index", "Services")">Services</a></li>
+                        <li class="breadcrumb-item active">Create</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            @using (Html.BeginForm("Create", "Services", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Service Name</label>
+                        <input type="text" name="ServiceName" class="form-control" placeholder="Mobile Recharge" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Category</label>
+                        <select name="Category" class="form-select" required>
+                            <option value="">Select Category</option>
+                            <option>Recharge</option>
+                            <option>Utility</option>
+                            <option>Payment</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Commission Type</label>
+                        <select name="CommissionType" class="form-select">
+                            <option>Percentage</option>
+                            <option>Flat</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Commission Value</label>
+                        <input type="number" name="CommissionValue" class="form-control" min="0" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        <select name="Status" class="form-select">
+                            <option>Active</option>
+                            <option>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="col-12 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
+                        <a href="@Url.Action("Index")" class="btn btn-light">Cancel</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

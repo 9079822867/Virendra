@@ -1,0 +1,495 @@
+@{
+    ViewBag.Title = "Developer Tool";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0 font-size-18">Developer Tool</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="javascript:void(0);">Developer Tools</a></li>
+                            <li class="breadcrumb-item active">Developer Tool</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs nav-tabs-custom card-header-tabs border mt-4" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" href="#introduction" data-bs-toggle="tab" role="tab" aria-controls="introduction" aria-selected="true">
+                    <span data-key="t-introduction">Introduction</span>
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="#rechargeapi" data-bs-toggle="tab" role="tab" aria-controls="rechargeapi" aria-selected="false">
+                    <span data-key="t-rechargeapi">Recharge API</span>
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="#operatorcode" data-bs-toggle="tab" role="tab" id="operatoritem" aria-controls="operatorcode" aria-selected="false">
+                    <span data-key="t-operatorcode">Operator Code</span>
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="#circlecode" data-bs-toggle="tab" role="tab" aria-controls="circlecode" aria-selected="false">
+                    <span data-key="t-circlecode">Circle Code</span>
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="#balance" data-bs-toggle="tab" role="tab" aria-controls="balance" aria-selected="false">
+                    <span data-key="t-balance">Balance</span>
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="#status_tab" data-bs-toggle="tab" role="tab" aria-controls="status_tab" aria-selected="false">
+                    <span data-key="t-status">Status</span>
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="#complaint_tab" data-bs-toggle="tab" role="tab" aria-controls="complaint_tab" aria-selected="false">
+                    <span data-key="t-complaint">Complaint</span>
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="#callback_info" data-bs-toggle="tab" role="tab" aria-controls="callback_info" aria-selected="false">
+                    <span data-key="t-callback">Files.CallbackInfo</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade active show" id="introduction" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="fw-bold font-size-15">How API works?</h5>
+                        <p class="text-muted">The API works on HTTP-POST/HTTP-GET METHOD, and the URL to be used is</p>
+
+                        <h5 class="fw-bold font-size-15">Sample URL</h5>
+                        <p class="text-muted">
+                            Whenever you submit or enquire any request through our API's the system immediately gives you the response in JSON format.
+                        </p>
+
+                        <h5 class="fw-bold font-size-15">Sample Response</h5>
+                        <pre class="bg-light p-3 border rounded"><code>{
+    "status": 1,
+    "api_txn_id": 2023,
+    "message": "recharge success",
+    "operator_reference": "op_ref1373"
+}</code></pre>
+
+                        <h5 class="fw-bold font-size-15">Available API's</h5>
+                        <ul class="list-unstyled mb-0 text-muted">
+                            <li>API for Mobile,DTH &amp; Data Card Recharge</li>
+                            <li>API for Paying Post Paid Bills</li>
+                            <li>API for Paying Electricity, Gas &amp; Insurance Bills</li>
+                            <li>API for Checking Account Balance</li>
+                            <li>API for Checking Recharge Status</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="rechargeapi" class="tab-pane fade" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="fw-bold font-size-15">Request URL</h5>
+                        <p><a style="color:blue">https://domain.com/api/recharge</a></p>
+
+                        <h5 class="fw-bold font-size-15 mt-2">Variables to be used for recharge request</h5>
+                        <div class="table-responsive mt-2 pb-4 text-muted">
+                            <table class="table table-bordered table-muted">
+                                <tbody>
+                                    <tr><td>username</td><td>Multi Recharge Account Mobile Number</td></tr>
+                                    <tr><td>key</td><td>Go to API Account and Register Server IP Address and Get Key</td></tr>
+                                    <tr><td>token</td><td>Go to API Account and Register Server IP Address and Get token</td></tr>
+                                    <tr><td>number</td><td>Mobile/DTH/Electricity Number</td></tr>
+                                    <tr><td>operator_code</td><td>Operator Code (Provided API Document) / Operator Code tab</td></tr>
+                                    <tr><td>circle_code</td><td>Circle Code (Provided API Document) / Circle Code tab</td></tr>
+                                    <tr><td>amount</td><td>Recharge Amount</td></tr>
+                                    <tr><td>txn_id</td><td>Your Transaction ID</td></tr>
+                                    <tr><td>optional1</td><td>Required MSEDCL Electricity (BU), Insurance (DOB)</td></tr>
+                                    <tr><td>optional2</td><td>Required in Electricity Due date</td></tr>
+                                    <tr><td>optional3</td><td>Required in Electricity Customer Mobile</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <p class="text-muted">
+                            <span class="fw-bold font-size-18 text-dark">Sample Response -</span>
+                        </p>
+                        <pre class="bg-light p-3 border rounded"><code>{
+    "status": 1,
+    "api_txn_id": 2023,
+    "message": "recharge success",
+    "operator_reference": "op_ref1373"
+}</code></pre>
+
+                        <div class="table-responsive pb-4">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr><td>Status</td><td>1 - success, 2 - failure, 3 - pending, 4 - refund</td></tr>
+                                    <tr><td>api_txn_id</td><td>API Transaction ID</td></tr>
+                                    <tr><td>message</td><td>Message from API</td></tr>
+                                    <tr><td>operator_reference</td><td>Operator Reference</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="operatorcode" class="tab-pane fade" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="fw-bold font-size-15">Operator Code</h5>
+                        <div class="col-md-4">
+                            <form id="serviceForm" method="post">
+                                <select name="service_type" id="serviceType" class="form-control form-control-sm" onchange="selectType()">
+                                    <option value="">SELECT Service Type</option>
+                                    <option value="1">Mobile Prepaid</option>
+                                    <option value="2">Postpaid Bills</option>
+                                    <option value="4">All Dth Recharge</option>
+                                    <option value="5">LandLine Bill Payment</option>
+                                    <option value="6">Electricity Bill Payment</option>
+                                    <option value="7">GAS Payment</option>
+                                    <option value="8">Health Insurance</option>
+                                    <option value="9">Money Transfer</option>
+                                    <option value="10">LandLine</option>
+                                    <option value="11">Credit Card</option>
+                                    <option value="12">Loan Repayment</option>
+                                    <option value="13">Cable TV</option>
+                                    <option value="14">Water Bill Payment</option>
+                                    <option value="16">AEPS</option>
+                                    <option value="17">Bhara Gas Bill Payment</option>
+                                    <option value="18">Fastag</option>
+                                    <option value="19">OTT SERVICES</option>
+                                    <option value="20">UTILITIES PAYMENTS</option>
+                                    <option value="21">PAY-IN</option>
+                                    <option value="23">VIP NUMBERS</option>
+                                    <option value="24">Google Play</option>
+                                    <option value="27">Trafic Chalan</option>
+                                    <option value="28">Housing Society</option>
+                                    <option value="29">UPI GATEWAY</option>
+                                    <option value="30">Bank Transfer Request</option>
+                                    <option value="32">Clubs and Associations</option>
+                                    <option value="33">Donation</option>
+                                    <option value="34">Education Fees</option>
+                                    <option value="36">Hospital</option>
+                                    <option value="37">Hospital and Pathology</option>
+                                    <option value="38">Insurance</option>
+                                    <option value="39">Municipal Services</option>
+                                    <option value="40">Municipal Taxes</option>
+                                    <option value="41">NCMC</option>
+                                    <option value="42">Prepaid meter</option>
+                                    <option value="43">Recurring Deposit</option>
+                                    <option value="46">Rental</option>
+                                    <option value="47">Subscription</option>
+                                    <option value="49">NPS</option>
+                                    <option value="50">Life Insurance</option>
+                                </select>
+                            </form>
+                        </div>
+                        <div class="mt-4 table-responsive">
+                            <table class="table align-middle datatable dt-responsive table-check nowrap">
+                                <thead class="text-center">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Operator Name</th>
+                                        <th>Opeartor Code</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="servicebody" class="text-center"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="circlecode" class="tab-pane fade" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="fw-bold font-size-15">Circle Code</h5>
+                        <div class="table-responsive mb-4 mt-3">
+                            <table class="table align-middle datatable dt-responsive table-check nowrap" style="border-collapse: collapse; border-spacing: 0 8px; width: 100%;">
+                                <thead class="text-center bg-primary text-white">
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col">Circle</th>
+                                        <th scope="col">Code</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-center">
+                                    <tr><td>1</td><td>Andhra Pradesh</td><td>1</td></tr>
+                                    <tr><td>2</td><td>Assam</td><td>2</td></tr>
+                                    <tr><td>3</td><td>Bihar</td><td>3</td></tr>
+                                    <tr><td>4</td><td>Chennai</td><td>4</td></tr>
+                                    <tr><td>5</td><td>Delhi</td><td>5</td></tr>
+                                    <tr><td>6</td><td>Gujarat</td><td>6</td></tr>
+                                    <tr><td>7</td><td>Haryana</td><td>7</td></tr>
+                                    <tr><td>8</td><td>Himachal Pradesh</td><td>8</td></tr>
+                                    <tr><td>9</td><td>Jammu &amp; Kashmir</td><td>9</td></tr>
+                                    <tr><td>10</td><td>Karnataka</td><td>10</td></tr>
+                                    <tr><td>11</td><td>Kerala</td><td>11</td></tr>
+                                    <tr><td>12</td><td>Kolkata</td><td>12</td></tr>
+                                    <tr><td>13</td><td>Maharashtra</td><td>13</td></tr>
+                                    <tr><td>14</td><td>Madhya Pradesh Chhattisgarh</td><td>14</td></tr>
+                                    <tr><td>15</td><td>Mumbai</td><td>15</td></tr>
+                                    <tr><td>16</td><td>North East</td><td>16</td></tr>
+                                    <tr><td>17</td><td>Orissa</td><td>17</td></tr>
+                                    <tr><td>18</td><td>Punjab</td><td>18</td></tr>
+                                    <tr><td>19</td><td>Rajasthan</td><td>19</td></tr>
+                                    <tr><td>20</td><td>Tamil Nadu</td><td>20</td></tr>
+                                    <tr><td>21</td><td>Uttar Pradesh - East</td><td>21</td></tr>
+                                    <tr><td>22</td><td>Uttar Pradesh - West</td><td>22</td></tr>
+                                    <tr><td>23</td><td>West Bengal</td><td>23</td></tr>
+                                    <tr><td>24</td><td>Jharkhand</td><td>24</td></tr>
+                                    <tr><td>25</td><td>Default</td><td>25</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="balance" class="tab-pane fade" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="fw-bold font-size-15">Balance Check</h5>
+                        <div class="mt-2">
+                            <b class="text-info">Both HTTP GET OR POST method Use</b>
+                            <p><a style="color:blue" class="font">https://domain.com/api/balance?username=username&amp;token=token</a></p>
+                            <h5 class="font-size-15">Sample Response</h5>
+                            <pre class="bg-light p-3 border rounded"><code>Success Response -
+{
+    "status":"1",
+    "balance":"904.0000"
+}
+
+Failed Response -
+{
+    "status":"0",
+    "message":"Error Message"
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="status_tab" class="tab-pane fade" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="font-size-15">Recharge Status</h5>
+                        <p><a style="color:blue" class="font">https://domain.com/api/statusCheck?username=username&amp;token=token&amp;txn_id=txn_id&amp;number=number</a></p>
+                        <h5 class="font-size-15">Sample Response</h5>
+                        <pre class="bg-light p-3 border rounded"><code>{
+    "status":"1",
+    "amount":"10.0000",
+    "txn_id":"7845745",
+    "operator_reference":"op_ref1375",
+    "message":"recharge_success"
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div id="complaint_tab" class="tab-pane fade" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="font-size-15">Register Complaint API</h5>
+                        <hr>
+                        <h5 class="font-size-15">API Endpoint</h5>
+                        <p><a style="color:blue" class="font">https://domain.com/api/complaint?username=username&amp;token=token&amp;txn_id=our_txn_id&amp;dispute_type=1</a></p>
+                        <h5 class="font-size-15">Request Method</h5>
+                        <p class="font-size-14 text-muted"><b>GET</b></p>
+                        <h5 class="font-size-15">Parameters</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Required</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>username</td><td>string</td><td>Yes</td><td>Username of the API consumer.</td></tr>
+                                    <tr><td>token</td><td>string</td><td>Yes</td><td>Authentication token for the API user.</td></tr>
+                                    <tr><td>txn_id</td><td>string</td><td>Yes</td><td>The unique transaction ID for which the complaint is being registered.</td></tr>
+                                    <tr>
+                                        <td>dispute_type</td>
+                                        <td>integer</td>
+                                        <td>Yes</td>
+                                        <td>
+                                            The type of dispute:
+                                            <ul class="mb-0">
+                                                <li><b>1</b>: Recharge</li>
+                                                <li><b>2</b>: Aeps</li>
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h5 class="font-size-15">Sample Request</h5>
+                        <pre class="bg-light p-3 border rounded"><code>GET https://domain.com/api/complaint?username=username&amp;token=token&amp;txn_id=our_txn_id&amp;dispute_type=1</code></pre>
+                        <h5 class="font-size-15">Sample Response</h5>
+                        <pre class="bg-light p-3 border rounded"><code>{
+    "status": "1",
+    "message": "Complaint Registered Successfully.",
+    "complaint_no": "7845745"
+}</code></pre>
+                        <h5 class="font-size-15">Response Parameters</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>status</td><td>string</td><td>Indicates the success or failure of the request (1 for success).</td></tr>
+                                    <tr><td>message</td><td>string</td><td>Descriptive message about the outcome of the request.</td></tr>
+                                    <tr><td>complaint_no</td><td>string</td><td>Unique complaint number assigned to the registered complaint.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h5 class="font-size-15">Error Handling</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Error Code</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>400</td><td>Bad request - Missing or invalid parameters.</td></tr>
+                                    <tr><td>401</td><td>Unauthorized - Invalid or expired authentication token.</td></tr>
+                                    <tr><td>500</td><td>Internal server error - Unable to process the request.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h5 class="font-size-15">Notes</h5>
+                        <p class="font-size-14 text-muted">Ensure that all required parameters are passed in the request. Use the response <code>complaint_no</code> for future references regarding the complaint.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="callback_info" class="tab-pane fade" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="font-size-15">Callback Information</h5>
+                        <hr>
+                        <h5 class="font-size-15">Method: POST</h5>
+                        <p class="font-size-14 text-muted">
+                            This document describes the callback mechanism used to notify users of transaction updates. The server sends a POST request to the user's specified URL containing transaction details.
+                        </p>
+                        <h5 class="font-size-15">Parameters</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>txnid</td><td>string</td><td>Unique transaction ID generated by the system.</td></tr>
+                                    <tr>
+                                        <td>status</td>
+                                        <td>integer</td>
+                                        <td>
+                                            Status of the transaction:
+                                            <ul class="mb-0">
+                                                <li><b>1</b>: Success</li>
+                                                <li><b>2</b>: Failure</li>
+                                                <li><b>3</b>: Pending</li>
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                    <tr><td>ErrorMessage</td><td>string</td><td>Descriptive message about the transaction's outcome.</td></tr>
+                                    <tr><td>OperatorRef</td><td>string</td><td>Reference ID provided by the operator for the transaction.</td></tr>
+                                    <tr><td>ApiTxnId</td><td>string</td><td>Unique transaction ID from the API for reconciliation.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h5 class="font-size-15">Headers</h5>
+                        <p class="font-size-14 text-muted">Content-Type: <code>application/x-www-form-urlencoded</code></p>
+                        <h5 class="font-size-15">Request Example</h5>
+                        <pre class="bg-light p-3 border rounded"><code>POST /callback_endpoint HTTP/1.1
+Host: userdomain.com
+Content-Type: application/x-www-form-urlencoded
+
+txnid=00041248&amp;status=1&amp;ErrorMessage=Recharge%20Success&amp;OperatorRef=MH74154844214&amp;ApiTxnId=090000000423</code></pre>
+                        <h5 class="font-size-15">Response</h5>
+                        <p class="font-size-14 text-muted">The user's server should respond with a <code>200 OK</code> status code if the callback is successfully received and processed.</p>
+                        <h5 class="font-size-15">Error Handling</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Error Code</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>400</td><td>Bad request - Invalid or missing data.</td></tr>
+                                    <tr><td>500</td><td>Internal server error on the user's side.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .nav-tabs-custom {
+        gap: 0.25rem;
+        flex-wrap: wrap;
+    }
+
+    .nav-tabs-custom .nav-link {
+        color: #495057;
+        border: 0;
+        border-radius: 4px 4px 0 0;
+        padding: 0.75rem 1rem;
+    }
+
+    .nav-tabs-custom .nav-link.active {
+        color: #fff;
+        background-color: #0d6efd;
+    }
+
+    .tab-content pre {
+        white-space: pre-wrap;
+        overflow-x: auto;
+    }
+
+    .tab-content table th,
+    .tab-content table td {
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+</style>
+
+<script>
+    function selectType() {
+        var serviceBody = document.getElementById('servicebody');
+
+        if (serviceBody) {
+            serviceBody.innerHTML = '';
+        }
+    }
+</script>

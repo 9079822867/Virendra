@@ -1,0 +1,142 @@
+# VIRENDRA Login Implementation - Quick Reference
+
+## Files Created/Modified
+
+### New Files Created:
+1. **VIRENDRA\Data\IUserRepository.cs** - Repository interface
+2. **VIRENDRA\Data\UserRepository.cs** - Dapper-based repository
+3. **VIRENDRA\Models\LoginModel.cs** - Login form model
+4. **VIRENDRA\App_Start\DependencyInjectionConfig.cs** - DI setup
+5. **VIRENDRA\Views\Auth\Login.cshtml** - Login view
+6. **VIRENDRA\Database\CreateUsersTable.sql** - DB reference
+7. **VIRENDRA\LOGIN_SETUP.md** - Comprehensive setup guide
+
+### Modified Files:
+1. **VIRENDRA\Models\User.cs** - Updated to match VRECHARGEDB schema
+2. **VIRENDRA\Controllers\AuthController.cs** - Added login logic with security
+3. **VIRENDRA\Global.asax.cs** - Added dependency injection initialization
+
+## Key Features Implemented
+
+✅ Login with Username/Password
+✅ Account Status Validation (Active, Not Locked, Not Deleted)
+✅ Failed Login Attempt Tracking
+✅ Account Lockout (5 attempts)
+✅ IP Address Logging
+✅ Forms Authentication
+✅ Parameterized SQL Queries (Dapper)
+✅ Anti-CSRF Token Validation
+✅ Repository Pattern with Dependency Injection
+✅ Bootstrap-styled UI
+
+## Database Integration
+
+**Database**: VRECHARGEDB
+**Table**: [User]
+**Key Fields Used**:
+- Username (login identifier)
+- Password (credentials)
+- IsActive, IsLocked, IsDeleted (status)
+- RetryCount (failed attempts)
+- LoginIP (audit trail)
+
+## Quick Start (3 Steps)
+
+### Step 1: Install Dapper
+```powershell
+Install-Package Dapper
+```
+
+### Step 2: Update Web.config
+```xml
+<connectionStrings>
+  <add name="DefaultConnection" 
+       connectionString="Server=YOUR_SERVER;Database=VRECHARGEDB;User Id=sa;Password=YOUR_PASSWORD;" 
+       providerName="System.Data.SqlClient" />
+</connectionStrings>
+```
+
+### Step 3: Test
+- URL: `http://localhost/Auth/Login`
+- Create a test user in database
+- Login with credentials
+
+## Login Flow
+
+```
+User → Login Page
+      ↓
+   Enter Username/Password
+      ↓
+   Validate Input
+      ↓
+   Query User from DB (Dapper)
+      ↓
+   Check Status (Active, Not Locked, Not Deleted)
+      ↓
+   Verify Password
+      ↓
+   If Success:
+     - Set Auth Cookie
+     - Reset RetryCount
+     - Update LoginIP
+     - Redirect to Dashboard
+      ↓
+   If Failed:
+     - Increment RetryCount
+     - Check if >= 5 attempts
+     - If yes: Lock Account
+     - Show error with remaining attempts
+```
+
+## Test User Setup
+
+```sql
+INSERT INTO [User] (Username, Password, RoleId, IsActive, IsLocked, IsDeleted, RetryCount, AddedDate, IsComm, IsOtpCheck)
+VALUES ('testuser', 'password123', 1, 1, 0, 0, 0, GETDATE(), 1, 1)
+```
+
+## Security Improvements Needed for Production
+
+⚠️ **Before Going Live:**
+1. Implement password hashing (BCrypt recommended)
+2. Enable HTTPS/TLS
+3. Configure session timeout
+4. Add rate limiting
+5. Implement password reset
+6. Add two-factor authentication
+7. Set up HTTPS cookies
+
+See LOGIN_SETUP.md for production security checklist.
+
+## File Structure
+
+```
+VIRENDRA/
+├── Controllers/
+│   └── AuthController.cs (modified)
+├── Models/
+│   ├── User.cs (updated)
+│   └── LoginModel.cs (new)
+├── Views/
+│   └── Auth/
+│       └── Login.cshtml (new)
+├── Data/
+│   ├── IUserRepository.cs (new)
+│   └── UserRepository.cs (new)
+├── App_Start/
+│   ├── DependencyInjectionConfig.cs (new)
+│   └── Global.asax.cs (modified)
+├── Database/
+│   └── CreateUsersTable.sql (new)
+├── Global.asax.cs (modified)
+└── LOGIN_SETUP.md (comprehensive guide)
+```
+
+## Support
+
+For detailed information, see:
+- **LOGIN_SETUP.md** - Complete setup and configuration guide
+- **AuthController.cs** - Login logic implementation
+- **UserRepository.cs** - Database access layer
+

@@ -1,0 +1,90 @@
+@model VIRENDRA.Models.TransactionHistoryViewModel
+@{
+    ViewBag.Title = "Transaction History";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="history-page">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+        <h4 class="mb-sm-0 font-size-18">Transaction History</h4>
+        <div class="page-title-right">
+            <ol class="breadcrumb m-0">
+                <li class="breadcrumb-item"><a href="javascript:void(0);">Transaction</a></li>
+                <li class="breadcrumb-item active">Transaction History</li>
+            </ol>
+        </div>
+    </div>
+
+    <form class="history-filter" method="get" action="@Url.Action("TransactionHistory", "Transaction")">
+        <div class="row g-3 align-items-center">
+            <div class="col-lg-2 col-md-4">
+                <input type="date" name="fromDate" class="form-control" value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <input type="date" name="toDate" class="form-control" value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="Credit" @(Model.Type == "Credit" ? "selected" : "")>Credit</option>
+                    <option value="Debit" @(Model.Type == "Debit" ? "selected" : "")>Debit</option>
+                    <option value="Commission" @(Model.Type == "Commission" ? "selected" : "")>Commission</option>
+                    <option value="Refund" @(Model.Type == "Refund" ? "selected" : "")>Refund</option>
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <input type="text" name="searchText" class="form-control" value="@Model.SearchText" placeholder="Txn ID, type, description" />
+            </div>
+            <div class="col-lg-1 col-md-3">
+                <button type="submit" class="btn btn-history-search w-100">Search</button>
+            </div>
+            <div class="col-lg-1 col-md-3">
+                <a href="@Url.Action("TransactionHistory", "Transaction")" class="btn btn-history-reset w-100">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <hr class="history-divider" />
+
+    <div class="table-responsive history-table-wrap">
+        <table class="table history-table mb-0">
+            <thead>
+                <tr>
+                    <th>Sr.No</th>
+                    <th>Txn ID</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th class="text-end">Credit</th>
+                    <th class="text-end">Debit</th>
+                    <th class="text-end">Balance</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.SrNo</td>
+                        <td>@item.TxnId</td>
+                        <td><span class="type-badge type-@item.Type.ToLower()">@item.Type</span></td>
+                        <td>@item.Description</td>
+                        <td class="text-end text-success">@item.Credit.ToString("0.00")</td>
+                        <td class="text-end text-danger">@item.Debit.ToString("0.00")</td>
+                        <td class="text-end">@item.Balance.ToString("0.00")</td>
+                        <td>@item.Date.ToString("dd MMM yyyy hh:mm tt")</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="text-success fw-semibold">Row Count @Model.TotalCount</td>
+                    <td class="text-end text-success">&#8377; @Model.TotalCredit.ToString("0.00")</td>
+                    <td class="text-end text-danger">&#8377; @Model.TotalDebit.ToString("0.00")</td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+@Html.Partial("_HistoryStyles")

@@ -1,0 +1,135 @@
+@{
+    ViewBag.Title = "Balance - Developer Tool";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Developer Tool - Check Balance</h2>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>API for Checking Account Balance</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Description</h5>
+                    <p>This API endpoint allows you to check the current balance in your account.</p>
+
+                    <h5 class="mt-4">Request Method</h5>
+                    <p><strong>HTTP GET</strong></p>
+
+                    <h5 class="mt-4">Request Parameters</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>api_key</td>
+                                <td>String</td>
+                                <td>Your API Key</td>
+                                <td>Yes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h5 class="mt-4">Sample Request</h5>
+                    <pre><code>GET /api/balance?api_key=your_api_key HTTP/1.1
+Host: api.example.com</code></pre>
+
+                    <h5 class="mt-4">Sample Response</h5>
+                    <pre><code>{
+    "status": 1,
+    "message": "Balance retrieved successfully",
+    "data": {
+        "account_balance": 5000.50,
+        "available_credit": 2500.00,
+        "currency": "INR",
+        "last_updated": "2024-01-15 14:30:00"
+    }
+}</code></pre>
+
+                    <h5 class="mt-4">Response Details</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>account_balance</td>
+                                <td>Decimal</td>
+                                <td>Total balance in account</td>
+                            </tr>
+                            <tr>
+                                <td>available_credit</td>
+                                <td>Decimal</td>
+                                <td>Available credit limit</td>
+                            </tr>
+                            <tr>
+                                <td>currency</td>
+                                <td>String</td>
+                                <td>Currency code (INR, USD, etc.)</td>
+                            </tr>
+                            <tr>
+                                <td>last_updated</td>
+                                <td>DateTime</td>
+                                <td>When balance was last updated</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h5 class="mt-4">Error Response</h5>
+                    <pre><code>{
+    "status": 0,
+    "message": "Invalid API Key",
+    "error_code": "INVALID_KEY"
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <a href="@Url.Action("Index")" class="btn btn-secondary">Back to Introduction</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+        padding: 15px;
+    }
+    .card-body {
+        padding: 20px;
+    }
+    pre {
+        background-color: #f4f4f4;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+    table {
+        font-size: 0.95rem;
+    }
+</style>

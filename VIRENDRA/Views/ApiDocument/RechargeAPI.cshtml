@@ -1,0 +1,141 @@
+@{
+    ViewBag.Title = "Recharge API - Developer Tool";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Developer Tool - Recharge API</h2>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>API for Mobile, DTH & Data Card Recharge</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Description</h5>
+                    <p>This API allows you to process mobile, DTH, and data card recharges through our platform.</p>
+
+                    <h5 class="mt-4">Request Method</h5>
+                    <p><strong>HTTP POST</strong></p>
+
+                    <h5 class="mt-4">Request Parameters</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>api_key</td>
+                                <td>String</td>
+                                <td>Your API Key</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>phone_number</td>
+                                <td>String</td>
+                                <td>Recipient mobile number</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>amount</td>
+                                <td>Decimal</td>
+                                <td>Recharge amount</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>operator_id</td>
+                                <td>Integer</td>
+                                <td>Operator ID</td>
+                                <td>Yes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h5 class="mt-4">Sample Request</h5>
+                    <pre><code>POST /api/recharge HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+
+{
+    "api_key": "your_api_key",
+    "phone_number": "9876543210",
+    "amount": 100,
+    "operator_id": 1
+}</code></pre>
+
+                    <h5 class="mt-4">Sample Response</h5>
+                    <pre><code>{
+    "status": 1,
+    "api_txn_id": 2023,
+    "message": "recharge success",
+    "operator_reference": "op_ref1373"
+}</code></pre>
+
+                    <h5 class="mt-4">Response Codes</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Meaning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Success</td>
+                            </tr>
+                            <tr>
+                                <td>0</td>
+                                <td>Failed</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Pending</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <a href="@Url.Action("Index")" class="btn btn-secondary">Back to Introduction</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+        padding: 15px;
+    }
+    .card-body {
+        padding: 20px;
+    }
+    pre {
+        background-color: #f4f4f4;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+    table {
+        font-size: 0.95rem;
+    }
+</style>

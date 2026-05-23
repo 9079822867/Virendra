@@ -1,0 +1,132 @@
+@{
+    ViewBag.Title = "Recharge";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">Recharge</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Home")">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Recharge</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">New Recharge</h5>
+                </div>
+                <div class="card-body">
+                    @using (Html.BeginForm("Index", "Recharge", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Recharge Type</label>
+                                <select name="RechargeType" class="form-select" required>
+                                    <option value="">Select Type</option>
+                                    <option>Mobile</option>
+                                    <option>DTH</option>
+                                    <option>Data Card</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Operator</label>
+                                <select name="Operator" class="form-select" required>
+                                    <option value="">Select Operator</option>
+                                    <option>Reliance Jio</option>
+                                    <option>Airtel</option>
+                                    <option>VI - Vodafone & Idea</option>
+                                    <option>BSNL</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Mobile / Customer Number</label>
+                                <input type="text" name="CustomerNumber" class="form-control" maxlength="12" placeholder="Enter number" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Circle</label>
+                                <select name="Circle" class="form-select">
+                                    <option>Rajasthan</option>
+                                    <option>Delhi NCR</option>
+                                    <option>Uttar Pradesh East</option>
+                                    <option>Maharashtra</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Amount</label>
+                                <input type="number" name="Amount" class="form-control" min="1" step="1" placeholder="Enter amount" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Reference ID</label>
+                                <input type="text" name="ReferenceId" class="form-control" placeholder="Auto / manual reference">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Recharge</button>
+                                <a href="@Url.Action("Index", "Services")" class="btn btn-light">Back to Services</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Recharge</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Number</th>
+                                    <th>Operator</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>9142687433</td>
+                                    <td>Jio</td>
+                                    <td>349.00</td>
+                                    <td><span class="badge bg-success">Success</span></td>
+                                </tr>
+                                <tr>
+                                    <td>8808940074</td>
+                                    <td>Jio</td>
+                                    <td>26.00</td>
+                                    <td><span class="badge bg-danger">Failed</span></td>
+                                </tr>
+                                <tr>
+                                    <td>9649095619</td>
+                                    <td>VI</td>
+                                    <td>199.00</td>
+                                    <td><span class="badge bg-success">Success</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
