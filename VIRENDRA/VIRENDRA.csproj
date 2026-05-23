@@ -178,6 +178,8 @@
     <Compile Include="Data\WalletRepository.cs" />
     <Compile Include="Data\IVendorRepository.cs" />
     <Compile Include="Data\VendorRepository.cs" />
+    <Compile Include="Data\ITransactionRepository.cs" />
+    <Compile Include="Data\TransactionRepository.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
