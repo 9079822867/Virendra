@@ -2,11 +2,12 @@ using System;
 using System.Net;
 using System.Web.Mvc;
 using VIRENDRA.Data;
+using VIRENDRA.Infrastructure;
 using VIRENDRA.Models;
 
 namespace VIRENDRA.Controllers
 {
-    [Authorize]
+    [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
     public class UserController : Controller
     {
         private readonly IUserRepository _userRepository;

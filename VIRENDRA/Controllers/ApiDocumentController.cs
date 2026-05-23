@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Web.Mvc;
+using VIRENDRA.Infrastructure;
+using VIRENDRA.Models;
 
 namespace VIRENDRA.Controllers
 {
+    [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.ApiUser)]
     public class ApiDocumentController : Controller
     {
         // GET: ApiDocument

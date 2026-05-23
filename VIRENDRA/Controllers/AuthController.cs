@@ -4,6 +4,7 @@ using System.Web.Mvc;
 using System.Web.Security;
 using VIRENDRA.Data;
 using VIRENDRA.Models;
+using VIRENDRA.Infrastructure;
 
 namespace VIRENDRA.Controllers
 {
@@ -73,8 +74,10 @@ namespace VIRENDRA.Controllers
 
                     // Set authentication cookie
                     FormsAuthentication.SetAuthCookie(user.Username, model.RememberMe);
-                    Session["UserId"] = user.Id;
+                    Session["UserId"]   = user.Id;
                     Session["Username"] = user.Username;
+                    Session["RoleId"]   = user.RoleId ?? RoleConstants.Retailer;
+                    Session["UserBal"]  = user.UserBal ?? 0m;
 
                     return RedirectToAction("Dashboard", "Home");
                 }

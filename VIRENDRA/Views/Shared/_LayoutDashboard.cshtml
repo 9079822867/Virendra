@@ -1,6 +1,19 @@
 ﻿<!DOCTYPE html>
 @{
     var currentController = (ViewContext.RouteData.Values["controller"] ?? "").ToString();
+    byte roleId  = (byte)(Session["RoleId"] ?? (byte)0);
+    string uname = (Session["Username"] ?? "User").ToString();
+    decimal bal  = (decimal)(Session["UserBal"] ?? 0m);
+
+    bool isSuperAdmin = roleId == 1;
+    bool isAdmin      = roleId == 2;
+    bool isApiUser    = roleId == 3;
+    bool isRetailer   = roleId == 4;
+
+    string roleName = isSuperAdmin ? "Super Admin"
+                    : isAdmin      ? "Admin"
+                    : isApiUser    ? "API User"
+                    : "Retailer";
 }
 <html>
 <head>
@@ -225,18 +238,18 @@
         </div>
 
         <div class="user-info">
-            <div class="time">
-                <i class="fas fa-moon"></i>
-            </div>
             <div class="balance">
-                2292.60
-            </div>
-            <div class="balance">
-                0.00
+                <i class="fas fa-wallet me-1"></i> ₹@bal.ToString("N2")
             </div>
             <div class="user-name">
-                SARITE GUPTA | AU222 <i class="fas fa-chevron-down"></i>
+                <i class="fas fa-user-circle me-1"></i>
+                @uname
+                <span class="badge ms-1" style="background:rgba(255,255,255,.25);font-size:.7rem;">@roleName</span>
+                <i class="fas fa-chevron-down ms-1"></i>
             </div>
+            <a href="@Url.Action("Logout", "Auth")" class="btn btn-sm btn-outline-light">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
         </div>
     </div>
 
@@ -245,93 +258,120 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <ul class="metismenu list-unstyled mm-show" id="side-menu">
-                <li class="menu-title" data-key="t-menu">Menu</li>
+                <li class="menu-title">Menu</li>
 
+                @* Dashboard: all roles *@
                 <li class="@(currentController == "Home" ? "mm-active" : "")">
                     <a href="@Url.Action("Dashboard", "Home")" class="@(currentController == "Home" ? "active" : "")">
                         <i class="fas fa-home"></i>
-                        <span data-key="t-dashboard">Dashboard</span>
+                        <span>Dashboard</span>
                     </a>
                 </li>
 
-                <li class="@(currentController == "Services" || currentController == "Recharge" ? "mm-active" : "")">
-                    <a href="@Url.Action("Index", "Services")" class="@(currentController == "Services" || currentController == "Recharge" ? "active" : "")">
-                        <i class="bx bx-mobile"></i>
-                        <span data-key="t-RechargePanel">Services</span>
+                @* User Management: SuperAdmin + Admin *@
+                @if (isSuperAdmin || isAdmin)
+                {
+                    <li class="menu-title">Administration</li>
+                    <li class="@(currentController == "User" ? "mm-active" : "")">
+                        <a href="@Url.Action("Index", "User")" class="@(currentController == "User" ? "active" : "")">
+                            <i class="fas fa-users"></i>
+                            <span>User Management</span>
+                        </a>
+                    </li>
+                }
+
+                @* Services: SuperAdmin + Admin *@
+                @if (isSuperAdmin || isAdmin)
+                {
+                    <li class="@(currentController == "Services" ? "mm-active" : "")">
+                        <a href="@Url.Action("Index", "Services")" class="@(currentController == "Services" ? "active" : "")">
+                            <i class="bx bx-mobile"></i>
+                            <span>Services</span>
+                        </a>
+                    </li>
+                }
+
+                @* Recharge: all roles *@
+                <li class="menu-title">Recharge</li>
+                <li class="@(currentController == "Recharge" ? "mm-active" : "")">
+                    <a href="@Url.Action("Index", "Recharge")" class="@(currentController == "Recharge" ? "active" : "")">
+                        <i class="bx bx-mobile-alt"></i>
+                        <span>Do Recharge</span>
                     </a>
                 </li>
 
+                @* Transactions: all roles *@
                 <li class="@(currentController == "Transaction" ? "mm-active" : "")">
                     <a href="javascript:void(0);" class="has-arrow @(currentController == "Transaction" ? "active" : "")">
                         <i class="far fa-file-alt"></i>
-                        <span data-key="t-transaction">Transaction</span>
+                        <span>Transaction</span>
                     </a>
                     <ul class="sub-menu mm-collapse @(currentController == "Transaction" ? "mm-show" : "")" aria-expanded="@(currentController == "Transaction" ? "true" : "false")">
-                        <li>
-                            <a href="@Url.Action("RechargeHistory", "Transaction")" data-key="t-recharge_history">Recharge History</a>
-                        </li>
-                        <li>
-                            <a href="@Url.Action("TransactionHistory", "Transaction")" data-key="t-transaction_history">Transaction History</a>
-                        </li>
+                        <li><a href="@Url.Action("RechargeHistory", "Transaction")">Recharge History</a></li>
+                        <li><a href="@Url.Action("TransactionHistory", "Transaction")">Transaction History</a></li>
                     </ul>
                 </li>
 
-                <li>
-                    <a href="javascript:void(0);" class="has-arrow">
-                        <i class="fas fa-dollar-sign"></i>
-                        <span data-key="t-payment">Payment</span>
-                    </a>
-                    <ul class="sub-menu mm-collapse" aria-expanded="false">
-                        <li><a href="javascript:void(0);" data-key="t-request">Payment Request</a></li>
-                        <li><a href="javascript:void(0);">Add Money</a></li>
-                    </ul>
-                </li>
+                @* Payment: SuperAdmin + Admin + Retailer *@
+                @if (isSuperAdmin || isAdmin || isRetailer)
+                {
+                    <li>
+                        <a href="javascript:void(0);" class="has-arrow">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span>Payment</span>
+                        </a>
+                        <ul class="sub-menu mm-collapse" aria-expanded="false">
+                            <li><a href="javascript:void(0);">Payment Request</a></li>
+                            <li><a href="javascript:void(0);">Add Money</a></li>
+                        </ul>
+                    </li>
+                }
 
+                @* Reports: SuperAdmin + Admin *@
+                @if (isSuperAdmin || isAdmin)
+                {
+                    <li class="menu-title">Reports</li>
+                    <li class="@(currentController == "Reports" ? "mm-active" : "")">
+                        <a href="javascript:void(0);" class="has-arrow @(currentController == "Reports" ? "active" : "")">
+                            <i class="bx bx-file"></i>
+                            <span>Reports</span>
+                        </a>
+                        <ul class="sub-menu mm-collapse @(currentController == "Reports" ? "mm-show" : "")" aria-expanded="@(currentController == "Reports" ? "true" : "false")">
+                            <li><a href="@Url.Action("OperatorwiseReport", "Reports")">Operatorwise Report</a></li>
+                            <li><a href="javascript:void(0);">Payment Report</a></li>
+                        </ul>
+                    </li>
+                }
+
+                @* Developer Tools: SuperAdmin + API User *@
+                @if (isSuperAdmin || isApiUser)
+                {
+                    <li class="menu-title">Developer</li>
+                    <li class="@(currentController == "ApiDocument" || currentController == "ApiSettings" ? "mm-active" : "")">
+                        <a href="javascript:void(0);" class="has-arrow @(currentController == "ApiDocument" || currentController == "ApiSettings" ? "active" : "")">
+                            <i class="bx bxs-wrench"></i>
+                            <span>Developer Tools</span>
+                        </a>
+                        <ul class="sub-menu mm-collapse @(currentController == "ApiDocument" || currentController == "ApiSettings" ? "mm-show" : "")" aria-expanded="@(currentController == "ApiDocument" || currentController == "ApiSettings" ? "true" : "false")">
+                            <li class="@(currentController == "ApiSettings" ? "mm-active" : "")">
+                                <a href="@Url.Action("Index", "ApiSettings")" class="@(currentController == "ApiSettings" ? "active" : "")">API Setting</a>
+                            </li>
+                            <li class="@(currentController == "ApiDocument" ? "mm-active" : "")">
+                                <a href="@Url.Action("Index", "ApiDocument")" class="@(currentController == "ApiDocument" ? "active" : "")">API Integration Tool</a>
+                            </li>
+                        </ul>
+                    </li>
+                }
+
+                @* Support: all roles *@
+                <li class="menu-title">Support</li>
                 <li>
                     <a href="javascript:void(0);" class="has-arrow">
                         <i class="fas fa-headphones"></i>
-                        <span data-key="t-support">Support</span>
+                        <span>Support</span>
                     </a>
                     <ul class="sub-menu mm-collapse" aria-expanded="false">
-                        <li><a href="javascript:void(0);" data-key="t-dispute">Dispute</a></li>
-                    </ul>
-                </li>
-
-                <li>
-                    <a href="javascript:void(0);" class="has-arrow">
-                        <i class="fas fa-box"></i>
-                        <span data-key="t-utilities">Utilities</span>
-                    </a>
-                    <ul class="sub-menu mm-collapse" aria-expanded="false">
-                        <li><a href="javascript:void(0);" data-key="t-bank">Bank Account</a></li>
-                    </ul>
-                </li>
-
-                <li class="@(currentController == "Reports" ? "mm-active" : "")">
-                    <a href="javascript:void(0);" class="has-arrow @(currentController == "Reports" ? "active" : "")">
-                        <i class="bx bx-file"></i>
-                        <span>Reports</span>
-                    </a>
-                    <ul class="sub-menu mm-collapse @(currentController == "Reports" ? "mm-show" : "")" aria-expanded="@(currentController == "Reports" ? "true" : "false")">
-                        <li class="@(currentController == "Reports" ? "mm-active" : "")">
-                            <a href="@Url.Action("OperatorwiseReport", "Reports")" class="@(currentController == "Reports" ? "active" : "")">Operatorwise Report</a>
-                        </li>
-                        <li><a href="javascript:void(0);">Payment Report</a></li>
-                    </ul>
-                </li>
-
-                <li class="@(currentController == "ApiDocument" || currentController == "ApiSettings" ? "mm-active" : "")">
-                    <a href="javascript:void(0);" class="has-arrow @(currentController == "ApiDocument" || currentController == "ApiSettings" ? "active" : "")">
-                        <i class="bx bxs-wrench"></i>
-                        <span data-key="t-support">Developer Tool</span>
-                    </a>
-                    <ul class="sub-menu mm-collapse @(currentController == "ApiDocument" || currentController == "ApiSettings" ? "mm-show" : "")" aria-expanded="@(currentController == "ApiDocument" || currentController == "ApiSettings" ? "true" : "false")">
-                        <li class="@(currentController == "ApiSettings" ? "mm-active" : "")">
-                            <a href="@Url.Action("Index", "ApiSettings")" data-key="t-dispute" class="@(currentController == "ApiSettings" ? "active" : "")">API Setting</a>
-                        </li>
-                        <li class="@(currentController == "ApiDocument" ? "mm-active" : "")">
-                            <a href="@Url.Action("Index", "ApiDocument")" data-key="t-dispute" class="@(currentController == "ApiDocument" ? "active" : "")">API Integration Tool</a>
-                        </li>
+                        <li><a href="javascript:void(0);">Dispute</a></li>
                     </ul>
                 </li>
             </ul>

@@ -1,7 +1,10 @@
 using System.Web.Mvc;
+using VIRENDRA.Infrastructure;
+using VIRENDRA.Models;
 
 namespace VIRENDRA.Controllers
 {
+    [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
     public class ServicesController : Controller
     {
         // GET: Services
