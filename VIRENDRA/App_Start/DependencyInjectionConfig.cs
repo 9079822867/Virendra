@@ -81,6 +81,9 @@ namespace VIRENDRA.App_Start
             if (controllerType == typeof(WalletController))
                 return new WalletController(_walletRepo, _userRepo);
 
+            if (controllerType == typeof(BankAccountController))
+                return new BankAccountController(_walletRepo);
+
             if (controllerType == typeof(VendorController))
                 return new VendorController(_vendorRepo);
 

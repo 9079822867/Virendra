@@ -167,6 +167,7 @@
     <Compile Include="Controllers\OperatorController.cs" />
     <Compile Include="Controllers\PackageCommController.cs" />
     <Compile Include="Controllers\WalletController.cs" />
+    <Compile Include="Controllers\BankAccountController.cs" />
     <Compile Include="Controllers\VendorController.cs" />
     <Compile Include="Data\DashboardRepository.cs" />
     <Compile Include="Data\IDashboardRepository.cs" />
@@ -336,6 +337,10 @@
     <Content Include="Views\Package\Create.cshtml" />
     <Content Include="Views\Package\Edit.cshtml" />
     <Content Include="Views\Package\Index.cshtml" />
+    <Content Include="Views\BankAccount\Create.cshtml" />
+    <Content Include="Views\BankAccount\Edit.cshtml" />
+    <Content Include="Views\BankAccount\Index.cshtml" />
+    <Content Include="Views\BankAccount\_BankAccountForm.cshtml" />
     <Content Include="Views\Vendor\Create.cshtml" />
     <Content Include="Views\Vendor\Edit.cshtml" />
     <Content Include="Views\Vendor\Index.cshtml" />

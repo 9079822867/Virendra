@@ -20,9 +20,73 @@ namespace VIRENDRA.Data
         public List<BankAccount> GetAllBankAccounts()
         {
             using (var conn = new SqlConnection(_connectionString))
-                return conn.Query<BankAccount>(
-                    "SELECT Id, BankName, AccountNo, HolderName, IFSCCode, UpiAdress, BranchName, Remark FROM BankAccount ORDER BY BankName"
+                return conn.Query<BankAccount>(@"
+                    SELECT b.Id, b.BankName, b.AccountNo, b.HolderName, b.IFSCCode,
+                           b.UpiAdress, b.BranchName, b.BranchAddress,
+                           b.BlockAmount, b.AccountTypeId, b.UserId, b.ApiId,
+                           b.Remark, b.AddedById, b.AddedDate, b.BlockUser, b.ImageUrl
+                    FROM BankAccount b
+                    ORDER BY b.BankName"
                 ).ToList();
+        }
+
+        public BankAccount GetBankAccountById(int id)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+                return conn.QueryFirstOrDefault<BankAccount>(@"
+                    SELECT Id, BankName, AccountNo, HolderName, IFSCCode,
+                           UpiAdress, BranchName, BranchAddress,
+                           BlockAmount, AccountTypeId, UserId, ApiId,
+                           Remark, AddedById, AddedDate, UpdatedById, UpdatedDate,
+                           BlockUser, ImageUrl
+                    FROM BankAccount WHERE Id = @Id",
+                    new { Id = id });
+        }
+
+        public int CreateBankAccount(BankAccount bank)
+        {
+            const string sql = @"
+                INSERT INTO BankAccount
+                    (BankName, AccountNo, HolderName, IFSCCode, UpiAdress,
+                     BranchName, BranchAddress, BlockAmount, AccountTypeId,
+                     Remark, AddedById, AddedDate, BlockUser)
+                VALUES
+                    (@BankName, @AccountNo, @HolderName, @IFSCCode, @UpiAdress,
+                     @BranchName, @BranchAddress, @BlockAmount, @AccountTypeId,
+                     @Remark, @AddedById, GETDATE(), @BlockUser);
+                SELECT CAST(SCOPE_IDENTITY() AS INT);";
+
+            using (var conn = new SqlConnection(_connectionString))
+                return conn.ExecuteScalar<int>(sql, bank);
+        }
+
+        public void UpdateBankAccount(BankAccount bank)
+        {
+            const string sql = @"
+                UPDATE BankAccount SET
+                    BankName=@BankName, AccountNo=@AccountNo, HolderName=@HolderName,
+                    IFSCCode=@IFSCCode, UpiAdress=@UpiAdress,
+                    BranchName=@BranchName, BranchAddress=@BranchAddress,
+                    BlockAmount=@BlockAmount, AccountTypeId=@AccountTypeId,
+                    Remark=@Remark, UpdatedById=@UpdatedById, UpdatedDate=GETDATE(),
+                    BlockUser=@BlockUser
+                WHERE Id=@Id";
+
+            using (var conn = new SqlConnection(_connectionString))
+                conn.Execute(sql, bank);
+        }
+
+        public void DeleteBankAccount(int id)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+                conn.Execute("DELETE FROM BankAccount WHERE Id = @Id", new { Id = id });
+        }
+
+        public void ToggleBlockUser(int id, bool blockUser)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+                conn.Execute("UPDATE BankAccount SET BlockUser = @BlockUser WHERE Id = @Id",
+                    new { Id = id, BlockUser = blockUser });
         }
 
         public void AddMoney(WalletRequest req)

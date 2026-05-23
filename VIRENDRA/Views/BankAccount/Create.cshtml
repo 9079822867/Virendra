@@ -1,7 +1,7 @@
-@model VIRENDRA.Models.ApiSource
+@model VIRENDRA.Models.BankAccount
 
 @{
-    ViewBag.Title = "Add API Source";
+    ViewBag.Title = "Add Bank Account";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
 }
 
@@ -13,12 +13,12 @@
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div>
                     <h4 class="mb-1 fw-bold text-dark">
-                        <i class="fas fa-plus-circle text-success me-2"></i>Add New API Source
+                        <i class="fas fa-plus-circle text-success me-2"></i>Add Bank Account
                     </h4>
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0" style="font-size:.82rem;">
                             <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="@Url.Action("Index")">API Sources</a></li>
+                            <li class="breadcrumb-item"><a href="@Url.Action("Index")">Bank Accounts</a></li>
                             <li class="breadcrumb-item active">Add New</li>
                         </ol>
                     </nav>
@@ -30,7 +30,7 @@
         </div>
     </div>
 
-    @using (Html.BeginForm("Create", "Vendor", FormMethod.Post))
+    @using (Html.BeginForm("Create", "BankAccount", FormMethod.Post))
     {
         @Html.AntiForgeryToken()
         @Html.HiddenFor(m => m.Id)
@@ -45,23 +45,23 @@
             </div>
         }
 
-        @Html.Partial("_VendorForm", Model)
+        @Html.Partial("_BankAccountForm", Model)
 
-        <!-- Action Buttons -->
+        <!-- Action Bar -->
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card border-0 shadow-sm" style="border-radius:10px;">
                     <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <span class="text-muted small">
                             <i class="fas fa-info-circle me-1"></i>
-                            All fields marked <span class="text-danger fw-bold">*</span> are required.
+                            Fields marked <span class="text-danger fw-bold">*</span> are required.
                         </span>
                         <div class="d-flex gap-2">
                             <a href="@Url.Action("Index")" class="btn btn-outline-secondary px-4">
                                 <i class="fas fa-times me-1"></i>Cancel
                             </a>
                             <button type="submit" class="btn btn-success px-4 fw-semibold">
-                                <i class="fas fa-save me-1"></i>Save API Source
+                                <i class="fas fa-save me-1"></i>Save Bank Account
                             </button>
                         </div>
                     </div>

@@ -40,34 +40,21 @@
             <small class="text-white-50">Use these tokens in your API URLs</small>
         </div>
         <div class="row g-2" style="font-size:.78rem;">
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="d-flex flex-wrap gap-2">
                     <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[UUU]</code> API User ID</span>
                     <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[PPP]</code> API Password</span>
                     <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[RRR]</code> Token / Remark</span>
                     <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[MMM]</code> Mobile No</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[HHH]</code> Account (Bill)</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[NNN]</code> Acct Other</span>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="d-flex flex-wrap gap-2">
                     <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[OOO]</code> Operator Code</span>
                     <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[CCC]</code> Circle Code</span>
                     <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[AAA]</code> Amount</span>
                     <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[TTT]</code> Ref Txn No</span>
                     <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[VVV]</code> Vendor Txn No</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[EEE]</code> Extra URL</span>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="d-flex flex-wrap gap-2">
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#dfd;border:1px solid #ffffff25;font-weight:500;"><code>[DDD]</code> Extra Data</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#dfd;border:1px solid #ffffff25;font-weight:500;"><code>[FFFT]</code> DateTime</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#dfd;border:1px solid #ffffff25;font-weight:500;"><code>[FFFR]</code> Random Key</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#dfd;border:1px solid #ffffff25;font-weight:500;"><code>[KKK]</code> Lapu No</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#dfd;border:1px solid #ffffff25;font-weight:500;"><code>[KKKP]</code> Lapu Pwd</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#dfd;border:1px solid #ffffff25;font-weight:500;"><code>[COMM1]</code> Common Opt-1</span>
                 </div>
             </div>
         </div>
@@ -227,7 +214,7 @@
                                     }
                                 </div>
                                 <span class="badge ms-2"
-                                      style="background:@color20;color:@color;border:1px solid @(color)40;font-size:.7rem;">
+                                      style="background:@color;color:@color;border:1px solid @(color)40;font-size:.7rem;">
                                     @(string.IsNullOrEmpty(u.URL) ? "empty" : u.Method)
                                 </span>
                                 <i class="fas fa-chevron-down ms-3 text-muted" style="font-size:.7rem;transition:.2s;"></i>

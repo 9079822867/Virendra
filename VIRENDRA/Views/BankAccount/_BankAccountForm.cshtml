@@ -1,0 +1,171 @@
+@model VIRENDRA.Models.BankAccount
+
+<div class="row g-4">
+
+    <!-- ===== LEFT: Core Bank Details ===== -->
+    <div class="col-xl-6">
+        <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden;">
+            <div class="card-header border-0 py-3 px-4"
+                 style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width:36px;height:36px;background:rgba(255,255,255,.2);">
+                        <i class="fas fa-university text-white" style="font-size:.85rem;"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 text-white fw-bold">Bank Details</h6>
+                        <small class="text-white-50">Core account information</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body px-4 py-3">
+
+                <!-- Bank Name -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-university text-primary me-1"></i>Bank Name <span class="text-danger">*</span>
+                    </label>
+                    @Html.TextBoxFor(m => m.BankName, new { @class = "form-control form-control-sm", placeholder = "e.g. State Bank of India" })
+                    @Html.ValidationMessageFor(m => m.BankName, "", new { @class = "text-danger", style = "font-size:.78rem;" })
+                </div>
+
+                <!-- Account Holder Name -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-user text-success me-1"></i>Account Holder Name <span class="text-danger">*</span>
+                    </label>
+                    @Html.TextBoxFor(m => m.HolderName, new { @class = "form-control form-control-sm", placeholder = "Full name on account" })
+                    @Html.ValidationMessageFor(m => m.HolderName, "", new { @class = "text-danger", style = "font-size:.78rem;" })
+                </div>
+
+                <!-- Account Number -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-hashtag text-info me-1"></i>Account Number <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group input-group-sm">
+                        @Html.TextBoxFor(m => m.AccountNo, new { @class = "form-control font-monospace", placeholder = "e.g. 1234567890", id = "accountNoField" })
+                        <button type="button" class="btn btn-outline-secondary" onclick="toggleAccNo()" title="Show/Hide">
+                            <i class="fas fa-eye" id="accEyeIcon"></i>
+                        </button>
+                    </div>
+                    @Html.ValidationMessageFor(m => m.AccountNo, "", new { @class = "text-danger", style = "font-size:.78rem;" })
+                </div>
+
+                <!-- IFSC Code -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-code text-warning me-1"></i>IFSC Code <span class="text-danger">*</span>
+                    </label>
+                    @Html.TextBoxFor(m => m.IFSCCode, new { @class = "form-control form-control-sm font-monospace text-uppercase", placeholder = "e.g. SBIN0001234", maxlength = "11" })
+                    @Html.ValidationMessageFor(m => m.IFSCCode, "", new { @class = "text-danger", style = "font-size:.78rem;" })
+                </div>
+
+                <!-- UPI Address -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-qrcode text-secondary me-1"></i>UPI Address
+                        <small class="text-muted">(optional)</small>
+                    </label>
+                    @Html.TextBoxFor(m => m.UpiAdress, new { @class = "form-control form-control-sm", placeholder = "e.g. name@upi" })
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== RIGHT: Branch & Settings ===== -->
+    <div class="col-xl-6">
+        <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden;">
+            <div class="card-header border-0 py-3 px-4"
+                 style="background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width:36px;height:36px;background:rgba(255,255,255,.2);">
+                        <i class="fas fa-cog text-white" style="font-size:.85rem;"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 text-white fw-bold">Branch &amp; Settings</h6>
+                        <small class="text-white-50">Branch info and control options</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body px-4 py-3">
+
+                <!-- Branch Name -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-map-marker-alt text-danger me-1"></i>Branch Name
+                    </label>
+                    @Html.TextBoxFor(m => m.BranchName, new { @class = "form-control form-control-sm", placeholder = "e.g. Main Branch" })
+                </div>
+
+                <!-- Branch Address -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-map me-1 text-secondary"></i>Branch Address
+                    </label>
+                    @Html.TextAreaFor(m => m.BranchAddress, 2, 0, new { @class = "form-control form-control-sm", placeholder = "Full branch address" })
+                </div>
+
+                <!-- Block Amount -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-lock text-warning me-1"></i>Block Amount (₹)
+                    </label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">₹</span>
+                        @Html.TextBoxFor(m => m.BlockAmount, "{0:0.##}", new { @class = "form-control", type = "number", min = "0", step = "0.01", placeholder = "0.00" })
+                    </div>
+                </div>
+
+                <!-- Remark -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-comment text-info me-1"></i>Remark
+                    </label>
+                    @Html.TextBoxFor(m => m.Remark, new { @class = "form-control form-control-sm", placeholder = "Optional note" })
+                </div>
+
+                <!-- BlockUser Toggle -->
+                <div class="mb-2">
+                    <div class="d-flex align-items-center justify-content-between p-3 rounded-3"
+                         style="background:#fff3cd;border:1px solid #ffc107;">
+                        <div>
+                            <i class="fas fa-ban text-warning me-2"></i>
+                            <span class="fw-semibold text-dark" style="font-size:.84rem;">Block Account</span>
+                            <div class="text-muted" style="font-size:.75rem;">Blocked accounts will not appear in wallet dropdown.</div>
+                        </div>
+                        <div class="form-check form-switch mb-0 ms-3">
+                            @Html.CheckBoxFor(m => m.BlockUser, new { @class = "form-check-input", style = "width:46px;height:24px;cursor:pointer;" })
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Toggle account number visibility
+    function toggleAccNo() {
+        var f = document.getElementById('accountNoField');
+        var e = document.getElementById('accEyeIcon');
+        if (f.type === 'password') {
+            f.type = 'text';
+            e.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            f.type = 'password';
+            e.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    }
+
+    // Auto-uppercase IFSC
+    document.querySelector('[name="IFSCCode"]')?.addEventListener('input', function () {
+        var pos = this.selectionStart;
+        this.value = this.value.toUpperCase();
+        this.setSelectionRange(pos, pos);
+    });
+</script>

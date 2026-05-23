@@ -76,10 +76,19 @@ namespace VIRENDRA.Models
     public class BankAccount
     {
         public int     Id            { get; set; }
+
+        [Required(ErrorMessage = "Bank name is required")]
         public string  BankName      { get; set; }
+
+        [Required(ErrorMessage = "Account number is required")]
         public string  AccountNo     { get; set; }
+
+        [Required(ErrorMessage = "Account holder name is required")]
         public string  HolderName    { get; set; }
+
+        [Required(ErrorMessage = "IFSC code is required")]
         public string  IFSCCode      { get; set; }
+
         public string  UpiAdress     { get; set; }
         public string  BranchName    { get; set; }
         public string  BranchAddress { get; set; }
@@ -94,5 +103,8 @@ namespace VIRENDRA.Models
         public DateTime? UpdatedDate { get; set; }
         public string  ImageUrl      { get; set; }
         public bool    BlockUser     { get; set; }
+
+        // JOIN-populated (not a DB column)
+        public string  AccountTypeName { get; set; }
     }
 }
