@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title - Recharge Software</title>
+    <link href="~/Content/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/css/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f0f4ff;
+            display: flex;
+        }
+
+        /* ── Left panel ── */
+        .auth-left {
+            width: 48%;
+            min-height: 100vh;
+            background: linear-gradient(145deg, #0d47a1 0%, #1565c0 40%, #0288d1 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            width: 380px; height: 380px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.06);
+            top: -80px; right: -80px;
+        }
+
+        .auth-left::after {
+            content: '';
+            position: absolute;
+            width: 260px; height: 260px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.06);
+            bottom: -60px; left: -60px;
+        }
+
+        .brand-icon {
+            width: 80px; height: 80px;
+            background: rgba(255,255,255,.15);
+            border-radius: 24px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 28px;
+            backdrop-filter: blur(6px);
+        }
+
+        .brand-icon i { font-size: 40px; color: #fff; }
+
+        .auth-left h1 {
+            color: #fff;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -.5px;
+            text-align: center;
+            margin-bottom: 14px;
+        }
+
+        .auth-left p {
+            color: rgba(255,255,255,.78);
+            font-size: .97rem;
+            text-align: center;
+            line-height: 1.7;
+            max-width: 340px;
+        }
+
+        .feature-list {
+            margin-top: 40px;
+            list-style: none;
+            width: 100%;
+            max-width: 340px;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255,255,255,.88);
+            font-size: .92rem;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255,255,255,.12);
+        }
+
+        .feature-list li:last-child { border-bottom: none; }
+
+        .feature-list li i {
+            font-size: 1.1rem;
+            color: #80deea;
+            flex-shrink: 0;
+        }
+
+        /* ── Right panel ── */
+        .auth-right {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 32px;
+            background: #fff;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .login-box .welcome {
+            font-size: 1.65rem;
+            font-weight: 700;
+            color: #0d1b2a;
+            margin-bottom: 6px;
+        }
+
+        .login-box .sub {
+            color: #6b7280;
+            font-size: .93rem;
+            margin-bottom: 36px;
+        }
+
+        /* floating-label inputs */
+        .field-wrap {
+            position: relative;
+            margin-bottom: 22px;
+        }
+
+        .field-wrap label {
+            position: absolute;
+            top: 50%; left: 14px;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: .9rem;
+            pointer-events: none;
+            transition: .18s ease;
+            background: #fff;
+            padding: 0 4px;
+        }
+
+        .field-wrap input:focus ~ label,
+        .field-wrap input:not(:placeholder-shown) ~ label {
+            top: 0; font-size: .75rem; color: #1565c0;
+        }
+
+        .field-wrap input {
+            width: 100%;
+            height: 52px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 0 44px 0 14px;
+            font-size: .95rem;
+            color: #0d1b2a;
+            outline: none;
+            transition: border-color .2s;
+            background: transparent;
+        }
+
+        .field-wrap input:focus { border-color: #1565c0; }
+
+        .field-icon {
+            position: absolute;
+            right: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 1.05rem;
+        }
+
+        .field-icon:hover { color: #1565c0; }
+
+        .validation-msg {
+            font-size: .78rem;
+            color: #ef4444;
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* remember / forgot row */
+        .extras {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            font-size: .87rem;
+        }
+
+        .extras label { color: #4b5563; cursor: pointer; display: flex; align-items: center; gap: 7px; }
+        .extras input[type=checkbox] {
+            width: 16px; height: 16px;
+            accent-color: #1565c0;
+            cursor: pointer;
+        }
+
+        .forgot { color: #1565c0; text-decoration: none; font-weight: 500; }
+        .forgot:hover { text-decoration: underline; }
+
+        /* submit btn */
+        .btn-login {
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(90deg, #0d47a1, #0288d1);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: .3px;
+            cursor: pointer;
+            transition: opacity .2s, transform .15s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+
+        .btn-login:hover { opacity: .9; transform: translateY(-1px); }
+        .btn-login:active { transform: translateY(0); }
+
+        /* error alert */
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 11px 14px;
+            font-size: .87rem;
+            color: #dc2626;
+            margin-bottom: 20px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* bottom link */
+        .bottom-note {
+            text-align: center;
+            margin-top: 26px;
+            font-size: .87rem;
+            color: #6b7280;
+        }
+
+        .bottom-note a { color: #1565c0; font-weight: 500; text-decoration: none; }
+        .bottom-note a:hover { text-decoration: underline; }
+
+        /* responsive */
+        @@media (max-width: 768px) {
+            .auth-left { display: none; }
+            .auth-right { padding: 40px 20px; background: #f0f4ff; }
+            .login-box {
+                background: #fff;
+                padding: 36px 28px;
+                border-radius: 16px;
+                box-shadow: 0 4px 24px rgba(0,0,0,.08);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    @RenderBody()
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("Scripts", required: false)
+
+</body>
+</html>
