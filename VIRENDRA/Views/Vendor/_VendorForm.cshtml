@@ -8,145 +8,316 @@
         "XML (application/xml)",
         "Plain Text (text/plain)"
     };
+
+    var urlIcons = new Dictionary<string, string>
+    {
+        { "RechargeRequest",  "fa-bolt" },
+        { "BalanceCheck",     "fa-wallet" },
+        { "StatusCheck",      "fa-search" },
+        { "CallBack",         "fa-reply" },
+        { "Validation",       "fa-shield-alt" },
+        { "ComplainRequest",  "fa-exclamation-circle" }
+    };
+
+    var urlColors = new Dictionary<string, string>
+    {
+        { "RechargeRequest",  "#4CAF50" },
+        { "BalanceCheck",     "#2196F3" },
+        { "StatusCheck",      "#FF9800" },
+        { "CallBack",         "#9C27B0" },
+        { "Validation",       "#F44336" },
+        { "ComplainRequest",  "#607D8B" }
+    };
 }
 
-@* URL parameter legend *@
-<div class="alert alert-danger py-2 mb-3" style="font-size:0.82rem;">
-    <strong>Note:- Please use following naming conventions for the API URLs:-</strong>
-    <div class="row mt-1">
-        <div class="col-md-4">
-            <ul class="mb-0 ps-3">
-                <li><code>[UUU]</code> → API user id</li>
-                <li><code>[PPP]</code> → API password</li>
-                <li><code>[RRR]</code> → any other (like token, remark etc)</li>
-                <li><code>[MMM]</code> → mobileNo(Prepaid)/number(BillPay)</li>
-                <li><code>[HHH]</code> → account(BillPay)</li>
-                <li><code>[NNN]</code> → account other(BillPay)</li>
-                <li><code>[VVV]</code> → vendor transaction number</li>
-                <li><code>[OOO]</code> → operator code</li>
-            </ul>
+<!-- ===== PLACEHOLDER LEGEND ===== -->
+<div class="card border-0 mb-4" style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:12px;">
+    <div class="card-body py-3 px-4">
+        <div class="d-flex align-items-center mb-2">
+            <span class="badge bg-warning text-dark me-2 px-2 py-1" style="font-size:.75rem;border-radius:6px;">
+                <i class="fas fa-info-circle me-1"></i>PLACEHOLDER GUIDE
+            </span>
+            <small class="text-white-50">Use these tokens in your API URLs</small>
         </div>
-        <div class="col-md-4">
-            <ul class="mb-0 ps-3">
-                <li><code>[CCC]</code> → Circle code</li>
-                <li><code>[AAA]</code> → Amount</li>
-                <li><code>[EEE]</code> → Extra Url (in Operator Code setting)</li>
-                <li><code>[DDD]</code> → Extra Parameter data</li>
-                <li><code>[TTT]</code> → reference transaction number</li>
-                <li><code>[FFF1]</code> → optional1</li>
-                <li><code>[FFF2]</code> → optional2</li>
-                <li><code>[FFF3]</code> → optional3</li>
-            </ul>
-        </div>
-        <div class="col-md-4">
-            <ul class="mb-0 ps-3">
-                <li><code>[FFF4]</code> → optional4</li>
-                <li><code>[FFFT]</code> → current date time</li>
-                <li><code>[FFFR]</code> → Random Key for API</li>
-                <li><code>[KKK]</code> → Lapu number</li>
-                <li><code>[KKKP]</code> → Lapu password</li>
-                <li><code>[KKK3]</code> → Lapu pin</li>
-                <li><code>[KKK1]</code> → Lapu optional-1</li>
-                <li><code>[COMM1]</code> → Common optional-1</li>
-            </ul>
+        <div class="row g-2" style="font-size:.78rem;">
+            <div class="col-md-4">
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[UUU]</code> API User ID</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[PPP]</code> API Password</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[RRR]</code> Token / Remark</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[MMM]</code> Mobile No</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[HHH]</code> Account (Bill)</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[NNN]</code> Acct Other</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[OOO]</code> Operator Code</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[CCC]</code> Circle Code</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[AAA]</code> Amount</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[TTT]</code> Ref Txn No</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[VVV]</code> Vendor Txn No</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[EEE]</code> Extra URL</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#dfd;border:1px solid #ffffff25;font-weight:500;"><code>[DDD]</code> Extra Data</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#dfd;border:1px solid #ffffff25;font-weight:500;"><code>[FFFT]</code> DateTime</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#dfd;border:1px solid #ffffff25;font-weight:500;"><code>[FFFR]</code> Random Key</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#dfd;border:1px solid #ffffff25;font-weight:500;"><code>[KKK]</code> Lapu No</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#dfd;border:1px solid #ffffff25;font-weight:500;"><code>[KKKP]</code> Lapu Pwd</span>
+                    <span class="badge rounded-pill" style="background:#ffffff18;color:#dfd;border:1px solid #ffffff25;font-weight:500;"><code>[COMM1]</code> Common Opt-1</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row g-0">
-    <!-- ===== LEFT: API Source Info ===== -->
-    <div class="col-md-3" style="background:#d9d9d9;padding:1.5rem;border-radius:6px 0 0 6px;">
-        <h6 class="fw-bold mb-3">API Source Info</h6>
+<!-- ===== MAIN CONTENT ROW ===== -->
+<div class="row g-4">
 
-        <div class="mb-3">
-            <label class="form-label fw-semibold small">API Name <span class="text-danger">*</span></label>
-            @Html.TextBoxFor(m => m.ApiName, new { @class = "form-control form-control-sm" })
-            @Html.ValidationMessageFor(m => m.ApiName, "", new { @class = "text-danger small" })
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-semibold small">API User ID <small class="text-muted">([UUU])</small></label>
-            @Html.TextBoxFor(m => m.ApiUserId, new { @class = "form-control form-control-sm" })
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-semibold small">API Password <small class="text-muted">([PPP])</small></label>
-            @Html.TextBoxFor(m => m.ApiPassword, new { @class = "form-control form-control-sm" })
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-semibold small">Remark <small class="text-muted">([RRR])</small></label>
-            @Html.TextBoxFor(m => m.Remark, new { @class = "form-control form-control-sm" })
-        </div>
-
-        <div class="mb-2">
-            <div class="form-check">
-                @Html.CheckBoxFor(m => m.IsAutoStatusCheck, new { @class = "form-check-input" })
-                <label class="form-check-label fw-semibold small" for="IsAutoStatusCheck">IsAutoStatusCheck</label>
+    <!-- ===== LEFT PANEL: API Source Info ===== -->
+    <div class="col-xl-3 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">
+            <!-- Card Header -->
+            <div class="card-header border-0 py-3 px-4" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width:38px;height:38px;background:rgba(255,255,255,.2);">
+                        <i class="fas fa-plug text-white"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 text-white fw-bold">API Source Info</h6>
+                        <small class="text-white-50">Connection credentials</small>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <div class="mb-3">
-            <label class="form-label fw-semibold small">Check Time (min)</label>
-            @Html.TextBoxFor(m => m.StatusCheckTime, new { @class = "form-control form-control-sm", type = "number", min = "0" })
-        </div>
+            <div class="card-body px-4 py-3">
+                <!-- API Name -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-tag text-primary me-1"></i>API Name <span class="text-danger">*</span>
+                    </label>
+                    @Html.TextBoxFor(m => m.ApiName, new { @class = "form-control form-control-sm", placeholder = "e.g. Airtel API" })
+                    @Html.ValidationMessageFor(m => m.ApiName, "", new { @class = "text-danger", style = "font-size:.78rem;" })
+                </div>
 
-        <div class="mb-3 form-check">
-            @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input" })
-            <label class="form-check-label fw-semibold small" for="IsActive">IsActive</label>
+                <!-- API User ID -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-user text-success me-1"></i>API User ID
+                        <span class="badge bg-light text-secondary border ms-1" style="font-size:.7rem;">[UUU]</span>
+                    </label>
+                    @Html.TextBoxFor(m => m.ApiUserId, new { @class = "form-control form-control-sm", placeholder = "API user ID" })
+                </div>
+
+                <!-- API Password -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-key text-warning me-1"></i>API Password
+                        <span class="badge bg-light text-secondary border ms-1" style="font-size:.7rem;">[PPP]</span>
+                    </label>
+                    <div class="input-group input-group-sm">
+                        @Html.PasswordFor(m => m.ApiPassword, new { @class = "form-control", placeholder = "API password", id = "apiPasswordField" })
+                        <button type="button" class="btn btn-outline-secondary" onclick="togglePwd()" title="Show/Hide">
+                            <i class="fas fa-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Remark -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-comment text-info me-1"></i>Remark
+                        <span class="badge bg-light text-secondary border ms-1" style="font-size:.7rem;">[RRR]</span>
+                    </label>
+                    @Html.TextBoxFor(m => m.Remark, new { @class = "form-control form-control-sm", placeholder = "Optional remark / token" })
+                </div>
+
+                <!-- Divider -->
+                <hr class="my-3" style="border-color:#eee;" />
+
+                <!-- Auto Status Check -->
+                <div class="mb-3">
+                    <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background:#f8f9fa;border:1px solid #e9ecef;">
+                        <div>
+                            <i class="fas fa-sync-alt text-primary me-1" style="font-size:.8rem;"></i>
+                            <span style="font-size:.82rem;font-weight:600;">Auto Status Check</span>
+                        </div>
+                        <div class="form-check form-switch mb-0">
+                            @Html.CheckBoxFor(m => m.IsAutoStatusCheck, new { @class = "form-check-input", style = "width:42px;height:22px;cursor:pointer;" })
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Check Time -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
+                        <i class="fas fa-clock text-secondary me-1"></i>Status Check Interval (min)
+                    </label>
+                    <div class="input-group input-group-sm">
+                        @Html.TextBoxFor(m => m.StatusCheckTime, new { @class = "form-control", type = "number", min = "0", placeholder = "0" })
+                        <span class="input-group-text text-muted" style="font-size:.78rem;">min</span>
+                    </div>
+                </div>
+
+                <!-- Is Active -->
+                <div class="mb-2">
+                    <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background:#f8f9fa;border:1px solid #e9ecef;">
+                        <div>
+                            <i class="fas fa-toggle-on text-success me-1" style="font-size:.8rem;"></i>
+                            <span style="font-size:.82rem;font-weight:600;">Active Status</span>
+                        </div>
+                        <div class="form-check form-switch mb-0">
+                            @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input", style = "width:42px;height:22px;cursor:pointer;" })
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- ===== RIGHT: API URLs ===== -->
-    <div class="col-md-9" style="padding:1.5rem;background:#fff;border:1px solid #dee2e6;border-radius:0 6px 6px 0;">
-        <h6 class="fw-bold mb-3">API URLs</h6>
-        <div class="table-responsive">
-            <table class="table table-bordered align-middle mb-0" style="font-size:0.85rem;">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width:30px">#</th>
-                        <th style="width:140px">URL</th>
-                        <th style="width:80px">Method</th>
-                        <th style="width:200px">Response Type</th>
-                        <th>Post Data</th>
-                    </tr>
-                </thead>
-                <tbody>
+    <!-- ===== RIGHT PANEL: API URLs ===== -->
+    <div class="col-xl-9 col-lg-8">
+        <div class="card border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">
+            <!-- Card Header -->
+            <div class="card-header border-0 py-3 px-4" style="background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width:38px;height:38px;background:rgba(255,255,255,.2);">
+                        <i class="fas fa-link text-white"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 text-white fw-bold">API Endpoint URLs</h6>
+                        <small class="text-white-50">Configure each endpoint method &amp; response format</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <!-- URL rows as accordion-style cards -->
+                <div class="p-3" id="urlAccordion">
                     @{ int idx = 0; }
                     @foreach (var u in Model.ApiUrls)
                     {
-                        <tr>
-                            <td class="text-center fw-bold">@(idx + 1)</td>
-                            <td>
-                                <input type="hidden" name="urlType" value="@u.UrlType" />
-                                <label class="form-label fw-semibold d-block mb-1" style="color:#555;">@u.UrlType</label>
-                                <textarea name="url" class="form-control form-control-sm" rows="3"
-                                          placeholder="e.g. https://api.com/rc?uid=[UUU]&pwd=[PPP]">@u.URL</textarea>
-                            </td>
-                            <td>
-                                <select name="method" class="form-select form-select-sm">
-                                    <option value="GET"  @(u.Method == "GET"  ? "selected" : "")>GET</option>
-                                    <option value="POST" @(u.Method == "POST" ? "selected" : "")>POST</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select name="responseType" class="form-select form-select-sm">
-                                    @foreach (var rt in responseTypeOptions)
+                        var icon  = urlIcons.ContainsKey(u.UrlType)  ? urlIcons[u.UrlType]  : "fa-link";
+                        var color = urlColors.ContainsKey(u.UrlType) ? urlColors[u.UrlType] : "#607D8B";
+                        var colId = "urlRow_" + idx;
+
+                        <div class="mb-2 border rounded-3 overflow-hidden" style="border-color:#e0e0e0!important;">
+                            <!-- Row Header (clickable) -->
+                            <div class="d-flex align-items-center px-3 py-2"
+                                 style="background:#fafafa;cursor:pointer;user-select:none;"
+                                 data-bs-toggle="collapse" data-bs-target="#@colId" aria-expanded="@(idx == 0 ? "true" : "false")">
+                                <span class="d-flex align-items-center justify-content-center me-3 rounded-circle"
+                                      style="width:32px;height:32px;background:@color;flex-shrink:0;">
+                                    <i class="fas @icon text-white" style="font-size:.75rem;"></i>
+                                </span>
+                                <div class="flex-grow-1">
+                                    <span class="fw-semibold text-dark" style="font-size:.85rem;">@u.UrlType</span>
+                                    @if (!string.IsNullOrEmpty(u.URL))
                                     {
-                                        <option value="@rt" @(u.ResType == rt ? "selected" : "")>@rt</option>
+                                        <div class="text-muted text-truncate" style="font-size:.72rem;max-width:500px;">@u.URL</div>
                                     }
-                                </select>
-                            </td>
-                            <td>
-                                <label class="form-label small text-muted d-block mb-1">Post Data</label>
-                                <textarea name="postParameter" class="form-control form-control-sm" rows="3"
-                                          placeholder="key1=val1&key2=val2">@u.PostData</textarea>
-                            </td>
-                        </tr>
+                                    else
+                                    {
+                                        <div class="text-muted" style="font-size:.72rem;font-style:italic;">Not configured</div>
+                                    }
+                                </div>
+                                <span class="badge ms-2"
+                                      style="background:@color20;color:@color;border:1px solid @(color)40;font-size:.7rem;">
+                                    @(string.IsNullOrEmpty(u.URL) ? "empty" : u.Method)
+                                </span>
+                                <i class="fas fa-chevron-down ms-3 text-muted" style="font-size:.7rem;transition:.2s;"></i>
+                            </div>
+
+                            <!-- Collapsible Body -->
+                            <div id="@colId" class="collapse @(idx == 0 ? "show" : "")">
+                                <input type="hidden" name="urlType" value="@u.UrlType" />
+                                <div class="p-3 border-top" style="background:#fff;">
+                                    <div class="row g-3">
+                                        <!-- URL field -->
+                                        <div class="col-12">
+                                            <label class="form-label fw-semibold text-dark mb-1" style="font-size:.8rem;">
+                                                <i class="fas fa-globe me-1" style="color:@color;"></i>Endpoint URL
+                                            </label>
+                                            <textarea name="url" class="form-control form-control-sm font-monospace" rows="2"
+                                                      placeholder="https://api.example.com/endpoint?uid=[UUU]&pwd=[PPP]&mob=[MMM]&op=[OOO]&amt=[AAA]&ref=[TTT]">@u.URL</textarea>
+                                        </div>
+                                        <!-- Method + Response Type -->
+                                        <div class="col-sm-4">
+                                            <label class="form-label fw-semibold text-dark mb-1" style="font-size:.8rem;">
+                                                <i class="fas fa-exchange-alt me-1 text-secondary"></i>HTTP Method
+                                            </label>
+                                            <select name="method" class="form-select form-select-sm">
+                                                <option value="GET"  @(u.Method == "GET"  ? "selected" : "")>GET</option>
+                                                <option value="POST" @(u.Method == "POST" ? "selected" : "")>POST</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <label class="form-label fw-semibold text-dark mb-1" style="font-size:.8rem;">
+                                                <i class="fas fa-file-code me-1 text-secondary"></i>Response Type
+                                            </label>
+                                            <select name="responseType" class="form-select form-select-sm">
+                                                @foreach (var rt in responseTypeOptions)
+                                                {
+                                                    <option value="@rt" @(u.ResType == rt ? "selected" : "")>@rt</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <!-- Post Data -->
+                                        <div class="col-12">
+                                            <label class="form-label fw-semibold text-dark mb-1" style="font-size:.8rem;">
+                                                <i class="fas fa-paper-plane me-1 text-secondary"></i>POST Body / Parameters
+                                                <small class="text-muted ms-1">(only for POST method)</small>
+                                            </label>
+                                            <textarea name="postParameter" class="form-control form-control-sm font-monospace" rows="2"
+                                                      placeholder="uid=[UUU]&pwd=[PPP]&mobile=[MMM]&amount=[AAA]">@u.PostData</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         idx++;
                     }
-                </tbody>
-            </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Toggle password visibility
+        function togglePwd() {
+            var f = document.getElementById('apiPasswordField');
+            var e = document.getElementById('eyeIcon');
+            if (f.type === 'password') {
+                f.type = 'text';
+                e.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                f.type = 'password';
+                e.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        // Rotate chevron on collapse
+        document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function (el) {
+            var target = el.getAttribute('data-bs-target');
+            var colEl = document.querySelector(target);
+            if (!colEl) return;
+            colEl.addEventListener('show.bs.collapse', function () {
+                el.querySelector('.fa-chevron-down').style.transform = 'rotate(180deg)';
+            });
+            colEl.addEventListener('hide.bs.collapse', function () {
+                el.querySelector('.fa-chevron-down').style.transform = 'rotate(0deg)';
+            });
+            // Set initial state
+            if (colEl.classList.contains('show')) {
+                el.querySelector('.fa-chevron-down').style.transform = 'rotate(180deg)';
+            }
+        });
+    </script>
+}

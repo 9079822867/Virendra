@@ -36,7 +36,7 @@ namespace VIRENDRA.Data
             using (var conn = new SqlConnection(_connectionString))
             {
                 var src = conn.QueryFirstOrDefault<ApiSource>(
-                    "SELECT Id, ApiName, ApiUserId, ApiPassword, Remark, IsActive, Balance, VBal, IsAutoStatusCheck, CheckTime, ApiTypeId, AddedDate FROM ApiSource WHERE Id = @Id",
+                    "SELECT Id, ApiName, ApiUserId, ApiPassword, Remark, IsActive, ApiBal, ActualBal, IsAutoStatusCheck, StatusCheckTime, ApiTypeId, AddedDate FROM ApiSource WHERE Id = @Id",
                     new { Id = id });
 
                 if (src != null)
@@ -51,10 +51,10 @@ namespace VIRENDRA.Data
             const string sql = @"
                 INSERT INTO ApiSource
                     (ApiName, ApiUserId, ApiPassword, Remark, IsActive,
-                     IsAutoStatusCheck, CheckTime, Balance, VBal, AddedDate)
+                     IsAutoStatusCheck, StatusCheckTime, ApiBal, ActualBal, AddedDate)
                 VALUES
                     (@ApiName, @ApiUserId, @ApiPassword, @Remark, @IsActive,
-                     @IsAutoStatusCheck, @CheckTime, 0, 0, GETDATE());
+                     @IsAutoStatusCheck, @StatusCheckTime, 0, 0, GETDATE());
                 SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
             using (var conn = new SqlConnection(_connectionString))
@@ -67,7 +67,7 @@ namespace VIRENDRA.Data
                 UPDATE ApiSource SET
                     ApiName=@ApiName, ApiUserId=@ApiUserId, ApiPassword=@ApiPassword,
                     Remark=@Remark, IsActive=@IsActive,
-                    IsAutoStatusCheck=@IsAutoStatusCheck, CheckTime=@CheckTime
+                    IsAutoStatusCheck=@IsAutoStatusCheck, StatusCheckTime=@StatusCheckTime
                 WHERE Id=@Id";
 
             using (var conn = new SqlConnection(_connectionString))

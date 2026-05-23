@@ -6,15 +6,35 @@
 }
 
 <div class="container-fluid">
-    <div class="page-title-box d-sm-flex align-items-center justify-content-between mb-3">
-        <h4 class="mb-sm-0 font-size-18">Edit API Source — <strong>@Model.ApiName</strong></h4>
-        <a href="@Url.Action("Index")" class="btn btn-light"><i class="fas fa-arrow-left me-1"></i>API Source List</a>
+
+    <!-- Page Title -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                    <h4 class="mb-1 fw-bold text-dark">
+                        <i class="fas fa-pencil-alt text-info me-2"></i>Edit API Source
+                        <span class="text-muted fw-normal ms-1">— @Model.ApiName</span>
+                    </h4>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0" style="font-size:.82rem;">
+                            <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="@Url.Action("Index")">API Sources</a></li>
+                            <li class="breadcrumb-item active">Edit</li>
+                        </ol>
+                    </nav>
+                </div>
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm px-3">
+                    <i class="fas fa-arrow-left me-1"></i>Back to List
+                </a>
+            </div>
+        </div>
     </div>
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible">
-            <i class="fas fa-check-circle me-1"></i> @TempData["SuccessMessage"]
+        <div class="alert alert-success alert-dismissible mb-3" style="border-radius:10px;">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
@@ -23,15 +43,39 @@
     {
         @Html.AntiForgeryToken()
         @Html.HiddenFor(m => m.Id)
-        @Html.ValidationSummary(true, "", new { @class = "text-danger mb-3" })
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger alert-dismissible mb-3" style="border-radius:10px;">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Please fix the errors below before saving.</strong>
+                @Html.ValidationSummary(true, "", new { @class = "mb-0 mt-1" })
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
 
         @Html.Partial("_VendorForm", Model)
 
-        <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top">
-            <a href="@Url.Action("Index")" class="btn btn-light px-4">Cancel</a>
-            <button type="submit" class="btn btn-success px-4">
-                <i class="fas fa-save me-1"></i> Update API Source
-            </button>
+        <!-- Action Buttons -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm" style="border-radius:10px;">
+                    <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="text-muted small">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Editing <strong>@Model.ApiName</strong> — ID #@Model.Id
+                        </span>
+                        <div class="d-flex gap-2">
+                            <a href="@Url.Action("Index")" class="btn btn-outline-secondary px-4">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-info text-white px-4 fw-semibold">
+                                <i class="fas fa-save me-1"></i>Update API Source
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     }
 </div>
