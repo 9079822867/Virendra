@@ -18,6 +18,32 @@ namespace VIRENDRA.Data
                 ?? throw new ConfigurationErrorsException("sqlconn connection string is missing in Web.config");
         }
 
+        public List<RechargeHistoryItem> GetRecentRecharges(int top = 10)
+        {
+            const string sql = @"
+                SELECT TOP (@Top)
+                    r.UserTxnId   AS TxnId,
+                    r.OurRefTxnId,
+                    r.ApiTxnId,
+                    r.CustomerNo  AS Number,
+                    ISNULL(o.Name, '-') AS Operator,
+                    r.Amount,
+                    ISNULL(r.Recharge_Commision, 0) AS Commission,
+                    CASE r.StatusId
+                        WHEN 2 THEN 'Success'
+                        WHEN 3 THEN 'Failed'
+                        ELSE 'Pending'
+                    END AS Status,
+                    r.StatusMsg,
+                    r.RequestTime AS Date
+                FROM Recharge r
+                LEFT JOIN [Operator] o ON o.Id = r.OpId
+                ORDER BY r.RequestTime DESC";
+
+            using (var conn = new SqlConnection(_connectionString))
+                return conn.Query<RechargeHistoryItem>(sql, new { Top = top }).ToList();
+        }
+
         public List<RechargeHistoryItem> GetRechargeHistory(
             int? userId, DateTime fromDate, DateTime toDate, string status, string searchText)
         {
@@ -25,11 +51,14 @@ namespace VIRENDRA.Data
                 SELECT
                     ROW_NUMBER() OVER (ORDER BY r.RequestTime DESC) AS SrNo,
                     r.UserTxnId  AS TxnId,
+                    r.OurRefTxnId,
+                    r.ApiTxnId,
                     r.CustomerNo AS Number,
                     ISNULL(o.Name, '-') AS Operator,
                     r.Amount,
                     ISNULL(r.Recharge_Commision, 0) AS Commission,
                     CASE r.StatusId WHEN 2 THEN 'Success' WHEN 3 THEN 'Failed' ELSE 'Pending' END AS Status,
+                    r.StatusMsg,
                     r.RequestTime AS Date
                 FROM Recharge r
                 LEFT JOIN [Operator] o ON o.Id = r.OpId

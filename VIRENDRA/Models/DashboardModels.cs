@@ -100,12 +100,15 @@ namespace VIRENDRA.Models
     public class RechargeHistoryItem
     {
         public int SrNo { get; set; }
-        public string TxnId { get; set; }
-        public string Number { get; set; }
+        public string TxnId { get; set; }         // UserTxnId
+        public string OurRefTxnId { get; set; }   // Internal reference ID
+        public string ApiTxnId { get; set; }       // API-side transaction ID
+        public string Number { get; set; }         // CustomerNo
         public string Operator { get; set; }
         public decimal Amount { get; set; }
         public decimal Commission { get; set; }
-        public string Status { get; set; }
+        public string Status { get; set; }         // Success | Failed | Pending
+        public string StatusMsg { get; set; }      // Raw message from API
         public DateTime Date { get; set; }
     }
 

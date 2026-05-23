@@ -60,6 +60,9 @@ namespace VIRENDRA.App_Start
             System.Web.Routing.RequestContext requestContext,
             System.Type controllerType)
         {
+            if (controllerType == typeof(HomeController))
+                return new HomeController(_txnRepo);
+
             if (controllerType == typeof(AuthController))
                 return new AuthController(_userRepo);
 

@@ -6,6 +6,8 @@ namespace VIRENDRA.Data
 {
     public interface ITransactionRepository
     {
+        List<RechargeHistoryItem> GetRecentRecharges(int top = 10);
+
         List<RechargeHistoryItem> GetRechargeHistory(
             int? userId, DateTime fromDate, DateTime toDate, string status, string searchText);
 

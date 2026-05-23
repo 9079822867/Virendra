@@ -249,128 +249,146 @@
                 </div>
             </div>
 
-            <!-- Tab 3: Transactions Table -->
+            <!-- Tab 3: Recent Transactions (live from Recharge table) -->
             <div id="transactions-tab" class="tab-pane fade" role="tabpanel">
-                <div class="card mt-3">
-                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Recent Transactions</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th class="text-center">Status</th>
-                                        <th>Transaction ID</th>
-                                        <th>Reference ID</th>
-                                        <th>Result</th>
-                                        <th>Name</th>
-                                        <th>Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Transaction Row 1 - Success -->
-                                    <tr>
-                                        <td class="text-center">
-                                            <i class="fa fa-check-circle text-success fa-lg"></i>
-                                        </td>
-                                        <td>9142687433</td>
-                                        <td>BR000DL9W5L6</td>
-                                        <td><span class="badge bg-success">SUCCESS</span></td>
-                                        <td>
-                                            <div>Reliance Jio</div>
-                                            <small class="text-muted">NE2605221943TEPB2G</small>
-                                        </td>
-                                        <td>349.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-center" colspan="6">
-                                            <small class="text-muted">22-05-2026 | 07:43:27 PM</small>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Transaction Row 2 - Success -->
-                                    <tr>
-                                        <td class="text-center">
-                                            <i class="fa fa-check-circle text-success fa-lg"></i>
-                                        </td>
-                                        <td>6386970345</td>
-                                        <td>8359839541</td>
-                                        <td><span class="badge bg-success">SUCCESS</span></td>
-                                        <td>
-                                            <div>Reliance Jio</div>
-                                            <small class="text-muted">NE26052219430QZTDM</small>
-                                        </td>
-                                        <td>299.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-center" colspan="6">
-                                            <small class="text-muted">22-05-2026 | 07:43:04 PM</small>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Transaction Row 3 - Success -->
-                                    <tr>
-                                        <td class="text-center">
-                                            <i class="fa fa-check-circle text-success fa-lg"></i>
-                                        </td>
-                                        <td>9649095619</td>
-                                        <td>RJH2605221933450280</td>
-                                        <td><span class="badge bg-success">SUCCESS</span></td>
-                                        <td>
-                                            <div>VI - Vodafone & Idea</div>
-                                            <small class="text-muted">NE26052219351PW6MB</small>
-                                        </td>
-                                        <td>199.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-center" colspan="6">
-                                            <small class="text-muted">22-05-2026 | 07:43:51 PM</small>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Transaction Row 4 - Failure -->
-                                    <tr>
-                                        <td class="text-center">
-                                            <i class="fa fa-times-circle text-danger fa-lg"></i>
-                                        </td>
-                                        <td>8808940074</td>
-                                        <td>[]</td>
-                                        <td><span class="badge bg-danger">FAILURE</span></td>
-                                        <td>
-                                            <div>Reliance Jio</div>
-                                            <small class="text-muted">NE2605221926E8FCYGT</small>
-                                        </td>
-                                        <td>26.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-center" colspan="6">
-                                            <small class="text-muted">22-05-2026 | 07:26:58 PM</small>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Transaction Row 5 - Success -->
-                                    <tr>
-                                        <td class="text-center">
-                                            <i class="fa fa-check-circle text-success fa-lg"></i>
-                                        </td>
-                                        <td>8318514642</td>
-                                        <td>2605221908962261711</td>
-                                        <td><span class="badge bg-success">SUCCESS</span></td>
-                                        <td>
-                                            <div>Reliance Jio</div>
-                                            <small class="text-muted">NE2605221908OQPZK0D</small>
-                                        </td>
-                                        <td>299.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-center" colspan="6">
-                                            <small class="text-muted">22-05-2026 | 07:08:00 PM</small>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                @{
+                    var recentList = ViewBag.RecentRecharges as List<VIRENDRA.Models.RechargeHistoryItem>
+                                     ?? new List<VIRENDRA.Models.RechargeHistoryItem>();
+                }
+                <div class="card border-0 shadow-sm mt-3" style="border-radius:12px;overflow:hidden;">
+                    <!-- Card Header -->
+                    <div class="card-header border-0 py-3 px-4"
+                         style="background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                                     style="width:36px;height:36px;background:rgba(255,255,255,.2);">
+                                    <i class="fas fa-bolt text-white" style="font-size:.85rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 text-white fw-bold">Recent Recharge Transactions</h6>
+                                    <small class="text-white-50">Latest 10 records from the Recharge table</small>
+                                </div>
+                            </div>
+                            <a href="@Url.Action("Index", "Transaction")" class="btn btn-sm btn-light fw-semibold">
+                                <i class="fas fa-list me-1"></i>View All
+                            </a>
                         </div>
+                    </div>
+
+                    <div class="card-body p-0">
+                        @if (!recentList.Any())
+                        {
+                            <div class="text-center py-5 text-muted">
+                                <i class="fas fa-inbox fa-3x mb-3 d-block" style="opacity:.3;"></i>
+                                <p class="mb-0">No recharge transactions found.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" style="font-size:.86rem;">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-4 text-center" style="width:50px;">#</th>
+                                            <th class="text-center" style="width:46px;">Status</th>
+                                            <th>Txn / Mobile</th>
+                                            <th>Reference</th>
+                                            <th>Operator</th>
+                                            <th class="text-end">Amount (₹)</th>
+                                            <th class="text-end">Comm (₹)</th>
+                                            <th>Date &amp; Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{ int sno = 1; }
+                                        @foreach (var r in recentList)
+                                        {
+                                            // Status styling
+                                            string statusColor, statusIcon, badgeClass;
+                                            switch (r.Status)
+                                            {
+                                                case "Success":
+                                                    statusColor = "#4CAF50"; statusIcon = "fa-check-circle"; badgeClass = "bg-success";
+                                                    break;
+                                                case "Failed":
+                                                    statusColor = "#F44336"; statusIcon = "fa-times-circle"; badgeClass = "bg-danger";
+                                                    break;
+                                                default:
+                                                    statusColor = "#FF9800"; statusIcon = "fa-clock"; badgeClass = "bg-warning text-dark";
+                                                    break;
+                                            }
+
+                                            <tr>
+                                                <td class="ps-4 text-center text-muted fw-semibold">@sno</td>
+                                                <td class="text-center">
+                                                    <i class="fas @statusIcon fa-lg" style="color:@statusColor;" title="@r.Status @r.StatusMsg"></i>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-semibold text-dark">@(r.TxnId ?? "—")</div>
+                                                    <small class="text-muted">@r.Number</small>
+                                                </td>
+                                                <td>
+                                                    @if (!string.IsNullOrEmpty(r.OurRefTxnId))
+                                                    {
+                                                        <code class="text-dark" style="font-size:.78rem;">@r.OurRefTxnId</code>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">—</span>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(r.ApiTxnId))
+                                                    {
+                                                        <div><small class="text-muted" style="font-size:.72rem;">@r.ApiTxnId</small></div>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                                             style="width:28px;height:28px;background:#667eea15;flex-shrink:0;">
+                                                            <i class="fas fa-bolt" style="color:#667eea;font-size:.65rem;"></i>
+                                                        </div>
+                                                        <span>@r.Operator</span>
+                                                    </div>
+                                                </td>
+                                                <td class="text-end fw-semibold text-dark">
+                                                    ₹@r.Amount.ToString("0.00")
+                                                </td>
+                                                <td class="text-end">
+                                                    @if (r.Commission > 0)
+                                                    {
+                                                        <span class="text-success fw-semibold">₹@r.Commission.ToString("0.##")</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">—</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <div style="white-space:nowrap;">@r.Date.ToString("dd-MMM-yyyy")</div>
+                                                    <small class="text-muted">@r.Date.ToString("hh:mm:ss tt")</small>
+                                                </td>
+                                            </tr>
+                                            sno++;
+                                        }
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td colspan="5" class="ps-4 fw-semibold text-muted" style="font-size:.8rem;">
+                                                Showing @recentList.Count record(s)
+                                            </td>
+                                            <td class="text-end fw-bold text-dark">
+                                                ₹@recentList.Sum(x => x.Amount).ToString("0.00")
+                                            </td>
+                                            <td class="text-end fw-bold text-success">
+                                                ₹@recentList.Sum(x => x.Commission).ToString("0.##")
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
