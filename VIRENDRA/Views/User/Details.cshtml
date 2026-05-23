@@ -25,7 +25,7 @@
                     <tbody>
                         <tr><th style="width:220px">Id</th><td>@Model.Id</td></tr>
                         <tr><th>Username</th><td>@Model.Username</td></tr>
-                        <tr><th>Role</th><td>@Model.RoleId</td></tr>
+                        <tr><th>Role</th><td><span class="badge bg-primary">@(Model.RoleName ?? "-")</span></td></tr>
                         <tr><th>Status</th><td>@(Model.IsActive ? "Active" : "Inactive")</td></tr>
                         <tr><th>Locked</th><td>@(Model.IsLocked ? "Yes" : "No")</td></tr>
                         <tr><th>User Balance</th><td>@((Model.UserBal ?? 0).ToString("0.0000"))</td></tr>

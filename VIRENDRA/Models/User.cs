@@ -8,6 +8,7 @@ namespace VIRENDRA.Models
         public string Username { get; set; }
         public string Password { get; set; }
         public byte? RoleId { get; set; }
+        public string RoleName { get; set; }
         public string TokenAPI { get; set; }
         public bool IsActive { get; set; }
         public bool IsLocked { get; set; }

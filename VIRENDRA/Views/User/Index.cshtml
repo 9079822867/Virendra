@@ -46,7 +46,9 @@
                             <tr>
                                 <td>@item.Id</td>
                                 <td>@item.Username</td>
-                                <td>@item.RoleId</td>
+                                <td>
+                                    <span class="badge bg-primary">@(item.RoleName ?? "-")</span>
+                                </td>
                                 <td>@((item.UserBal ?? 0).ToString("0.0000"))</td>
                                 <td>
                                     <span class="badge @(item.IsActive ? "bg-success" : "bg-secondary")">

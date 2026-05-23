@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -11,6 +12,12 @@ namespace VIRENDRA.Data
     public class UserRepository : IUserRepository
     {
         private readonly string _connectionString;
+
+        public UserRepository()
+        {
+            _connectionString = ConfigurationManager.ConnectionStrings["sqlconn"]?.ConnectionString
+                ?? throw new ConfigurationErrorsException("sqlconn connection string is missing in Web.config");
+        }
 
         public UserRepository(string connectionString)
         {
@@ -33,14 +40,18 @@ namespace VIRENDRA.Data
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
                 db.Open();
-                string query = @"SELECT Id, Username, Password, RoleId, TokenAPI, IsActive, IsLocked, 
-                                IsDeleted, RetryCount, OTP, PassCode, LoginIP, AddedDate, UpdatedDate, 
-                                AddedById, UpdatedById, CallbackURL, ResetCode, PackageId, HKey, HPass, 
-                                UserBal, ParentID, UserPin, AppToken, Firebasetoken, ComplainCallbackURL, 
-                                UserOutStandingBal, IsComm, IsOtpCheck, IsJioActiveHigh 
-                                FROM [User]
-                                WHERE IsDeleted = 0
-                                ORDER BY Id DESC";
+                string query = @"
+                    SELECT u.Id, u.Username, u.Password, u.RoleId, r.RoleName,
+                           u.TokenAPI, u.IsActive, u.IsLocked, u.IsDeleted, u.RetryCount,
+                           u.OTP, u.PassCode, u.LoginIP, u.AddedDate, u.UpdatedDate,
+                           u.AddedById, u.UpdatedById, u.CallbackURL, u.ResetCode,
+                           u.PackageId, u.HKey, u.HPass, u.UserBal, u.ParentID,
+                           u.UserPin, u.AppToken, u.Firebasetoken, u.ComplainCallbackURL,
+                           u.UserOutStandingBal, u.IsComm, u.IsOtpCheck, u.IsJioActiveHigh
+                    FROM [User] u
+                    LEFT JOIN [Role] r ON r.Id = u.RoleId
+                    WHERE u.IsDeleted = 0
+                    ORDER BY u.Id DESC";
                 return db.Query<User>(query).ToList();
             }
         }
@@ -50,12 +61,17 @@ namespace VIRENDRA.Data
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
                 db.Open();
-                string query = @"SELECT Id, Username, Password, RoleId, TokenAPI, IsActive, IsLocked, 
-                                IsDeleted, RetryCount, OTP, PassCode, LoginIP, AddedDate, UpdatedDate, 
-                                AddedById, UpdatedById, CallbackURL, ResetCode, PackageId, HKey, HPass, 
-                                UserBal, ParentID, UserPin, AppToken, Firebasetoken, ComplainCallbackURL, 
-                                UserOutStandingBal, IsComm, IsOtpCheck, IsJioActiveHigh 
-                                FROM [User] WHERE Username = @Username";
+                string query = @"
+                    SELECT u.Id, u.Username, u.Password, u.RoleId, r.RoleName,
+                           u.TokenAPI, u.IsActive, u.IsLocked, u.IsDeleted, u.RetryCount,
+                           u.OTP, u.PassCode, u.LoginIP, u.AddedDate, u.UpdatedDate,
+                           u.AddedById, u.UpdatedById, u.CallbackURL, u.ResetCode,
+                           u.PackageId, u.HKey, u.HPass, u.UserBal, u.ParentID,
+                           u.UserPin, u.AppToken, u.Firebasetoken, u.ComplainCallbackURL,
+                           u.UserOutStandingBal, u.IsComm, u.IsOtpCheck, u.IsJioActiveHigh
+                    FROM [User] u
+                    LEFT JOIN [Role] r ON r.Id = u.RoleId
+                    WHERE u.Username = @Username";
                 return db.QueryFirstOrDefault<User>(query, new { Username = username });
             }
         }
@@ -65,12 +81,17 @@ namespace VIRENDRA.Data
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
                 db.Open();
-                string query = @"SELECT Id, Username, Password, RoleId, TokenAPI, IsActive, IsLocked, 
-                                IsDeleted, RetryCount, OTP, PassCode, LoginIP, AddedDate, UpdatedDate, 
-                                AddedById, UpdatedById, CallbackURL, ResetCode, PackageId, HKey, HPass, 
-                                UserBal, ParentID, UserPin, AppToken, Firebasetoken, ComplainCallbackURL, 
-                                UserOutStandingBal, IsComm, IsOtpCheck, IsJioActiveHigh 
-                                FROM [User] WHERE Id = @Id";
+                string query = @"
+                    SELECT u.Id, u.Username, u.Password, u.RoleId, r.RoleName,
+                           u.TokenAPI, u.IsActive, u.IsLocked, u.IsDeleted, u.RetryCount,
+                           u.OTP, u.PassCode, u.LoginIP, u.AddedDate, u.UpdatedDate,
+                           u.AddedById, u.UpdatedById, u.CallbackURL, u.ResetCode,
+                           u.PackageId, u.HKey, u.HPass, u.UserBal, u.ParentID,
+                           u.UserPin, u.AppToken, u.Firebasetoken, u.ComplainCallbackURL,
+                           u.UserOutStandingBal, u.IsComm, u.IsOtpCheck, u.IsJioActiveHigh
+                    FROM [User] u
+                    LEFT JOIN [Role] r ON r.Id = u.RoleId
+                    WHERE u.Id = @Id";
                 return db.QueryFirstOrDefault<User>(query, new { Id = id });
             }
         }
@@ -81,17 +102,17 @@ namespace VIRENDRA.Data
             {
                 db.Open();
                 string query = @"INSERT INTO [User] (
-                                    Username, Password, RoleId, TokenAPI, IsActive, IsLocked, 
-                                    IsDeleted, RetryCount, OTP, PassCode, LoginIP, AddedDate, 
-                                    AddedById, CallbackURL, ResetCode, PackageId, UserBal, ParentID, 
-                                    UserPin, AppToken, Firebasetoken, ComplainCallbackURL, 
+                                    Username, Password, RoleId, TokenAPI, IsActive, IsLocked,
+                                    IsDeleted, RetryCount, OTP, PassCode, LoginIP, AddedDate,
+                                    AddedById, CallbackURL, ResetCode, PackageId, UserBal, ParentID,
+                                    UserPin, AppToken, Firebasetoken, ComplainCallbackURL,
                                     UserOutStandingBal, IsComm, IsOtpCheck, IsJioActiveHigh
-                                ) 
+                                )
                                 VALUES (
-                                    @Username, @Password, @RoleId, @TokenAPI, @IsActive, @IsLocked, 
-                                    @IsDeleted, @RetryCount, @OTP, @PassCode, @LoginIP, @AddedDate, 
-                                    @AddedById, @CallbackURL, @ResetCode, @PackageId, @UserBal, @ParentID, 
-                                    @UserPin, @AppToken, @Firebasetoken, @ComplainCallbackURL, 
+                                    @Username, @Password, @RoleId, @TokenAPI, @IsActive, @IsLocked,
+                                    @IsDeleted, @RetryCount, @OTP, @PassCode, @LoginIP, @AddedDate,
+                                    @AddedById, @CallbackURL, @ResetCode, @PackageId, @UserBal, @ParentID,
+                                    @UserPin, @AppToken, @Firebasetoken, @ComplainCallbackURL,
                                     @UserOutStandingBal, @IsComm, @IsOtpCheck, @IsJioActiveHigh
                                 )";
                 db.Execute(query, user);
@@ -103,15 +124,15 @@ namespace VIRENDRA.Data
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
                 db.Open();
-                string query = @"UPDATE [User] 
-                                SET Username = @Username, Password = @Password, RoleId = @RoleId, 
-                                    TokenAPI = @TokenAPI, IsActive = @IsActive, IsLocked = @IsLocked, 
-                                    IsDeleted = @IsDeleted, RetryCount = @RetryCount, OTP = @OTP, 
-                                    PassCode = @PassCode, LoginIP = @LoginIP, UpdatedDate = @UpdatedDate, 
-                                    UpdatedById = @UpdatedById, CallbackURL = @CallbackURL, ResetCode = @ResetCode, 
-                                    PackageId = @PackageId, UserBal = @UserBal, UserPin = @UserPin, 
-                                    AppToken = @AppToken, Firebasetoken = @Firebasetoken, 
-                                    ComplainCallbackURL = @ComplainCallbackURL, UserOutStandingBal = @UserOutStandingBal, 
+                string query = @"UPDATE [User]
+                                SET Username = @Username, Password = @Password, RoleId = @RoleId,
+                                    TokenAPI = @TokenAPI, IsActive = @IsActive, IsLocked = @IsLocked,
+                                    IsDeleted = @IsDeleted, RetryCount = @RetryCount, OTP = @OTP,
+                                    PassCode = @PassCode, LoginIP = @LoginIP, UpdatedDate = @UpdatedDate,
+                                    UpdatedById = @UpdatedById, CallbackURL = @CallbackURL, ResetCode = @ResetCode,
+                                    PackageId = @PackageId, UserBal = @UserBal, UserPin = @UserPin,
+                                    AppToken = @AppToken, Firebasetoken = @Firebasetoken,
+                                    ComplainCallbackURL = @ComplainCallbackURL, UserOutStandingBal = @UserOutStandingBal,
                                     IsComm = @IsComm, IsOtpCheck = @IsOtpCheck, IsJioActiveHigh = @IsJioActiveHigh
                                 WHERE Id = @Id";
                 db.Execute(query, user);
@@ -123,8 +144,7 @@ namespace VIRENDRA.Data
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
                 db.Open();
-                string query = "UPDATE [User] SET IsDeleted = 1 WHERE Id = @Id";
-                db.Execute(query, new { Id = id });
+                db.Execute("UPDATE [User] SET IsDeleted = 1 WHERE Id = @Id", new { Id = id });
             }
         }
 
@@ -133,8 +153,8 @@ namespace VIRENDRA.Data
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
                 db.Open();
-                string query = "UPDATE [User] SET LoginIP = @LoginIP WHERE Id = @UserId";
-                db.Execute(query, new { LoginIP = ipAddress, UserId = userId });
+                db.Execute("UPDATE [User] SET LoginIP = @LoginIP WHERE Id = @UserId",
+                    new { LoginIP = ipAddress, UserId = userId });
             }
         }
 
@@ -143,15 +163,11 @@ namespace VIRENDRA.Data
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
                 db.Open();
-                string query = @"
-                    UPDATE [User]
-                    SET LoginIP = @LoginIP,
-                        CallbackURL = @CallbackURL,
-                        TokenAPI = @TokenAPI,
-                        UpdatedDate = @UpdatedDate,
+                string query = @"UPDATE [User]
+                    SET LoginIP = @LoginIP, CallbackURL = @CallbackURL,
+                        TokenAPI = @TokenAPI, UpdatedDate = @UpdatedDate,
                         UpdatedById = @UserId
                     WHERE Id = @UserId";
-
                 db.Execute(query, new
                 {
                     LoginIP = ipAddress,
@@ -168,8 +184,8 @@ namespace VIRENDRA.Data
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
                 db.Open();
-                string query = "UPDATE [User] SET RetryCount = @RetryCount WHERE Id = @UserId";
-                db.Execute(query, new { RetryCount = retryCount, UserId = userId });
+                db.Execute("UPDATE [User] SET RetryCount = @RetryCount WHERE Id = @UserId",
+                    new { RetryCount = retryCount, UserId = userId });
             }
         }
     }
