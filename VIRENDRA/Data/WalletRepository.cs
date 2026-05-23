@@ -136,22 +136,103 @@ namespace VIRENDRA.Data
             return (success, error, log);
         }
 
-        public List<WalletRequest> GetTransactions(int? userId = null)
+        public List<WalletRequest> GetTransactions(int? userId = null, int? statusId = null)
         {
             const string sql = @"
                 SELECT w.Id, w.UserId, w.Amount, w.TxnTypeId, w.AmtTypeId, w.StatusId,
                        w.Chequeno, w.PaymentRemark, w.Comment, w.TrTypeId,
                        w.BankAccountId, w.PaymentDate, w.AddedDate, w.AddedById,
+                       w.UpdatedDate, w.UpdatedById,
                        u.Username AS UserName,
                        b.HolderName AS BankAccountName
                 FROM WalletRequest w
                 LEFT JOIN [User] u ON u.Id = w.UserId
                 LEFT JOIN BankAccount b ON b.Id = w.BankAccountId
-                WHERE (@UserId IS NULL OR w.UserId = @UserId)
+                WHERE (@UserId   IS NULL OR w.UserId   = @UserId)
+                  AND (@StatusId IS NULL OR w.StatusId = @StatusId)
                 ORDER BY w.AddedDate DESC";
 
             using (var conn = new SqlConnection(_connectionString))
-                return conn.Query<WalletRequest>(sql, new { UserId = userId }).ToList();
+                return conn.Query<WalletRequest>(sql, new { UserId = userId, StatusId = statusId }).ToList();
+        }
+
+        public WalletRequest GetWalletRequestById(int id)
+        {
+            const string sql = @"
+                SELECT w.Id, w.UserId, w.Amount, w.TxnTypeId, w.AmtTypeId, w.StatusId,
+                       w.Chequeno, w.PaymentRemark, w.Comment, w.TrTypeId,
+                       w.BankAccountId, w.PaymentDate, w.AddedDate, w.AddedById,
+                       w.UpdatedDate, w.UpdatedById,
+                       u.Username AS UserName,
+                       b.HolderName AS BankAccountName
+                FROM WalletRequest w
+                LEFT JOIN [User] u ON u.Id = w.UserId
+                LEFT JOIN BankAccount b ON b.Id = w.BankAccountId
+                WHERE w.Id = @Id";
+
+            using (var conn = new SqlConnection(_connectionString))
+                return conn.QueryFirstOrDefault<WalletRequest>(sql, new { Id = id });
+        }
+
+        public void UpdateWalletRequest(WalletRequest req)
+        {
+            const string sql = @"
+                UPDATE WalletRequest SET
+                    UserId        = @UserId,
+                    Amount        = @Amount,
+                    BankAccountId = @BankAccountId,
+                    Chequeno      = @Chequeno,
+                    PaymentRemark = @PaymentRemark,
+                    Comment       = @Comment,
+                    PaymentDate   = @PaymentDate,
+                    TrTypeId      = CASE @TransferType
+                                        WHEN 'IMPS'   THEN 1
+                                        WHEN 'NEFT'   THEN 2
+                                        WHEN 'RTGS'   THEN 3
+                                        WHEN 'UPI'    THEN 4
+                                        WHEN 'Cash'   THEN 5
+                                        WHEN 'Cheque' THEN 6
+                                        ELSE TrTypeId END,
+                    AmtTypeId     = CASE WHEN @WalletType = 'BillPayment' THEN 2 ELSE 1 END,
+                    TxnTypeId     = CASE WHEN @IsCredit = 1 THEN 1
+                                         WHEN @IsDebit  = 1 THEN 2
+                                         ELSE TxnTypeId END,
+                    UpdatedDate   = GETDATE(),
+                    UpdatedById   = @UpdatedById
+                WHERE Id = @Id";
+
+            using (var conn = new SqlConnection(_connectionString))
+                conn.Execute(sql, new
+                {
+                    req.Id,
+                    req.UserId,
+                    req.Amount,
+                    req.BankAccountId,
+                    req.Chequeno,
+                    req.PaymentRemark,
+                    req.Comment,
+                    req.PaymentDate,
+                    req.TransferType,
+                    req.WalletType,
+                    req.IsCredit,
+                    req.IsDebit,
+                    req.UpdatedById
+                });
+        }
+
+        public void DeleteWalletRequest(int id)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+                conn.Execute("DELETE FROM WalletRequest WHERE Id = @Id", new { Id = id });
+        }
+
+        public void UpdateRequestStatus(int id, int statusId, int updatedById)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+                conn.Execute(@"UPDATE WalletRequest
+                               SET StatusId = @StatusId, UpdatedDate = GETDATE(), UpdatedById = @UpdatedById
+                               WHERE Id = @Id",
+                    new { Id = id, StatusId = statusId, UpdatedById = updatedById });
         }
     }
 }

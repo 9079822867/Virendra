@@ -50,6 +50,37 @@ namespace VIRENDRA.Models
         [Required]
         public string TransferType { get; set; } = "IMPS";   // IMPS|NEFT|RTGS|UPI|Cash|Cheque
 
+        // ── Display helpers (computed, not DB columns) ──
+        public string StatusName
+        {
+            get
+            {
+                switch (StatusId)
+                {
+                    case 2:  return "Approved";
+                    case 3:  return "Rejected";
+                    default: return "Pending";
+                }
+            }
+        }
+
+        public string TrTypeName
+        {
+            get
+            {
+                switch (TrTypeId)
+                {
+                    case 1:  return "IMPS";
+                    case 2:  return "NEFT";
+                    case 3:  return "RTGS";
+                    case 4:  return "UPI";
+                    case 5:  return "Cash";
+                    case 6:  return "Cheque";
+                    default: return "—";
+                }
+            }
+        }
+
         // Convenience aliases that delegate to the real columns
         [Required]
         public string ChequeRefNo

@@ -13,8 +13,12 @@ namespace VIRENDRA.Data
         void DeleteBankAccount(int id);
         void ToggleBlockUser(int id, bool blockUser);
 
-        // Wallet transactions
+        // Wallet / Payment Request CRUD
         (bool Success, string Error, string Log) AddMoney(WalletRequest req);
-        List<WalletRequest> GetTransactions(int? userId = null);
+        List<WalletRequest> GetTransactions(int? userId = null, int? statusId = null);
+        WalletRequest GetWalletRequestById(int id);
+        void UpdateWalletRequest(WalletRequest req);
+        void DeleteWalletRequest(int id);
+        void UpdateRequestStatus(int id, int statusId, int updatedById);
     }
 }

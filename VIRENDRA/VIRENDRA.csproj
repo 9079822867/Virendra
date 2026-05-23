@@ -346,6 +346,8 @@
     <Content Include="Views\Vendor\Index.cshtml" />
     <Content Include="Views\Vendor\_VendorForm.cshtml" />
     <Content Include="Views\Wallet\AddMoney.cshtml" />
+    <Content Include="Views\Wallet\Edit.cshtml" />
+    <Content Include="Views\Wallet\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

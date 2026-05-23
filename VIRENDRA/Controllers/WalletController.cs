@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Web.Mvc;
 using VIRENDRA.Data;
 using VIRENDRA.Infrastructure;
@@ -18,12 +19,16 @@ namespace VIRENDRA.Controllers
             _userRepo   = userRepo;
         }
 
-        private void PopulateDropdowns(int? selectedUserId = null, int? selectedBankId = null)
+        // ─── Shared helpers ────────────────────────────────────────────────────
+
+        private void PopulateDropdowns(int? selectedUserId = null,
+                                       int? selectedBankId = null,
+                                       string selectedTransferType = "IMPS",
+                                       string selectedWalletType   = "Main")
         {
             ViewBag.UserList = new SelectList(
                 _userRepo.GetAllUsers(), "Id", "Username", selectedUserId);
 
-            // BankAccount now uses HolderName as the display field
             ViewBag.BankAccountList = new SelectList(
                 _walletRepo.GetAllBankAccounts(), "Id", "HolderName", selectedBankId);
 
@@ -35,8 +40,33 @@ namespace VIRENDRA.Controllers
                 new { Value = "UPI",    Text = "UPI"    },
                 new { Value = "Cash",   Text = "Cash"   },
                 new { Value = "Cheque", Text = "Cheque" },
-            }, "Value", "Text");
+            }, "Value", "Text", selectedTransferType);
+
+            ViewBag.WalletTypeList = new SelectList(new[]
+            {
+                new { Value = "Main",        Text = "Main Wallet"       },
+                new { Value = "BillPayment", Text = "Bill Payment Wallet"},
+            }, "Value", "Text", selectedWalletType);
         }
+
+        // ─── Payment Request Index ──────────────────────────────────────────────
+
+        [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
+        public ActionResult Index(int? statusId = null)
+        {
+            var list = _walletRepo.GetTransactions(statusId: statusId);
+
+            ViewBag.StatusId     = statusId;
+            ViewBag.TotalCount   = list.Count;
+            ViewBag.PendingCount = list.Count(w => w.StatusId == 1 || w.StatusId == null);
+            ViewBag.ApprovedCount= list.Count(w => w.StatusId == 2);
+            ViewBag.RejectedCount= list.Count(w => w.StatusId == 3);
+            ViewBag.TotalAmount  = list.Sum(w => w.Amount);
+
+            return View(list);
+        }
+
+        // ─── Add Money (Create) ─────────────────────────────────────────────────
 
         [HttpGet]
         public ActionResult AddMoney()
@@ -62,7 +92,8 @@ namespace VIRENDRA.Controllers
         {
             if (!ModelState.IsValid)
             {
-                PopulateDropdowns(model.UserId, model.BankAccountId);
+                PopulateDropdowns(model.UserId, model.BankAccountId,
+                                  model.TransferType, model.WalletType);
                 return View(model);
             }
 
@@ -74,24 +105,120 @@ namespace VIRENDRA.Controllers
 
                 if (result.Success)
                 {
-                    // Use SP's @Log message if meaningful, otherwise fall back to generic text
                     TempData["SuccessMessage"] = !string.IsNullOrWhiteSpace(result.Log) && result.Log != "0"
                         ? result.Log
-                        : "Wallet transaction added successfully.";
-                    return RedirectToAction("AddMoney");
+                        : "Payment request submitted successfully.";
+                    return RedirectToAction("Index");
                 }
-                else
-                {
-                    ModelState.AddModelError("", result.Error);
-                    PopulateDropdowns(model.UserId, model.BankAccountId);
-                    return View(model);
-                }
+
+                ModelState.AddModelError("", result.Error);
+                PopulateDropdowns(model.UserId, model.BankAccountId,
+                                  model.TransferType, model.WalletType);
+                return View(model);
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", "Unexpected error: " + ex.Message);
-                PopulateDropdowns(model.UserId, model.BankAccountId);
+                PopulateDropdowns(model.UserId, model.BankAccountId,
+                                  model.TransferType, model.WalletType);
                 return View(model);
+            }
+        }
+
+        // ─── Edit ───────────────────────────────────────────────────────────────
+
+        [HttpGet]
+        [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
+        public ActionResult Edit(int id)
+        {
+            var req = _walletRepo.GetWalletRequestById(id);
+            if (req == null) return HttpNotFound();
+
+            PopulateDropdowns(req.UserId, req.BankAccountId,
+                              req.TransferType ?? req.TrTypeName,
+                              req.WalletType   ?? "Main");
+            return View(req);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
+        public ActionResult Edit(WalletRequest model)
+        {
+            if (!ModelState.IsValid)
+            {
+                PopulateDropdowns(model.UserId, model.BankAccountId,
+                                  model.TransferType, model.WalletType);
+                return View(model);
+            }
+
+            model.UpdatedById = (int?)Session["UserId"];
+
+            try
+            {
+                _walletRepo.UpdateWalletRequest(model);
+                TempData["SuccessMessage"] = "Payment request updated successfully.";
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error: " + ex.Message);
+                PopulateDropdowns(model.UserId, model.BankAccountId,
+                                  model.TransferType, model.WalletType);
+                return View(model);
+            }
+        }
+
+        // ─── Delete ─────────────────────────────────────────────────────────────
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
+        public ActionResult Delete(int id)
+        {
+            try
+            {
+                _walletRepo.DeleteWalletRequest(id);
+                TempData["SuccessMessage"] = "Payment request deleted.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Cannot delete: " + ex.Message;
+            }
+            return RedirectToAction("Index");
+        }
+
+        // ─── Approve / Reject (AJAX) ─────────────────────────────────────────────
+
+        [HttpPost]
+        [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
+        public JsonResult Approve(int id)
+        {
+            try
+            {
+                int userId = (int)(Session["UserId"] ?? 0);
+                _walletRepo.UpdateRequestStatus(id, 2, userId);   // 2 = Approved
+                return Json(new { success = true, message = "Request approved." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
+        public JsonResult Reject(int id)
+        {
+            try
+            {
+                int userId = (int)(Session["UserId"] ?? 0);
+                _walletRepo.UpdateRequestStatus(id, 3, userId);   // 3 = Rejected
+                return Json(new { success = true, message = "Request rejected." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
             }
         }
     }

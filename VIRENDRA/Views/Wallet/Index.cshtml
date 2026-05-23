@@ -1,0 +1,374 @@
+@model IEnumerable<VIRENDRA.Models.WalletRequest>
+
+@{
+    ViewBag.Title = "Payment Requests";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+
+    int?    currentStatus = ViewBag.StatusId as int?;
+    int     totalCount    = (int)(ViewBag.TotalCount    ?? 0);
+    int     pendingCount  = (int)(ViewBag.PendingCount  ?? 0);
+    int     approvedCount = (int)(ViewBag.ApprovedCount ?? 0);
+    int     rejectedCount = (int)(ViewBag.RejectedCount ?? 0);
+    decimal totalAmount   = (decimal)(ViewBag.TotalAmount ?? 0m);
+}
+
+<div class="container-fluid">
+
+    <!-- Page Title -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                    <h4 class="mb-1 fw-bold text-dark">
+                        <i class="fas fa-wallet text-primary me-2"></i>Payment Requests
+                    </h4>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0" style="font-size:.82rem;">
+                            <li class="breadcrumb-item"><a href="@Url.Action("Dashboard","Home")">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Payment Requests</li>
+                        </ol>
+                    </nav>
+                </div>
+                <a href="@Url.Action("AddMoney","Wallet")" class="btn btn-success px-3 fw-semibold">
+                    <i class="fas fa-plus me-1"></i>Add Money
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-3" style="border-radius:10px;">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible mb-3" style="border-radius:10px;">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <a href="@Url.Action("Index")" class="text-decoration-none">
+                <div class="card border-0 shadow-sm @(currentStatus == null ? "border-primary" : "")"
+                     style="border-radius:12px;border-left:4px solid #667eea!important;@(currentStatus == null ? "box-shadow:0 0 0 2px #667eea40!important;" : "")">
+                    <div class="card-body d-flex align-items-center gap-3 py-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:46px;height:46px;background:#667eea15;flex-shrink:0;">
+                            <i class="fas fa-list" style="color:#667eea;font-size:1.1rem;"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted" style="font-size:.75rem;">Total Requests</div>
+                            <div class="fw-bold fs-5 text-dark">@totalCount</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <a href="@Url.Action("Index", new { statusId = 1 })" class="text-decoration-none">
+                <div class="card border-0 shadow-sm"
+                     style="border-radius:12px;border-left:4px solid #FF9800!important;@(currentStatus == 1 ? "box-shadow:0 0 0 2px #FF980040!important;" : "")">
+                    <div class="card-body d-flex align-items-center gap-3 py-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:46px;height:46px;background:#FF980015;flex-shrink:0;">
+                            <i class="fas fa-clock" style="color:#FF9800;font-size:1.1rem;"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted" style="font-size:.75rem;">Pending</div>
+                            <div class="fw-bold fs-5 text-dark">@pendingCount</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <a href="@Url.Action("Index", new { statusId = 2 })" class="text-decoration-none">
+                <div class="card border-0 shadow-sm"
+                     style="border-radius:12px;border-left:4px solid #4CAF50!important;@(currentStatus == 2 ? "box-shadow:0 0 0 2px #4CAF5040!important;" : "")">
+                    <div class="card-body d-flex align-items-center gap-3 py-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:46px;height:46px;background:#4CAF5015;flex-shrink:0;">
+                            <i class="fas fa-check-circle" style="color:#4CAF50;font-size:1.1rem;"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted" style="font-size:.75rem;">Approved</div>
+                            <div class="fw-bold fs-5 text-dark">@approvedCount</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <a href="@Url.Action("Index", new { statusId = 3 })" class="text-decoration-none">
+                <div class="card border-0 shadow-sm"
+                     style="border-radius:12px;border-left:4px solid #F44336!important;@(currentStatus == 3 ? "box-shadow:0 0 0 2px #F4433640!important;" : "")">
+                    <div class="card-body d-flex align-items-center gap-3 py-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:46px;height:46px;background:#F4433615;flex-shrink:0;">
+                            <i class="fas fa-times-circle" style="color:#F44336;font-size:1.1rem;"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted" style="font-size:.75rem;">Rejected</div>
+                            <div class="fw-bold fs-5 text-dark">@rejectedCount</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Total Amount Banner -->
+    <div class="card border-0 shadow-sm mb-4"
+         style="border-radius:12px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+        <div class="card-body py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="text-white">
+                <div style="font-size:.8rem;opacity:.8;">Total Amount</div>
+                <div class="fw-bold fs-4">
+                    <i class="fa fa-rupee-sign me-1"></i>@totalAmount.ToString("N2")
+                </div>
+            </div>
+            @if (currentStatus.HasValue)
+            {
+                <a href="@Url.Action("Index")" class="btn btn-outline-light btn-sm px-3">
+                    <i class="fas fa-filter me-1"></i>
+                    @(currentStatus == 1 ? "Pending" : currentStatus == 2 ? "Approved" : "Rejected") — Clear Filter
+                </a>
+            }
+            else
+            {
+                <span class="text-white-50 small">Showing all requests</span>
+            }
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">
+        <div class="card-header border-0 py-3 px-4"
+             style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                     style="width:36px;height:36px;background:rgba(255,255,255,.2);">
+                    <i class="fas fa-table text-white" style="font-size:.85rem;"></i>
+                </div>
+                <h6 class="mb-0 text-white fw-bold">
+                    Payment Request List
+                    @if (currentStatus.HasValue)
+                    {
+                        <span class="badge ms-2 text-dark"
+                              style="background:rgba(255,255,255,.3);font-size:.7rem;">
+                            @(currentStatus == 1 ? "Pending" : currentStatus == 2 ? "Approved" : "Rejected")
+                        </span>
+                    }
+                </h6>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="walletTable" class="table table-hover align-middle mb-0" style="font-size:.85rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">#</th>
+                            <th>User</th>
+                            <th>Amount (<i class="fa fa-rupee-sign"></i>)</th>
+                            <th>Transfer Type</th>
+                            <th>Bank Account</th>
+                            <th>Cheque / Ref No</th>
+                            <th>Payment Date</th>
+                            <th>Added Date</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center" style="width:150px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var w in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 text-muted">@w.Id</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                             style="width:30px;height:30px;background:#667eea20;flex-shrink:0;">
+                                            <i class="fas fa-user" style="color:#667eea;font-size:.65rem;"></i>
+                                        </div>
+                                        <span class="fw-semibold">@(w.UserName ?? w.UserId.ToString())</span>
+                                    </div>
+                                </td>
+                                <td class="fw-semibold text-success">
+                                    <i class="fa fa-rupee-sign"></i> @w.Amount.ToString("N2")
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border" style="font-size:.75rem;">
+                                        @w.TrTypeName
+                                    </span>
+                                </td>
+                                <td>@(w.BankAccountName ?? "—")</td>
+                                <td><code class="text-dark">@(w.Chequeno ?? "—")</code></td>
+                                <td>@(w.PaymentDate.HasValue ? w.PaymentDate.Value.ToString("dd MMM yyyy") : "—")</td>
+                                <td>@(w.AddedDate.HasValue ? w.AddedDate.Value.ToString("dd MMM yyyy HH:mm") : "—")</td>
+                                <td class="text-center">
+                                    @if (w.StatusId == 2)
+                                    {
+                                        <span class="badge" style="background:#4CAF50;font-size:.75rem;">
+                                            <i class="fas fa-check me-1"></i>Approved
+                                        </span>
+                                    }
+                                    else if (w.StatusId == 3)
+                                    {
+                                        <span class="badge" style="background:#F44336;font-size:.75rem;">
+                                            <i class="fas fa-times me-1"></i>Rejected
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge" style="background:#FF9800;font-size:.75rem;">
+                                            <i class="fas fa-clock me-1"></i>Pending
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                        <a href="@Url.Action("Edit", new { id = w.Id })"
+                                           class="btn btn-sm btn-outline-info" title="Edit">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </a>
+                                        @if (w.StatusId == null || w.StatusId == 1)
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-success btn-approve"
+                                                    data-id="@w.Id" title="Approve">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-warning btn-reject"
+                                                    data-id="@w.Id" title="Reject">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        }
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                title="Delete"
+                                                onclick="confirmDelete(@w.Id, '@Html.Raw((w.UserName ?? w.UserId.ToString()).Replace("'","\'"))', '@w.Amount.ToString("N2")')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:12px;overflow:hidden;">
+            <div class="modal-header border-0 pb-0"
+                 style="background:linear-gradient(135deg,#F44336,#c62828);">
+                <h5 class="modal-title text-white fw-bold">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-4">
+                <p class="mb-1">Delete payment request for:</p>
+                <p class="fw-semibold text-danger mb-1" id="deleteUserName"></p>
+                <p class="mb-3">Amount: <strong><i class="fa fa-rupee-sign"></i> <span id="deleteAmount"></span></strong></p>
+                <p class="text-muted small mb-0">
+                    <i class="fas fa-info-circle me-1"></i>
+                    This action cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer border-0">
+                @using (Html.BeginForm("Delete", "Wallet", FormMethod.Post, new { id = "deleteForm" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteWalletId" />
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(function () {
+            $('#walletTable').DataTable({
+                pageLength: 25,
+                order: [[0, 'desc']],
+                columnDefs: [{ orderable: false, targets: [9] }]
+            });
+
+            // Approve
+            $(document).on('click', '.btn-approve', function () {
+                var id  = $(this).data('id');
+                var row = $(this).closest('tr');
+                if (!confirm('Approve this payment request?')) return;
+
+                $.post('@Url.Action("Approve","Wallet")', { id: id }, function (res) {
+                    if (res.success) {
+                        row.find('.badge').removeClass()
+                           .addClass('badge')
+                           .css('background','#4CAF50')
+                           .html('<i class="fas fa-check me-1"></i>Approved');
+                        row.find('.btn-approve, .btn-reject').remove();
+                        showAlert('success', res.message);
+                    } else {
+                        showAlert('danger', res.message);
+                    }
+                });
+            });
+
+            // Reject
+            $(document).on('click', '.btn-reject', function () {
+                var id  = $(this).data('id');
+                var row = $(this).closest('tr');
+                if (!confirm('Reject this payment request?')) return;
+
+                $.post('@Url.Action("Reject","Wallet")', { id: id }, function (res) {
+                    if (res.success) {
+                        row.find('.badge').removeClass()
+                           .addClass('badge')
+                           .css('background','#F44336')
+                           .html('<i class="fas fa-times me-1"></i>Rejected');
+                        row.find('.btn-approve, .btn-reject').remove();
+                        showAlert('success', res.message);
+                    } else {
+                        showAlert('danger', res.message);
+                    }
+                });
+            });
+        });
+
+        function confirmDelete(id, user, amount) {
+            document.getElementById('deleteWalletId').value  = id;
+            document.getElementById('deleteUserName').textContent = user;
+            document.getElementById('deleteAmount').textContent   = amount;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+
+        function showAlert(type, msg) {
+            var a = $('<div class="alert alert-' + type + ' alert-dismissible" style="border-radius:10px;margin-bottom:1rem;">' +
+                      '<i class="fas fa-' + (type === 'success' ? 'check' : 'exclamation') + '-circle me-2"></i>' + msg +
+                      '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+            $('.container-fluid').prepend(a);
+            setTimeout(function () { a.alert('close'); }, 4000);
+        }
+    </script>
+}
