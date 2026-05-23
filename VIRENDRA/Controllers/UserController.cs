@@ -40,6 +40,7 @@ namespace VIRENDRA.Controllers
 
         public ActionResult Create()
         {
+            PopulateRoleList();
             return View(BuildNewUser());
         }
 
@@ -65,6 +66,7 @@ namespace VIRENDRA.Controllers
 
             if (!ModelState.IsValid)
             {
+                PopulateRoleList(user.RoleId);
                 return View(user);
             }
 
@@ -94,6 +96,7 @@ namespace VIRENDRA.Controllers
                 return HttpNotFound();
             }
 
+            PopulateRoleList(user.RoleId);
             return View(user);
         }
 
@@ -122,6 +125,7 @@ namespace VIRENDRA.Controllers
             if (!ModelState.IsValid)
             {
                 model.Id = id;
+                PopulateRoleList(model.RoleId);
                 return View(model);
             }
 
@@ -191,6 +195,12 @@ namespace VIRENDRA.Controllers
                 UserBal = 0,
                 UserOutStandingBal = 0
             };
+        }
+
+        private void PopulateRoleList(byte? selectedRoleId = null)
+        {
+            ViewBag.RoleList = new SelectList(
+                _userRepository.GetAllRoles(), "Id", "RoleName", selectedRoleId);
         }
     }
 }

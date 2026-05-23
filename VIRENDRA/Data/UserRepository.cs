@@ -17,6 +17,17 @@ namespace VIRENDRA.Data
             _connectionString = connectionString;
         }
 
+        public List<Role> GetAllRoles()
+        {
+            using (IDbConnection db = new SqlConnection(_connectionString))
+            {
+                db.Open();
+                return db.Query<Role>(
+                    "SELECT Id, RoleName, IsActive FROM [Role] WHERE IsActive = 1 ORDER BY RoleName"
+                ).ToList();
+            }
+        }
+
         public List<User> GetAllUsers()
         {
             using (IDbConnection db = new SqlConnection(_connectionString))
