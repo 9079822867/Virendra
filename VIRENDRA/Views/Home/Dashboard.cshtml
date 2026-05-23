@@ -73,7 +73,7 @@
                                 </div>
                                 <div>
                                     <p class="text-muted mb-1" style="font-size:.8rem;">Opening Balance</p>
-                                    <h4 class="mb-0 fw-bold">₹ @stats.OpeningBalance.ToString("0.##")</h4>
+                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.OpeningBalance.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
@@ -88,7 +88,7 @@
                                 </div>
                                 <div>
                                     <p class="text-muted mb-1" style="font-size:.8rem;">Current Balance</p>
-                                    <h4 class="mb-0 fw-bold">₹ @stats.ClosingBalance.ToString("0.##")</h4>
+                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.ClosingBalance.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
@@ -106,7 +106,7 @@
                                         Success Txn
                                         <span class="badge ms-1" style="background:#4CAF5020;color:#4CAF50;font-size:.68rem;">@stats.SuccessCount</span>
                                     </p>
-                                    <h4 class="mb-0 fw-bold">₹ @stats.SuccessAmount.ToString("0.##")</h4>
+                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.SuccessAmount.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
@@ -124,7 +124,7 @@
                                         Failed Txn
                                         <span class="badge ms-1" style="background:#F4433620;color:#F44336;font-size:.68rem;">@stats.FailedCount</span>
                                     </p>
-                                    <h4 class="mb-0 fw-bold">₹ @stats.FailedAmount.ToString("0.##")</h4>
+                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.FailedAmount.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
@@ -139,7 +139,7 @@
                                 </div>
                                 <div>
                                     <p class="text-muted mb-1" style="font-size:.8rem;">Refund Txn</p>
-                                    <h4 class="mb-0 fw-bold">₹ @stats.RefundAmount.ToString("0.##")</h4>
+                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.RefundAmount.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
@@ -154,7 +154,7 @@
                                 </div>
                                 <div>
                                     <p class="text-muted mb-1" style="font-size:.8rem;">Credit Balance</p>
-                                    <h4 class="mb-0 fw-bold">₹ @stats.CreditBalance.ToString("0.##")</h4>
+                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.CreditBalance.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
@@ -169,7 +169,7 @@
                                 </div>
                                 <div>
                                     <p class="text-muted mb-1" style="font-size:.8rem;">Today's Earning</p>
-                                    <h4 class="mb-0 fw-bold">₹ @stats.TodayEarning.ToString("0.##")</h4>
+                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.TodayEarning.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
@@ -297,8 +297,8 @@
                                             <th>Txn / Mobile</th>
                                             <th>Reference</th>
                                             <th>Operator</th>
-                                            <th class="text-end">Amount (₹)</th>
-                                            <th class="text-end">Comm (₹)</th>
+                                            <th class="text-end">Amount (<i class="fa fa-rupee-sign"></i>)</th>
+                                            <th class="text-end">Comm (<i class="fa fa-rupee-sign"></i>)</th>
                                             <th>Date &amp; Time</th>
                                         </tr>
                                     </thead>
@@ -354,12 +354,12 @@
                                                     </div>
                                                 </td>
                                                 <td class="text-end fw-semibold text-dark">
-                                                    ₹@r.Amount.ToString("0.00")
+                                                    <i class="fa fa-rupee-sign"></i> @r.Amount.ToString("0.00")
                                                 </td>
                                                 <td class="text-end">
                                                     @if (r.Commission > 0)
                                                     {
-                                                        <span class="text-success fw-semibold">₹@r.Commission.ToString("0.##")</span>
+                                                        <span class="text-success fw-semibold"><i class="fa fa-rupee-sign"></i> @r.Commission.ToString("0.##")</span>
                                                     }
                                                     else
                                                     {
@@ -380,10 +380,10 @@
                                                 Showing @recentList.Count record(s)
                                             </td>
                                             <td class="text-end fw-bold text-dark">
-                                                ₹@recentList.Sum(x => x.Amount).ToString("0.00")
+                                                <i class="fa fa-rupee-sign"></i> @recentList.Sum(x => x.Amount).ToString("0.00")
                                             </td>
                                             <td class="text-end fw-bold text-success">
-                                                ₹@recentList.Sum(x => x.Commission).ToString("0.##")
+                                                <i class="fa fa-rupee-sign"></i> @recentList.Sum(x => x.Commission).ToString("0.##")
                                             </td>
                                             <td></td>
                                         </tr>

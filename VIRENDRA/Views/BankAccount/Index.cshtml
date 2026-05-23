@@ -99,7 +99,7 @@
                     <div>
                         <div class="text-muted" style="font-size:.75rem;">Total Block Amt</div>
                         <div class="fw-bold fs-5 text-dark">
-                            ₹@Model.Sum(b => b.BlockAmount ?? 0).ToString("0.##")
+                            <i class="fa fa-rupee-sign"></i>@Model.Sum(b => b.BlockAmount ?? 0).ToString("0.##")
                         </div>
                     </div>
                 </div>
@@ -130,7 +130,7 @@
                             <th>IFSC Code</th>
                             <th>UPI Address</th>
                             <th>Branch</th>
-                            <th>Block Amt (₹)</th>
+                            <th>Block Amt (<i class="fa fa-rupee-sign"></i>)</th>
                             <th class="text-center">Status</th>
                             <th class="text-center">Actions</th>
                         </tr>
@@ -166,7 +166,7 @@
                                 <td>
                                     @if (b.BlockAmount.HasValue && b.BlockAmount > 0)
                                     {
-                                        <span class="fw-semibold text-warning">₹@b.BlockAmount.Value.ToString("0.##")</span>
+                                        <span class="fw-semibold text-warning"><i class="fa fa-rupee-sign"></i>@b.BlockAmount.Value.ToString("0.##")</span>
                                     }
                                     else
                                     {

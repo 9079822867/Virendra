@@ -111,10 +111,10 @@
                 <!-- Block Amount -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
-                        <i class="fas fa-lock text-warning me-1"></i>Block Amount (₹)
+                        <i class="fas fa-lock text-warning me-1"></i>Block Amount (<i class="fa fa-rupee-sign"></i>)
                     </label>
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text">₹</span>
+                        <span class="input-group-text"><i class="fa fa-rupee-sign"></i></span>
                         @Html.TextBoxFor(m => m.BlockAmount, "{0:0.##}", new { @class = "form-control", type = "number", min = "0", step = "0.01", placeholder = "0.00" })
                     </div>
                 </div>

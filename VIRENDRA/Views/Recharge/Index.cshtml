@@ -117,7 +117,7 @@
                                         <tr>
                                             <td>@r.Number</td>
                                             <td>@r.Operator</td>
-                                            <td>₹@r.Amount.ToString("0.##")</td>
+                                            <td><i class="fa fa-rupee-sign"></i> @r.Amount.ToString("0.##")</td>
                                             <td>
                                                 <span class="badge @(r.Status == "Success" ? "bg-success" : r.Status == "Pending" ? "bg-warning text-dark" : "bg-danger")">
                                                     @r.Status
