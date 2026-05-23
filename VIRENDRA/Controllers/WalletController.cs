@@ -70,13 +70,26 @@ namespace VIRENDRA.Controllers
 
             try
             {
-                _walletRepo.AddMoney(model);
-                TempData["SuccessMessage"] = "Wallet transaction added successfully.";
-                return RedirectToAction("AddMoney");
+                var result = _walletRepo.AddMoney(model);
+
+                if (result.Success)
+                {
+                    // Use SP's @Log message if meaningful, otherwise fall back to generic text
+                    TempData["SuccessMessage"] = !string.IsNullOrWhiteSpace(result.Log) && result.Log != "0"
+                        ? result.Log
+                        : "Wallet transaction added successfully.";
+                    return RedirectToAction("AddMoney");
+                }
+                else
+                {
+                    ModelState.AddModelError("", result.Error);
+                    PopulateDropdowns(model.UserId, model.BankAccountId);
+                    return View(model);
+                }
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", "Error saving transaction: " + ex.Message);
+                ModelState.AddModelError("", "Unexpected error: " + ex.Message);
                 PopulateDropdowns(model.UserId, model.BankAccountId);
                 return View(model);
             }

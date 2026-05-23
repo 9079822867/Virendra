@@ -14,7 +14,7 @@ namespace VIRENDRA.Data
         void ToggleBlockUser(int id, bool blockUser);
 
         // Wallet transactions
-        void AddMoney(WalletRequest req);
+        (bool Success, string Error, string Log) AddMoney(WalletRequest req);
         List<WalletRequest> GetTransactions(int? userId = null);
     }
 }

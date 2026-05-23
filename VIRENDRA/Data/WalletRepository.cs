@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using Dapper;
@@ -89,51 +90,47 @@ namespace VIRENDRA.Data
                     new { Id = id, BlockUser = blockUser });
         }
 
-        public void AddMoney(WalletRequest req)
+        public (bool Success, string Error, string Log) AddMoney(WalletRequest req)
         {
-            // Map UI helper properties to real DB columns:
-            //   WalletType "Main"/"BillPayment"  → AmtTypeId 1/2
-            //   IsCredit/IsDebit                 → TxnTypeId 1/2
-            //   TransferType string              → TrTypeId 1-6 (IMPS/NEFT/RTGS/UPI/Cash/Cheque)
-            //   ChequeRefNo convenience prop     → already writes to Chequeno
-            //   Remark convenience prop          → already writes to Comment
-            const string sql = @"
-                INSERT INTO WalletRequest
-                    (UserId, Amount, TxnTypeId, AmtTypeId, StatusId,
-                     Chequeno, PaymentRemark, Comment, TrTypeId,
-                     BankAccountId, PaymentDate, AddedDate, AddedById)
-                VALUES
-                    (@UserId, @Amount,
-                     CASE WHEN @IsCredit=1 THEN 1 WHEN @IsDebit=1 THEN 2 ELSE 1 END,
-                     CASE WHEN @WalletType='BillPayment' THEN 2 ELSE 1 END,
-                     1,
-                     @Chequeno, @PaymentRemark, @Comment,
-                     CASE @TransferType
-                         WHEN 'IMPS'   THEN 1
-                         WHEN 'NEFT'   THEN 2
-                         WHEN 'RTGS'   THEN 3
-                         WHEN 'UPI'    THEN 4
-                         WHEN 'Cash'   THEN 5
-                         WHEN 'Cheque' THEN 6
-                         ELSE 1 END,
-                     @BankAccountId, @PaymentDate, GETDATE(), @AddedById)";
+            // Map TransferType string → TrTypeId int for the SP
+            int trTypeId;
+            switch (req.TransferType?.ToUpper())
+            {
+                case "IMPS":   trTypeId = 1; break;
+                case "NEFT":   trTypeId = 2; break;
+                case "RTGS":   trTypeId = 3; break;
+                case "UPI":    trTypeId = 4; break;
+                case "CASH":   trTypeId = 5; break;
+                case "CHEQUE": trTypeId = 6; break;
+                default:       trTypeId = 1; break;
+            }
+
+            var p = new DynamicParameters();
+            p.Add("@IsPullOut",      req.IsPullOut ? "Yes" : "No");
+            p.Add("@IsDebit",        req.IsDebit   ? "Yes" : "No");
+            p.Add("@IsCredit",       req.IsCredit  ? "Yes" : "No");
+            p.Add("@UserId",         req.UserId);
+            p.Add("@Amount",         req.Amount);
+            p.Add("@Remark",         req.Comment);          // Remark alias → Comment column
+            p.Add("@AddedById",      req.AddedById ?? 0);
+            p.Add("@WRID",           req.Chequeno);          // Wallet Request ID = ref/cheque no
+            p.Add("@IsCreditClear",  "0");
+            p.Add("@TrTypeId",       trTypeId);
+            p.Add("@BankAccountId",  req.BankAccountId ?? 0);
+            p.Add("@gateWay",        1);
+            p.Add("@ChequeNo",       req.Chequeno);
+            p.Add("@PaymentDate",    req.PaymentDate);
+            p.Add("@error", dbType: DbType.String, direction: ParameterDirection.Output, size: 100);
+            p.Add("@Log",   dbType: DbType.String, direction: ParameterDirection.Output, size: 250);
 
             using (var conn = new SqlConnection(_connectionString))
-                conn.Execute(sql, new
-                {
-                    req.UserId,
-                    req.Amount,
-                    req.IsCredit,
-                    req.IsDebit,
-                    req.WalletType,
-                    req.Chequeno,
-                    req.PaymentRemark,
-                    req.Comment,
-                    req.TransferType,
-                    req.BankAccountId,
-                    req.PaymentDate,
-                    req.AddedById
-                });
+                conn.Execute("sp_AddUserWallet", p, commandType: CommandType.StoredProcedure);
+
+            var error   = p.Get<string>("@error") ?? "0";
+            var log     = p.Get<string>("@Log")   ?? string.Empty;
+            var success = error == "0" || string.IsNullOrWhiteSpace(error);
+
+            return (success, error, log);
         }
 
         public List<WalletRequest> GetTransactions(int? userId = null)
