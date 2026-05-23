@@ -19,21 +19,20 @@ namespace VIRENDRA.Controllers
 
         public ActionResult Index()
         {
-            var vendors = _vendorRepo.GetAllVendors();
-            return View(vendors);
+            return View(_vendorRepo.GetAllVendors());
         }
 
         [HttpGet]
         public ActionResult Create()
         {
-            var model = new Vendor { IsActive = true, CheckTime = 0 };
-            model.VendorUrls = _vendorRepo.GetVendorUrls(0); // blank URL rows
+            var model = new ApiSource { IsActive = true, CheckTime = 0 };
+            model.ApiUrls = _vendorRepo.GetVendorUrls(0);
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(Vendor model, string[] urlType, string[] url,
+        public ActionResult Create(ApiSource model, string[] urlType, string[] url,
             string[] method, string[] responseType, string[] postParameter)
         {
             if (!ModelState.IsValid)
@@ -41,10 +40,10 @@ namespace VIRENDRA.Controllers
 
             int newId = _vendorRepo.CreateVendor(model);
 
-            var urls = BuildVendorUrls(newId, urlType, url, method, responseType, postParameter);
+            var urls = BuildApiUrls(newId, urlType, url, method, responseType, postParameter);
             _vendorRepo.SaveVendorUrls(newId, urls);
 
-            TempData["SuccessMessage"] = "Vendor created successfully.";
+            TempData["SuccessMessage"] = "API source created successfully.";
             return RedirectToAction("Index");
         }
 
@@ -58,21 +57,21 @@ namespace VIRENDRA.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(Vendor model, string[] urlType, string[] url,
+        public ActionResult Edit(ApiSource model, string[] urlType, string[] url,
             string[] method, string[] responseType, string[] postParameter)
         {
             if (!ModelState.IsValid)
             {
-                model.VendorUrls = _vendorRepo.GetVendorUrls(model.Id);
+                model.ApiUrls = _vendorRepo.GetVendorUrls(model.Id);
                 return View(model);
             }
 
             _vendorRepo.UpdateVendor(model);
 
-            var urls = BuildVendorUrls(model.Id, urlType, url, method, responseType, postParameter);
+            var urls = BuildApiUrls(model.Id, urlType, url, method, responseType, postParameter);
             _vendorRepo.SaveVendorUrls(model.Id, urls);
 
-            TempData["SuccessMessage"] = "Vendor updated successfully.";
+            TempData["SuccessMessage"] = "API source updated successfully.";
             return RedirectToAction("Index");
         }
 
@@ -80,7 +79,7 @@ namespace VIRENDRA.Controllers
         public ActionResult Delete(int id)
         {
             _vendorRepo.DeleteVendor(id);
-            TempData["SuccessMessage"] = "Vendor deleted.";
+            TempData["SuccessMessage"] = "API source deleted.";
             return RedirectToAction("Index");
         }
 
@@ -98,22 +97,22 @@ namespace VIRENDRA.Controllers
             }
         }
 
-        private static List<VendorUrl> BuildVendorUrls(int vendorId, string[] urlType,
+        private static List<ApiUrl> BuildApiUrls(int apiSourceId, string[] urlType,
             string[] url, string[] method, string[] responseType, string[] postParameter)
         {
-            var list = new List<VendorUrl>();
+            var list = new List<ApiUrl>();
             if (urlType == null) return list;
 
             for (int i = 0; i < urlType.Length; i++)
             {
-                list.Add(new VendorUrl
+                list.Add(new ApiUrl
                 {
-                    VendorId      = vendorId,
-                    UrlType       = urlType[i],
-                    Url           = url != null && i < url.Length ? url[i] : null,
-                    Method        = method != null && i < method.Length ? method[i] : "GET",
-                    ResponseType  = responseType != null && i < responseType.Length ? responseType[i] : "JSON (application/json)",
-                    PostParameter = postParameter != null && i < postParameter.Length ? postParameter[i] : null,
+                    ApiId    = apiSourceId,
+                    UrlType  = urlType[i],
+                    URL      = url     != null && i < url.Length     ? url[i]          : null,
+                    Method   = method  != null && i < method.Length   ? method[i]       : "GET",
+                    ResType  = responseType != null && i < responseType.Length ? responseType[i] : "JSON (application/json)",
+                    PostData = postParameter != null && i < postParameter.Length ? postParameter[i] : null,
                 });
             }
             return list;

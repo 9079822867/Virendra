@@ -1,14 +1,14 @@
-@model VIRENDRA.Models.Vendor
+@model VIRENDRA.Models.ApiSource
 
 @{
-    ViewBag.Title = "Add Vendor";
+    ViewBag.Title = "Add API Source";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
 }
 
 <div class="container-fluid">
     <div class="page-title-box d-sm-flex align-items-center justify-content-between mb-3">
-        <h4 class="mb-sm-0 font-size-18">Add Vendor</h4>
-        <a href="@Url.Action("Index")" class="btn btn-light"><i class="fas fa-arrow-left me-1"></i>Vendor List</a>
+        <h4 class="mb-sm-0 font-size-18">Add API Source</h4>
+        <a href="@Url.Action("Index")" class="btn btn-light"><i class="fas fa-arrow-left me-1"></i>API Source List</a>
     </div>
 
     @using (Html.BeginForm("Create", "Vendor", FormMethod.Post))
@@ -22,7 +22,7 @@
         <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top">
             <a href="@Url.Action("Index")" class="btn btn-light px-4">Cancel</a>
             <button type="submit" class="btn btn-success px-4">
-                <i class="fas fa-save me-1"></i> Save Vendor
+                <i class="fas fa-save me-1"></i> Save API Source
             </button>
         </div>
     }

@@ -213,7 +213,7 @@ namespace VIRENDRA.Controllers
         private void PopulatePackageList(int? selectedPackageId = null)
         {
             ViewBag.PackageList = new SelectList(
-                _packageRepository.GetAllPackages().FindAll(p => p.IsActive), "Id", "PackageName", selectedPackageId);
+                _packageRepository.GetAllPackages(), "Id", "PackageName", selectedPackageId);
         }
     }
 }

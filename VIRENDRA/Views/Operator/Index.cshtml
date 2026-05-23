@@ -47,7 +47,7 @@
                                         @(op.IsActive ? "Active" : "Inactive")
                                     </span>
                                 </td>
-                                <td>@op.AddedDate.ToString("dd-MMM-yyyy")</td>
+                                <td>@(op.AddedDate.HasValue ? op.AddedDate.Value.ToString("dd-MMM-yyyy") : "-")</td>
                                 <td class="text-end">
                                     <a href="@Url.Action("Edit", new { id = op.Id })" class="btn btn-sm btn-primary">Edit</a>
                                     @using (Html.BeginForm("Delete", "Operator", new { id = op.Id }, FormMethod.Post))

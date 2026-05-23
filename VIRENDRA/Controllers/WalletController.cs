@@ -23,17 +23,18 @@ namespace VIRENDRA.Controllers
             ViewBag.UserList = new SelectList(
                 _userRepo.GetAllUsers(), "Id", "Username", selectedUserId);
 
+            // BankAccount now uses HolderName as the display field
             ViewBag.BankAccountList = new SelectList(
-                _walletRepo.GetAllBankAccounts(), "Id", "AccountName", selectedBankId);
+                _walletRepo.GetAllBankAccounts(), "Id", "HolderName", selectedBankId);
 
             ViewBag.TransferTypeList = new SelectList(new[]
             {
-                new { Value = "IMPS",  Text = "IMPS"  },
-                new { Value = "NEFT",  Text = "NEFT"  },
-                new { Value = "RTGS",  Text = "RTGS"  },
-                new { Value = "UPI",   Text = "UPI"   },
-                new { Value = "Cash",  Text = "Cash"  },
-                new { Value = "Cheque",Text = "Cheque"},
+                new { Value = "IMPS",   Text = "IMPS"   },
+                new { Value = "NEFT",   Text = "NEFT"   },
+                new { Value = "RTGS",   Text = "RTGS"   },
+                new { Value = "UPI",    Text = "UPI"    },
+                new { Value = "Cash",   Text = "Cash"   },
+                new { Value = "Cheque", Text = "Cheque" },
             }, "Value", "Text");
         }
 
@@ -43,7 +44,7 @@ namespace VIRENDRA.Controllers
             PopulateDropdowns();
 
             var refNo = DateTime.Now.ToString("yyyyMMddHHmmssfff");
-            var model = new WalletTransaction
+            var model = new WalletRequest
             {
                 WalletType   = "Main",
                 TransferType = "IMPS",
@@ -57,7 +58,7 @@ namespace VIRENDRA.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult AddMoney(WalletTransaction model)
+        public ActionResult AddMoney(WalletRequest model)
         {
             if (!ModelState.IsValid)
             {

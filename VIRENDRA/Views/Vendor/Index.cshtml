@@ -1,7 +1,7 @@
-@model IEnumerable<VIRENDRA.Models.Vendor>
+@model IEnumerable<VIRENDRA.Models.ApiSource>
 
 @{
-    ViewBag.Title = "Vendor List";
+    ViewBag.Title = "API Source List";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
 }
 
@@ -9,7 +9,7 @@
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0 font-size-18">Vendor List</h4>
+                <h4 class="mb-sm-0 font-size-18">API Source List</h4>
             </div>
         </div>
     </div>
@@ -37,12 +37,12 @@
                 <table id="vendorTable" class="table table-bordered table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>VId</th>
-                            <th>Vendor Name</th>
+                            <th>ID</th>
+                            <th>API Name</th>
                             <th>Remark</th>
                             <th>Active?</th>
-                            <th>Balance(INR)</th>
-                            <th>vBal(INR)</th>
+                            <th>Balance (INR)</th>
+                            <th>vBal (INR)</th>
                             <th>(Balance-vBal)</th>
                             <th>Actions</th>
                         </tr>
@@ -52,7 +52,7 @@
                         {
                             <tr>
                                 <td>@v.Id</td>
-                                <td>@v.VendorName</td>
+                                <td>@v.ApiName</td>
                                 <td>@v.Remark</td>
                                 <td>
                                     <div class="form-check form-switch">
@@ -77,18 +77,11 @@
                                         <a href="@Url.Action("Edit", new { id = v.Id })" class="btn btn-info btn-sm" title="Edit">
                                             <i class="fas fa-pencil-alt"></i>
                                         </a>
-                                        <button type="button" class="btn btn-success btn-sm" title="Add Balance"
-                                                onclick="addBalance(@v.Id)">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
                                         <button type="button" class="btn btn-danger btn-sm" title="Delete"
-                                                onclick="confirmDelete(@v.Id, '@v.VendorName')">
+                                                onclick="confirmDelete(@v.Id, '@Html.Raw(v.ApiName?.Replace("'", "\\'"))')">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                         <a href="@Url.Action("Edit", new { id = v.Id })" class="btn btn-primary btn-sm" title="URL Settings">
-                                            <i class="fas fa-cog"></i>
-                                        </a>
-                                        <a href="@Url.Action("Edit", new { id = v.Id })" class="btn btn-primary btn-sm" title="Settings">
                                             <i class="fas fa-cog"></i>
                                         </a>
                                     </div>
@@ -111,7 +104,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                Delete vendor <strong id="deleteVendorName"></strong>?
+                Delete API source <strong id="deleteVendorName"></strong>?
             </div>
             <div class="modal-footer">
                 @using (Html.BeginForm("Delete", "Vendor", FormMethod.Post, new { id = "deleteForm" }))
@@ -135,7 +128,6 @@
         $(function () {
             $('#vendorTable').DataTable({ pageLength: 25, order: [[0, 'desc']] });
 
-            // Toggle active
             $(document).on('change', '.toggle-active', function () {
                 var id = $(this).data('id');
                 var isActive = $(this).is(':checked');
@@ -157,16 +149,7 @@
             new bootstrap.Modal(document.getElementById('deleteModal')).show();
         }
 
-        function refreshBalance(id) {
-            alert('Refresh balance for vendor #' + id + ' — wire up to vendor API.');
-        }
-
-        function refreshAll() {
-            alert('Refresh all vendor balances — wire up to vendor APIs.');
-        }
-
-        function addBalance(id) {
-            alert('Add balance to vendor #' + id);
-        }
+        function refreshBalance(id) { alert('Refresh balance for API source #' + id); }
+        function refreshAll() { alert('Refresh all API source balances.'); }
     </script>
 }

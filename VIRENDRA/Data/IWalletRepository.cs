@@ -6,7 +6,7 @@ namespace VIRENDRA.Data
     public interface IWalletRepository
     {
         List<BankAccount> GetAllBankAccounts();
-        void AddMoney(WalletTransaction txn);
-        List<WalletTransaction> GetTransactions(int? userId = null);
+        void AddMoney(WalletRequest req);
+        List<WalletRequest> GetTransactions(int? userId = null);
     }
 }

@@ -1,3 +1,5 @@
+@model VIRENDRA.Models.RechargeFormViewModel
+
 @{
     ViewBag.Title = "Recharge";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
@@ -18,11 +20,20 @@
         </div>
     </div>
 
-    @if (TempData["SuccessMessage"] != null)
+    @if (Model.Result != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        var alertClass = Model.Result.Success ? "alert-success" : (Model.Result.IsPending ? "alert-warning" : "alert-danger");
+        <div class="alert @alertClass alert-dismissible fade show" role="alert">
+            <strong>@Model.Result.Status:</strong> @Model.Result.Message
+            @if (!string.IsNullOrEmpty(Model.Result.ApiTxnId))
+            {
+                <span> | API Txn: <strong>@Model.Result.ApiTxnId</strong></span>
+            }
+            @if (!string.IsNullOrEmpty(Model.Result.UserTxnId))
+            {
+                <span> | Ref: <strong>@Model.Result.UserTxnId</strong></span>
+            }
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
@@ -36,50 +47,45 @@
                     @using (Html.BeginForm("Index", "Recharge", FormMethod.Post))
                     {
                         @Html.AntiForgeryToken()
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger mb-2" })
+
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Recharge Type</label>
-                                <select name="RechargeType" class="form-select" required>
-                                    <option value="">Select Type</option>
-                                    <option>Mobile</option>
-                                    <option>DTH</option>
-                                    <option>Data Card</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Operator</label>
-                                <select name="Operator" class="form-select" required>
-                                    <option value="">Select Operator</option>
-                                    <option>Reliance Jio</option>
-                                    <option>Airtel</option>
-                                    <option>VI - Vodafone & Idea</option>
-                                    <option>BSNL</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Mobile / Customer Number</label>
-                                <input type="text" name="CustomerNumber" class="form-control" maxlength="12" placeholder="Enter number" required>
+                                <label class="form-label">Operator <span class="text-danger">*</span></label>
+                                @Html.DropDownListFor(m => m.Request.OperatorId,
+                                    Model.OperatorList,
+                                    "-- Select Operator --",
+                                    new { @class = "form-select", required = "required" })
+                                @Html.ValidationMessageFor(m => m.Request.OperatorId, "", new { @class = "text-danger small" })
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Circle</label>
-                                <select name="Circle" class="form-select">
-                                    <option>Rajasthan</option>
-                                    <option>Delhi NCR</option>
-                                    <option>Uttar Pradesh East</option>
-                                    <option>Maharashtra</option>
-                                </select>
+                                @Html.DropDownListFor(m => m.Request.CircleId,
+                                    Model.CircleList,
+                                    "-- Select Circle --",
+                                    new { @class = "form-select" })
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Amount</label>
-                                <input type="number" name="Amount" class="form-control" min="1" step="1" placeholder="Enter amount" required>
+                                <label class="form-label">Mobile / Customer Number <span class="text-danger">*</span></label>
+                                @Html.TextBoxFor(m => m.Request.CustomerNo,
+                                    new { @class = "form-control", maxlength = "12", placeholder = "Enter number", required = "required" })
+                                @Html.ValidationMessageFor(m => m.Request.CustomerNo, "", new { @class = "text-danger small" })
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Reference ID</label>
-                                <input type="text" name="ReferenceId" class="form-control" placeholder="Auto / manual reference">
+                                <label class="form-label">Amount <span class="text-danger">*</span></label>
+                                @Html.TextBoxFor(m => m.Request.Amount,
+                                    new { @class = "form-control", type = "number", min = "1", step = "1", placeholder = "Enter amount", required = "required" })
+                                @Html.ValidationMessageFor(m => m.Request.Amount, "", new { @class = "text-danger small" })
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Reference ID <small class="text-muted">(optional — auto-generated)</small></label>
+                                @Html.TextBoxFor(m => m.Request.UserTxnId,
+                                    new { @class = "form-control", placeholder = "Leave blank for auto" })
                             </div>
                             <div class="col-12">
-                                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Recharge</button>
-                                <a href="@Url.Action("Index", "Services")" class="btn btn-light">Back to Services</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Submit Recharge
+                                </button>
                             </div>
                         </div>
                     }
@@ -90,7 +96,7 @@
         <div class="col-lg-5">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Recent Recharge</h5>
+                    <h5 class="mb-0">Recent Recharges</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -104,24 +110,26 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>9142687433</td>
-                                    <td>Jio</td>
-                                    <td>349.00</td>
-                                    <td><span class="badge bg-success">Success</span></td>
-                                </tr>
-                                <tr>
-                                    <td>8808940074</td>
-                                    <td>Jio</td>
-                                    <td>26.00</td>
-                                    <td><span class="badge bg-danger">Failed</span></td>
-                                </tr>
-                                <tr>
-                                    <td>9649095619</td>
-                                    <td>VI</td>
-                                    <td>199.00</td>
-                                    <td><span class="badge bg-success">Success</span></td>
-                                </tr>
+                                @if (Model.RecentRecharges != null && Model.RecentRecharges.Count > 0)
+                                {
+                                    foreach (var r in Model.RecentRecharges)
+                                    {
+                                        <tr>
+                                            <td>@r.Number</td>
+                                            <td>@r.Operator</td>
+                                            <td>₹@r.Amount.ToString("0.##")</td>
+                                            <td>
+                                                <span class="badge @(r.Status == "Success" ? "bg-success" : r.Status == "Pending" ? "bg-warning text-dark" : "bg-danger")">
+                                                    @r.Status
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td colspan="4" class="text-center text-muted py-3">No recent recharges</td></tr>
+                                }
                             </tbody>
                         </table>
                     </div>

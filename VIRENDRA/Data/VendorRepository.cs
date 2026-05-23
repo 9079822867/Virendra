@@ -23,96 +23,93 @@ namespace VIRENDRA.Data
                 ?? throw new ConfigurationErrorsException("sqlconn connection string is missing in Web.config");
         }
 
-        public List<Vendor> GetAllVendors()
+        public List<ApiSource> GetAllVendors()
         {
             using (var conn = new SqlConnection(_connectionString))
-            {
-                return conn.Query<Vendor>(
-                    "SELECT * FROM Vendor ORDER BY Id DESC"
+                return conn.Query<ApiSource>(
+                    "SELECT Id, ApiName, ApiUserId, ApiPassword, Remark, IsActive, Balance, VBal, IsAutoStatusCheck, CheckTime, ApiTypeId, AddedDate FROM ApiSource ORDER BY Id DESC"
                 ).ToList();
-            }
         }
 
-        public Vendor GetVendorById(int id)
+        public ApiSource GetVendorById(int id)
         {
             using (var conn = new SqlConnection(_connectionString))
             {
-                var vendor = conn.QueryFirstOrDefault<Vendor>(
-                    "SELECT * FROM Vendor WHERE Id = @Id", new { Id = id });
+                var src = conn.QueryFirstOrDefault<ApiSource>(
+                    "SELECT Id, ApiName, ApiUserId, ApiPassword, Remark, IsActive, Balance, VBal, IsAutoStatusCheck, CheckTime, ApiTypeId, AddedDate FROM ApiSource WHERE Id = @Id",
+                    new { Id = id });
 
-                if (vendor != null)
-                    vendor.VendorUrls = GetVendorUrls(id);
+                if (src != null)
+                    src.ApiUrls = GetVendorUrls(id);
 
-                return vendor;
+                return src;
             }
         }
 
-        public int CreateVendor(Vendor vendor)
+        public int CreateVendor(ApiSource vendor)
         {
             const string sql = @"
-                INSERT INTO Vendor (VendorName, VendorType, LoginId, Password, Optional,
-                    IsAutoStatusCheck, CheckTime, Balance, VBal, Remark, IsActive, AddedDate)
-                VALUES (@VendorName, @VendorType, @LoginId, @Password, @Optional,
-                    @IsAutoStatusCheck, @CheckTime, 0, 0, @Remark, @IsActive, GETDATE());
+                INSERT INTO ApiSource
+                    (ApiName, ApiUserId, ApiPassword, Remark, IsActive,
+                     IsAutoStatusCheck, CheckTime, Balance, VBal, AddedDate)
+                VALUES
+                    (@ApiName, @ApiUserId, @ApiPassword, @Remark, @IsActive,
+                     @IsAutoStatusCheck, @CheckTime, 0, 0, GETDATE());
                 SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
             using (var conn = new SqlConnection(_connectionString))
-            {
                 return conn.ExecuteScalar<int>(sql, vendor);
-            }
         }
 
-        public void UpdateVendor(Vendor vendor)
+        public void UpdateVendor(ApiSource vendor)
         {
             const string sql = @"
-                UPDATE Vendor SET
-                    VendorName = @VendorName, VendorType = @VendorType,
-                    LoginId = @LoginId, Password = @Password, Optional = @Optional,
-                    IsAutoStatusCheck = @IsAutoStatusCheck, CheckTime = @CheckTime,
-                    Remark = @Remark, IsActive = @IsActive
-                WHERE Id = @Id";
+                UPDATE ApiSource SET
+                    ApiName=@ApiName, ApiUserId=@ApiUserId, ApiPassword=@ApiPassword,
+                    Remark=@Remark, IsActive=@IsActive,
+                    IsAutoStatusCheck=@IsAutoStatusCheck, CheckTime=@CheckTime
+                WHERE Id=@Id";
 
             using (var conn = new SqlConnection(_connectionString))
-            {
                 conn.Execute(sql, vendor);
-            }
         }
 
         public void DeleteVendor(int id)
         {
             using (var conn = new SqlConnection(_connectionString))
-            {
-                conn.Execute("DELETE FROM VendorUrl WHERE VendorId = @Id; DELETE FROM Vendor WHERE Id = @Id", new { Id = id });
-            }
+                conn.Execute("DELETE FROM ApiUrl WHERE ApiId = @Id; DELETE FROM ApiSource WHERE Id = @Id", new { Id = id });
         }
 
         public void ToggleActive(int id, bool isActive)
         {
             using (var conn = new SqlConnection(_connectionString))
-            {
-                conn.Execute("UPDATE Vendor SET IsActive = @IsActive WHERE Id = @Id", new { Id = id, IsActive = isActive });
-            }
+                conn.Execute("UPDATE ApiSource SET IsActive = @IsActive WHERE Id = @Id", new { Id = id, IsActive = isActive });
         }
 
-        public List<VendorUrl> GetVendorUrls(int vendorId)
+        public List<ApiUrl> GetVendorUrls(int apiSourceId)
         {
             using (var conn = new SqlConnection(_connectionString))
             {
-                var existing = conn.Query<VendorUrl>(
-                    "SELECT * FROM VendorUrl WHERE VendorId = @VendorId ORDER BY Id", new { VendorId = vendorId }
-                ).ToList();
+                var existing = conn.Query<ApiUrl>(@"
+                    SELECT u.Id, u.ApiId, u.UrlTypeId, t.TypeName AS UrlType,
+                           u.URL, u.Method, u.ResType, u.PostData, u.IsActive
+                    FROM ApiUrl u
+                    JOIN ApiUrlType t ON t.Id = u.UrlTypeId
+                    WHERE u.ApiId = @ApiId
+                    ORDER BY u.UrlTypeId",
+                    new { ApiId = apiSourceId }).ToList();
 
-                // Ensure all 6 URL types are present
-                var result = new List<VendorUrl>();
+                var result = new List<ApiUrl>();
                 foreach (var urlType in UrlTypes)
                 {
                     var row = existing.FirstOrDefault(u => u.UrlType == urlType)
-                        ?? new VendorUrl
+                        ?? new ApiUrl
                         {
-                            VendorId = vendorId,
-                            UrlType = urlType,
-                            Method = "GET",
-                            ResponseType = "JSON (application/json)"
+                            ApiId    = apiSourceId,
+                            UrlType  = urlType,
+                            Method   = "GET",
+                            ResType  = "JSON (application/json)",
+                            IsActive = true
                         };
                     result.Add(row);
                 }
@@ -120,23 +117,35 @@ namespace VIRENDRA.Data
             }
         }
 
-        public void SaveVendorUrls(int vendorId, List<VendorUrl> urls)
+        public void SaveVendorUrls(int apiSourceId, List<ApiUrl> urls)
         {
             const string upsert = @"
-                IF EXISTS (SELECT 1 FROM VendorUrl WHERE VendorId = @VendorId AND UrlType = @UrlType)
-                    UPDATE VendorUrl SET Url = @Url, Method = @Method, ResponseType = @ResponseType,
-                        PostParameter = @PostParameter
-                    WHERE VendorId = @VendorId AND UrlType = @UrlType
-                ELSE
-                    INSERT INTO VendorUrl (VendorId, UrlType, Url, Method, ResponseType, PostParameter)
-                    VALUES (@VendorId, @UrlType, @Url, @Method, @ResponseType, @PostParameter)";
+                DECLARE @tid INT = (SELECT Id FROM ApiUrlType WHERE TypeName = @UrlType);
+                IF @tid IS NOT NULL
+                BEGIN
+                    IF EXISTS (SELECT 1 FROM ApiUrl WHERE ApiId=@ApiId AND UrlTypeId=@tid)
+                        UPDATE ApiUrl
+                        SET URL=@URL, Method=@Method, ResType=@ResType, PostData=@PostData, IsActive=1
+                        WHERE ApiId=@ApiId AND UrlTypeId=@tid
+                    ELSE
+                        INSERT INTO ApiUrl (ApiId, UrlTypeId, URL, Method, ResType, PostData, IsActive, AddedDate)
+                        VALUES (@ApiId, @tid, @URL, @Method, @ResType, @PostData, 1, GETDATE())
+                END";
 
             using (var conn = new SqlConnection(_connectionString))
             {
                 foreach (var url in urls)
                 {
-                    url.VendorId = vendorId;
-                    conn.Execute(upsert, url);
+                    url.ApiId = apiSourceId;
+                    conn.Execute(upsert, new
+                    {
+                        ApiId   = apiSourceId,
+                        url.UrlType,
+                        url.URL,
+                        url.Method,
+                        url.ResType,
+                        url.PostData
+                    });
                 }
             }
         }

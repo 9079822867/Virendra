@@ -2,6 +2,7 @@ using System.Configuration;
 using System.Web.Mvc;
 using VIRENDRA.Controllers;
 using VIRENDRA.Data;
+using VIRENDRA.Services;
 
 namespace VIRENDRA.App_Start
 {
@@ -19,9 +20,14 @@ namespace VIRENDRA.App_Start
             var walletRepository      = new WalletRepository();
             var vendorRepository      = new VendorRepository();
             var transactionRepository = new TransactionRepository();
+            var rechargeRepository    = new RechargeRepository();
+            var rechargeService       = new RechargeService(rechargeRepository);
 
             ControllerBuilder.Current.SetControllerFactory(
-                new CustomControllerFactory(userRepository, packageRepository, walletRepository, vendorRepository, transactionRepository));
+                new CustomControllerFactory(
+                    userRepository, packageRepository, walletRepository,
+                    vendorRepository, transactionRepository,
+                    rechargeRepository, rechargeService));
         }
     }
 
@@ -32,15 +38,22 @@ namespace VIRENDRA.App_Start
         private readonly IWalletRepository      _walletRepo;
         private readonly IVendorRepository      _vendorRepo;
         private readonly ITransactionRepository _txnRepo;
+        private readonly IRechargeRepository    _rechargeRepo;
+        private readonly RechargeService        _rechargeSvc;
 
-        public CustomControllerFactory(IUserRepository userRepo, IPackageRepository pkgRepo,
-            IWalletRepository walletRepo, IVendorRepository vendorRepo, ITransactionRepository txnRepo)
+        public CustomControllerFactory(
+            IUserRepository userRepo, IPackageRepository pkgRepo,
+            IWalletRepository walletRepo, IVendorRepository vendorRepo,
+            ITransactionRepository txnRepo,
+            IRechargeRepository rechargeRepo, RechargeService rechargeSvc)
         {
-            _userRepo   = userRepo;
-            _pkgRepo    = pkgRepo;
-            _walletRepo = walletRepo;
-            _vendorRepo = vendorRepo;
-            _txnRepo    = txnRepo;
+            _userRepo      = userRepo;
+            _pkgRepo       = pkgRepo;
+            _walletRepo    = walletRepo;
+            _vendorRepo    = vendorRepo;
+            _txnRepo       = txnRepo;
+            _rechargeRepo  = rechargeRepo;
+            _rechargeSvc   = rechargeSvc;
         }
 
         protected override IController GetControllerInstance(
@@ -73,6 +86,9 @@ namespace VIRENDRA.App_Start
 
             if (controllerType == typeof(TransactionController))
                 return new TransactionController(_txnRepo);
+
+            if (controllerType == typeof(RechargeController))
+                return new RechargeController(_rechargeSvc, _rechargeRepo);
 
             return base.GetControllerInstance(requestContext, controllerType);
         }

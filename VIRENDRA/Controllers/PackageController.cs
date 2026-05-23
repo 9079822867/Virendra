@@ -19,7 +19,7 @@ namespace VIRENDRA.Controllers
 
         public ActionResult Create()
         {
-            return View(new Package { IsActive = true });
+            return View(new Package());
         }
 
         [HttpPost, ValidateAntiForgeryToken]
@@ -59,7 +59,7 @@ namespace VIRENDRA.Controllers
         public ActionResult Delete(int id)
         {
             _repo.DeletePackage(id);
-            TempData["SuccessMessage"] = "Package deactivated.";
+            TempData["SuccessMessage"] = "Package deleted.";
             return RedirectToAction("Index");
         }
     }

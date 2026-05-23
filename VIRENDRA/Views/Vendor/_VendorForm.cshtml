@@ -1,4 +1,4 @@
-@model VIRENDRA.Models.Vendor
+@model VIRENDRA.Models.ApiSource
 
 @{
     var responseTypeOptions = new[]
@@ -12,12 +12,12 @@
 
 @* URL parameter legend *@
 <div class="alert alert-danger py-2 mb-3" style="font-size:0.82rem;">
-    <strong>Note:- Please use following naming conventions for the Vendor urls:-</strong>
+    <strong>Note:- Please use following naming conventions for the API URLs:-</strong>
     <div class="row mt-1">
         <div class="col-md-4">
             <ul class="mb-0 ps-3">
-                <li><code>[UUU]</code> → Vendor user id</li>
-                <li><code>[PPP]</code> → Vendor password</li>
+                <li><code>[UUU]</code> → API user id</li>
+                <li><code>[PPP]</code> → API password</li>
                 <li><code>[RRR]</code> → any other (like token, remark etc)</li>
                 <li><code>[MMM]</code> → mobileNo(Prepaid)/number(BillPay)</li>
                 <li><code>[HHH]</code> → account(BillPay)</li>
@@ -30,10 +30,10 @@
             <ul class="mb-0 ps-3">
                 <li><code>[CCC]</code> → Circle code</li>
                 <li><code>[AAA]</code> → Amount</li>
-                <li><code>[EEE]</code> → Extra Url (in Vendor Opcode Setting)</li>
-                <li><code>[DDD]</code> → Extra Parameter data (in Vendor Opcode Setting)</li>
+                <li><code>[EEE]</code> → Extra Url (in Operator Code setting)</li>
+                <li><code>[DDD]</code> → Extra Parameter data</li>
                 <li><code>[TTT]</code> → reference transaction number</li>
-                <li><code>[FFF1]</code> → for optional1</li>
+                <li><code>[FFF1]</code> → optional1</li>
                 <li><code>[FFF2]</code> → optional2</li>
                 <li><code>[FFF3]</code> → optional3</li>
             </ul>
@@ -42,57 +42,41 @@
             <ul class="mb-0 ps-3">
                 <li><code>[FFF4]</code> → optional4</li>
                 <li><code>[FFFT]</code> → current date time</li>
-                <li><code>[FFFR]</code> → Random Key for Api</li>
+                <li><code>[FFFR]</code> → Random Key for API</li>
                 <li><code>[KKK]</code> → Lapu number</li>
                 <li><code>[KKKP]</code> → Lapu password</li>
                 <li><code>[KKK3]</code> → Lapu pin</li>
                 <li><code>[KKK1]</code> → Lapu optional-1</li>
-                <li><code>[KKK2]</code> → Lapu optional-2</li>
-                <li><code>[COMM1]</code> → Comman optional-1</li>
+                <li><code>[COMM1]</code> → Common optional-1</li>
             </ul>
         </div>
     </div>
 </div>
 
 <div class="row g-0">
-    <!-- ===== LEFT: Vendor Info ===== -->
+    <!-- ===== LEFT: API Source Info ===== -->
     <div class="col-md-3" style="background:#d9d9d9;padding:1.5rem;border-radius:6px 0 0 6px;">
-        <h6 class="fw-bold mb-3">Vendor Info</h6>
+        <h6 class="fw-bold mb-3">API Source Info</h6>
 
         <div class="mb-3">
-            <label class="form-label fw-semibold small">Vendor Name</label>
-            @Html.TextBoxFor(m => m.VendorName, new { @class = "form-control form-control-sm" })
-            @Html.ValidationMessageFor(m => m.VendorName, "", new { @class = "text-danger small" })
+            <label class="form-label fw-semibold small">API Name <span class="text-danger">*</span></label>
+            @Html.TextBoxFor(m => m.ApiName, new { @class = "form-control form-control-sm" })
+            @Html.ValidationMessageFor(m => m.ApiName, "", new { @class = "text-danger small" })
         </div>
 
         <div class="mb-3">
-            <label class="form-label fw-semibold small">Vendor Type</label>
-            @Html.DropDownListFor(m => m.VendorType,
-                new SelectList(new[]
-                {
-                    new { V = "Mobile",      T = "Mobile Prepaid/Postpaid" },
-                    new { V = "DTH",         T = "DTH" },
-                    new { V = "Utility",     T = "Utility / Bill Payment" },
-                    new { V = "BillPayment", T = "Bill Payment" },
-                    new { V = "Other",       T = "Other" },
-                }, "V", "T", Model.VendorType),
-                "Select a Api Type",
-                new { @class = "form-select form-select-sm" })
+            <label class="form-label fw-semibold small">API User ID <small class="text-muted">([UUU])</small></label>
+            @Html.TextBoxFor(m => m.ApiUserId, new { @class = "form-control form-control-sm" })
         </div>
 
         <div class="mb-3">
-            <label class="form-label fw-semibold small">Vendor LoginId</label>
-            @Html.TextBoxFor(m => m.LoginId, new { @class = "form-control form-control-sm" })
+            <label class="form-label fw-semibold small">API Password <small class="text-muted">([PPP])</small></label>
+            @Html.TextBoxFor(m => m.ApiPassword, new { @class = "form-control form-control-sm" })
         </div>
 
         <div class="mb-3">
-            <label class="form-label fw-semibold small">Vendor Password</label>
-            @Html.TextBoxFor(m => m.Password, new { @class = "form-control form-control-sm" })
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-semibold small">Optional</label>
-            @Html.TextBoxFor(m => m.Optional, new { @class = "form-control form-control-sm" })
+            <label class="form-label fw-semibold small">Remark <small class="text-muted">([RRR])</small></label>
+            @Html.TextBoxFor(m => m.Remark, new { @class = "form-control form-control-sm" })
         </div>
 
         <div class="mb-2">
@@ -103,13 +87,8 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label fw-semibold small">CheckTime</label>
+            <label class="form-label fw-semibold small">Check Time (min)</label>
             @Html.TextBoxFor(m => m.CheckTime, new { @class = "form-control form-control-sm", type = "number", min = "0" })
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-semibold small">Remark</label>
-            @Html.TextBoxFor(m => m.Remark, new { @class = "form-control form-control-sm" })
         </div>
 
         <div class="mb-3 form-check">
@@ -118,23 +97,23 @@
         </div>
     </div>
 
-    <!-- ===== RIGHT: Vendor URLs ===== -->
+    <!-- ===== RIGHT: API URLs ===== -->
     <div class="col-md-9" style="padding:1.5rem;background:#fff;border:1px solid #dee2e6;border-radius:0 6px 6px 0;">
-        <h6 class="fw-bold mb-3">Vendor URLs</h6>
+        <h6 class="fw-bold mb-3">API URLs</h6>
         <div class="table-responsive">
             <table class="table table-bordered align-middle mb-0" style="font-size:0.85rem;">
                 <thead class="table-light">
                     <tr>
-                        <th style="width:30px">ID</th>
+                        <th style="width:30px">#</th>
                         <th style="width:140px">URL</th>
                         <th style="width:80px">Method</th>
-                        <th style="width:200px">Response-Type</th>
-                        <th>Post Parameter</th>
+                        <th style="width:200px">Response Type</th>
+                        <th>Post Data</th>
                     </tr>
                 </thead>
                 <tbody>
                     @{ int idx = 0; }
-                    @foreach (var u in Model.VendorUrls)
+                    @foreach (var u in Model.ApiUrls)
                     {
                         <tr>
                             <td class="text-center fw-bold">@(idx + 1)</td>
@@ -142,11 +121,11 @@
                                 <input type="hidden" name="urlType" value="@u.UrlType" />
                                 <label class="form-label fw-semibold d-block mb-1" style="color:#555;">@u.UrlType</label>
                                 <textarea name="url" class="form-control form-control-sm" rows="3"
-                                          placeholder="Enter URL with placeholders e.g. https://api.com/recharge?uid=[UUU]">@u.Url</textarea>
+                                          placeholder="e.g. https://api.com/rc?uid=[UUU]&pwd=[PPP]">@u.URL</textarea>
                             </td>
                             <td>
                                 <select name="method" class="form-select form-select-sm">
-                                    <option value="GET" @(u.Method == "GET" ? "selected" : "")>GET</option>
+                                    <option value="GET"  @(u.Method == "GET"  ? "selected" : "")>GET</option>
                                     <option value="POST" @(u.Method == "POST" ? "selected" : "")>POST</option>
                                 </select>
                             </td>
@@ -154,14 +133,14 @@
                                 <select name="responseType" class="form-select form-select-sm">
                                     @foreach (var rt in responseTypeOptions)
                                     {
-                                        <option value="@rt" @(u.ResponseType == rt ? "selected" : "")>@rt</option>
+                                        <option value="@rt" @(u.ResType == rt ? "selected" : "")>@rt</option>
                                     }
                                 </select>
                             </td>
                             <td>
-                                <label class="form-label small text-muted d-block mb-1">Post Parameter</label>
+                                <label class="form-label small text-muted d-block mb-1">Post Data</label>
                                 <textarea name="postParameter" class="form-control form-control-sm" rows="3"
-                                          placeholder="key1=val1&key2=val2">@u.PostParameter</textarea>
+                                          placeholder="key1=val1&key2=val2">@u.PostData</textarea>
                             </td>
                         </tr>
                         idx++;

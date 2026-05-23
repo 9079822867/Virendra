@@ -132,4 +132,43 @@ namespace VIRENDRA.Models
         public decimal Balance { get; set; }
         public DateTime Date { get; set; }
     }
+
+    public class RechargeRequestModel
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        public int OperatorId { get; set; }
+
+        public int CircleId { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Required]
+        public string CustomerNo { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.Range(1, 100000)]
+        public decimal Amount { get; set; }
+
+        public byte RCTypeId { get; set; } = 1;
+
+        public string UserTxnId { get; set; }
+    }
+
+    public class RechargeFormViewModel
+    {
+        public RechargeRequestModel Request { get; set; } = new RechargeRequestModel();
+        public System.Web.Mvc.SelectList OperatorList { get; set; }
+        public System.Web.Mvc.SelectList CircleList { get; set; }
+        public List<RechargeHistoryItem> RecentRecharges { get; set; } = new List<RechargeHistoryItem>();
+        public RechargeResult Result { get; set; }
+    }
+
+    public class RechargeResult
+    {
+        public bool   Success    { get; set; }
+        public bool   IsPending  { get; set; }
+        public string Status     { get; set; }   // "Success" | "Pending" | "Failed"
+        public string Message    { get; set; }
+        public string ApiTxnId   { get; set; }
+        public long   RecId      { get; set; }
+        public string UserTxnId  { get; set; }
+    }
 }

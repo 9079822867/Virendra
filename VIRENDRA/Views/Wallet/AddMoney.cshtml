@@ -1,4 +1,4 @@
-@model VIRENDRA.Models.WalletTransaction
+@model VIRENDRA.Models.WalletRequest
 
 @{
     ViewBag.Title = "Wallet — Add Money";
@@ -77,19 +77,19 @@
                         <div class="mb-2">
                             <div class="form-check mb-2">
                                 @Html.CheckBoxFor(m => m.IsPullOut, new { @class = "form-check-input" })
-                                <label class="form-check-label fw-semibold" for="IsPullOut">IsPullOut <span class="text-danger">*</span></label>
+                                <label class="form-check-label fw-semibold" for="IsPullOut">IsPullOut</label>
                             </div>
                             <div class="form-check mb-2">
                                 @Html.CheckBoxFor(m => m.IsCredit, new { @class = "form-check-input" })
-                                <label class="form-check-label fw-semibold" for="IsCredit">IsCredit <span class="text-danger">*</span></label>
+                                <label class="form-check-label fw-semibold" for="IsCredit">IsCredit</label>
                             </div>
                             <div class="form-check mb-2">
                                 @Html.CheckBoxFor(m => m.IsDebit, new { @class = "form-check-input" })
-                                <label class="form-check-label fw-semibold" for="IsDebit">IsDebit <span class="text-danger">*</span></label>
+                                <label class="form-check-label fw-semibold" for="IsDebit">IsDebit</label>
                             </div>
                             <div class="form-check">
                                 @Html.CheckBoxFor(m => m.SMS, new { @class = "form-check-input" })
-                                <label class="form-check-label fw-semibold" for="SMS">SMS <span class="text-danger">*</span></label>
+                                <label class="form-check-label fw-semibold" for="SMS">SMS</label>
                             </div>
                         </div>
                     </div>
@@ -108,13 +108,14 @@
 
                         <!-- Payment Date -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">PaymentDate</label>
+                            <label class="form-label fw-semibold">Payment Date</label>
                             @Html.TextBoxFor(m => m.PaymentDate, "{0:yyyy-MM-dd}",
                                 new { @class = "form-control", type = "date" })
                         </div>
 
                         <!-- Payment Remark -->
                         <div class="mb-3">
+                            <label class="form-label fw-semibold">Payment Remark</label>
                             @Html.TextBoxFor(m => m.PaymentRemark,
                                 new { @class = "form-control", placeholder = "Payment Remark" })
                         </div>
@@ -130,7 +131,7 @@
 
                         <!-- Cheque/Ref Number -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Cheque/Ref Number <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Cheque / Ref Number <span class="text-danger">*</span></label>
                             @Html.TextBoxFor(m => m.ChequeRefNo,
                                 new { @class = "form-control", required = "required" })
                             @Html.ValidationMessageFor(m => m.ChequeRefNo, "", new { @class = "text-danger small" })
