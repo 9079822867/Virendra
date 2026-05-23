@@ -6,6 +6,7 @@ namespace VIRENDRA.Data
 {
     public interface IUserRepository
     {
+        List<Role> GetAllRoles();
         List<User> GetAllUsers();
         User GetUserByUsername(string username);
         User GetUserById(int id);
