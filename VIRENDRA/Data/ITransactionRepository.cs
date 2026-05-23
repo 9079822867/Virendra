@@ -6,6 +6,8 @@ namespace VIRENDRA.Data
 {
     public interface ITransactionRepository
     {
+        DashboardStats GetDashboardStats(int userId);
+
         List<RechargeHistoryItem> GetRecentRecharges(int top = 10);
 
         List<RechargeHistoryItem> GetRechargeHistory(

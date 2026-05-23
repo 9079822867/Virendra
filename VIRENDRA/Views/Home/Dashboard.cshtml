@@ -22,10 +22,17 @@
         <!-- End page title -->
 
         <!-- Success Alert -->
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fa fa-check-circle"></i> Login Successful..
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+        @if (TempData["LoginSuccess"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa fa-check-circle"></i> Login Successful..
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @{
+            var stats = ViewBag.Stats as VIRENDRA.Models.DashboardStats ?? new VIRENDRA.Models.DashboardStats();
+        }
 
         <!-- Tab Navigation - Bootstrap Native Tabs -->
         <ul class="nav nav-tabs-custom card-header-tabs border mt-4" role="tablist">
@@ -55,142 +62,137 @@
         <div class="tab-content">
             <!-- Tab 1: Overview -->
             <div id="overview-tab" class="tab-pane fade active show" role="tabpanel">
-                <div class="row mt-4">
-                    <!-- Opening Balance Card -->
-                    <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="stat-icon bg-primary rounded-lg p-3 mr-3">
-                                        <i class="fa fa-wallet fa-2x text-white"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-muted mb-1">Opening Balance</p>
-                                        <h4 class="mb-0"><i class="fa fa-rupee-sign"></i> 7239.37</h4>
-                                    </div>
+                <div class="row mt-4 g-3">
+
+                    <!-- Opening Balance -->
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #2196F3;border-radius:10px;">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <div class="stat-icon rounded-lg p-3" style="background:#2196F320;">
+                                    <i class="fa fa-wallet fa-2x" style="color:#2196F3;"></i>
+                                </div>
+                                <div>
+                                    <p class="text-muted mb-1" style="font-size:.8rem;">Opening Balance</p>
+                                    <h4 class="mb-0 fw-bold">₹ @stats.OpeningBalance.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Closing Balance Card -->
-                    <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="stat-icon bg-danger rounded-lg p-3 mr-3">
-                                        <i class="fa fa-times-circle fa-2x text-white"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-muted mb-1">Closing Balance</p>
-                                        <h4 class="mb-0"><i class="fa fa-rupee-sign"></i> 2292.6</h4>
-                                    </div>
+                    <!-- Closing / Current Balance -->
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #9C27B0;border-radius:10px;">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <div class="stat-icon rounded-lg p-3" style="background:#9C27B020;">
+                                    <i class="fa fa-rupee-sign fa-2x" style="color:#9C27B0;"></i>
+                                </div>
+                                <div>
+                                    <p class="text-muted mb-1" style="font-size:.8rem;">Current Balance</p>
+                                    <h4 class="mb-0 fw-bold">₹ @stats.ClosingBalance.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Success Transaction Card -->
-                    <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="stat-icon bg-success rounded-lg p-3 mr-3">
-                                        <i class="fa fa-check-circle fa-2x text-white"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-muted mb-1">Success Transaction</p>
-                                        <h4 class="mb-0"><i class="fa fa-rupee-sign"></i> 5091</h4>
-                                    </div>
+                    <!-- Success Transaction -->
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #4CAF50;border-radius:10px;">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <div class="stat-icon rounded-lg p-3" style="background:#4CAF5020;">
+                                    <i class="fa fa-check-circle fa-2x" style="color:#4CAF50;"></i>
+                                </div>
+                                <div>
+                                    <p class="text-muted mb-1" style="font-size:.8rem;">
+                                        Success Txn
+                                        <span class="badge ms-1" style="background:#4CAF5020;color:#4CAF50;font-size:.68rem;">@stats.SuccessCount</span>
+                                    </p>
+                                    <h4 class="mb-0 fw-bold">₹ @stats.SuccessAmount.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Failed Transaction Card -->
-                    <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="stat-icon bg-danger rounded-lg p-3 mr-3">
-                                        <i class="fa fa-times fa-2x text-white"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-muted mb-1">Failed Transaction</p>
-                                        <h4 class="mb-0"><i class="fa fa-rupee-sign"></i> 52</h4>
-                                    </div>
+                    <!-- Failed Transaction -->
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #F44336;border-radius:10px;">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <div class="stat-icon rounded-lg p-3" style="background:#F4433620;">
+                                    <i class="fa fa-times-circle fa-2x" style="color:#F44336;"></i>
+                                </div>
+                                <div>
+                                    <p class="text-muted mb-1" style="font-size:.8rem;">
+                                        Failed Txn
+                                        <span class="badge ms-1" style="background:#F4433620;color:#F44336;font-size:.68rem;">@stats.FailedCount</span>
+                                    </p>
+                                    <h4 class="mb-0 fw-bold">₹ @stats.FailedAmount.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Refund Transaction Card -->
-                    <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="stat-icon bg-warning rounded-lg p-3 mr-3">
-                                        <i class="fa fa-undo fa-2x text-white"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-muted mb-1">Refund Transaction</p>
-                                        <h4 class="mb-0"><i class="fa fa-rupee-sign"></i> 0</h4>
-                                    </div>
+                    <!-- Refund Transaction -->
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #FF9800;border-radius:10px;">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <div class="stat-icon rounded-lg p-3" style="background:#FF980020;">
+                                    <i class="fa fa-undo fa-2x" style="color:#FF9800;"></i>
+                                </div>
+                                <div>
+                                    <p class="text-muted mb-1" style="font-size:.8rem;">Refund Txn</p>
+                                    <h4 class="mb-0 fw-bold">₹ @stats.RefundAmount.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Credit Balance Card -->
-                    <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="stat-icon bg-success rounded-lg p-3 mr-3">
-                                        <i class="fa fa-credit-card fa-2x text-white"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-muted mb-1">Credit Balance</p>
-                                        <h4 class="mb-0"><i class="fa fa-rupee-sign"></i> 196.75</h4>
-                                    </div>
+                    <!-- Credit Balance -->
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #00BCD4;border-radius:10px;">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <div class="stat-icon rounded-lg p-3" style="background:#00BCD420;">
+                                    <i class="fa fa-credit-card fa-2x" style="color:#00BCD4;"></i>
+                                </div>
+                                <div>
+                                    <p class="text-muted mb-1" style="font-size:.8rem;">Credit Balance</p>
+                                    <h4 class="mb-0 fw-bold">₹ @stats.CreditBalance.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Today's Earning Card -->
-                    <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="stat-icon bg-success rounded-lg p-3 mr-3">
-                                        <i class="fa fa-chart-line fa-2x text-white"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-muted mb-1">Today's Earning</p>
-                                        <h4 class="mb-0"><i class="fa fa-rupee-sign"></i> 144.75</h4>
-                                    </div>
+                    <!-- Today's Earning -->
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #8BC34A;border-radius:10px;">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <div class="stat-icon rounded-lg p-3" style="background:#8BC34A20;">
+                                    <i class="fa fa-chart-line fa-2x" style="color:#8BC34A;"></i>
+                                </div>
+                                <div>
+                                    <p class="text-muted mb-1" style="font-size:.8rem;">Today's Earning</p>
+                                    <h4 class="mb-0 fw-bold">₹ @stats.TodayEarning.ToString("0.##")</h4>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Total Txn Count Card -->
-                    <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="stat-icon bg-secondary rounded-lg p-3 mr-3">
-                                        <i class="fa fa-list fa-2x text-white"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-muted mb-1">Total Txn Count</p>
-                                        <h4 class="mb-0">22</h4>
-                                    </div>
+                    <!-- Total Txn Count -->
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #607D8B;border-radius:10px;">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <div class="stat-icon rounded-lg p-3" style="background:#607D8B20;">
+                                    <i class="fa fa-list fa-2x" style="color:#607D8B;"></i>
+                                </div>
+                                <div>
+                                    <p class="text-muted mb-1" style="font-size:.8rem;">
+                                        Total Txn Count
+                                        <span class="badge ms-1" style="background:#607D8B20;color:#607D8B;font-size:.68rem;">@stats.PendingCount Pending</span>
+                                    </p>
+                                    <h4 class="mb-0 fw-bold">@stats.TotalTxnCount</h4>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
 

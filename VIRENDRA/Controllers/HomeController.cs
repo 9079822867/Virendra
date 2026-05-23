@@ -34,6 +34,8 @@ namespace VIRENDRA.Controllers
 
         public ActionResult Dashboard()
         {
+            int userId = (int)(Session["UserId"] ?? 0);
+            ViewBag.Stats           = _txnRepo.GetDashboardStats(userId);
             ViewBag.RecentRecharges = _txnRepo.GetRecentRecharges(10);
             return View();
         }

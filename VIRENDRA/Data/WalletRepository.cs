@@ -85,9 +85,12 @@ namespace VIRENDRA.Data
 
         public void ToggleBlockUser(int id, bool blockUser)
         {
+            // blockUser=true means "block the account" → store NULL (empty = Blocked in UI)
+            // blockUser=false means "activate the account" → store "Yes" (non-empty = Active in UI)
+            var value = blockUser ? (string)null : "Yes";
             using (var conn = new SqlConnection(_connectionString))
                 conn.Execute("UPDATE BankAccount SET BlockUser = @BlockUser WHERE Id = @Id",
-                    new { Id = id, BlockUser = blockUser });
+                    new { Id = id, BlockUser = value });
         }
 
         public (bool Success, string Error, string Log) AddMoney(WalletRequest req)

@@ -70,7 +70,7 @@
                     </div>
                     <div>
                         <div class="text-muted" style="font-size:.75rem;">Active</div>
-                        <div class="fw-bold fs-5 text-dark">@Model.Count(b => !b.BlockUser)</div>
+                        <div class="fw-bold fs-5 text-dark">@Model.Count()</div>
                     </div>
                 </div>
             </div>
@@ -84,7 +84,7 @@
                     </div>
                     <div>
                         <div class="text-muted" style="font-size:.75rem;">Blocked</div>
-                        <div class="fw-bold fs-5 text-dark">@Model.Count(b => b.BlockUser)</div>
+                        <div class="fw-bold fs-5 text-dark">@Model.Count()</div>
                     </div>
                 </div>
             </div>
@@ -178,10 +178,10 @@
                                         <input class="form-check-input toggle-block" type="checkbox"
                                                data-id="@b.Id"
                                                style="width:42px;height:22px;cursor:pointer;"
-                                               @(!b.BlockUser ? "checked" : "") />
-                                        <label class="toggle-label fw-semibold @(!b.BlockUser ? "text-success" : "text-danger")"
+                                               @(!string.IsNullOrEmpty(b.BlockUser) ? "checked" : "") />
+                                        <label class="toggle-label fw-semibold @(!string.IsNullOrEmpty(b.BlockUser) ? "text-success" : "text-danger")"
                                                style="font-size:.75rem;min-width:38px;">
-                                            @(!b.BlockUser ? "Active" : "Blocked")
+                                            @(!string.IsNullOrEmpty(b.BlockUser) ? "Active" : "Blocked")
                                         </label>
                                     </div>
                                 </td>

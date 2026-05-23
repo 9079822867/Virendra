@@ -18,6 +18,84 @@ namespace VIRENDRA.Data
                 ?? throw new ConfigurationErrorsException("sqlconn connection string is missing in Web.config");
         }
 
+        public DashboardStats GetDashboardStats(int userId)
+        {
+            const string sql = @"
+                DECLARE @Today    DATETIME = CAST(CAST(GETDATE() AS DATE) AS DATETIME);
+                DECLARE @Tomorrow DATETIME = DATEADD(DAY, 1, @Today);
+
+                SELECT
+                    -- Closing balance = live UserBal from User table
+                    ISNULL((SELECT TOP 1 UserBal
+                            FROM [User] WHERE Id = @UserId), 0)
+                        AS ClosingBalance,
+
+                    -- Opening balance = OP_Bal of first TxnLedger entry today;
+                    --   if no entry today, use CL_Bal of last entry before today;
+                    --   if no TxnLedger at all, fall back to current UserBal
+                    ISNULL(
+                        (SELECT TOP 1 OP_Bal FROM TxnLedger
+                         WHERE UserId = @UserId AND TxnDate >= @Today ORDER BY Id ASC),
+                        ISNULL(
+                            (SELECT TOP 1 CL_Bal FROM TxnLedger
+                             WHERE UserId = @UserId AND TxnDate < @Today ORDER BY Id DESC),
+                            ISNULL((SELECT TOP 1 UserBal FROM [User] WHERE Id = @UserId), 0)
+                        )
+                    ) AS OpeningBalance,
+
+                    -- Success amount today
+                    ISNULL((SELECT SUM(Amount) FROM Recharge
+                            WHERE UserId = @UserId AND StatusId = 2
+                              AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
+                        AS SuccessAmount,
+
+                    -- Failed amount today
+                    ISNULL((SELECT SUM(Amount) FROM Recharge
+                            WHERE UserId = @UserId AND StatusId = 3
+                              AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
+                        AS FailedAmount,
+
+                    -- Refund (no dedicated table yet)
+                    0.0 AS RefundAmount,
+
+                    -- Credit balance: today's CR_Amt from TxnLedger
+                    ISNULL((SELECT SUM(CR_Amt) FROM TxnLedger
+                            WHERE UserId = @UserId
+                              AND TxnDate >= @Today AND TxnDate < @Tomorrow), 0)
+                        AS CreditBalance,
+
+                    -- Today's earning: commission on success recharges
+                    ISNULL((SELECT SUM(Recharge_Commision) FROM Recharge
+                            WHERE UserId = @UserId AND StatusId = 2
+                              AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
+                        AS TodayEarning,
+
+                    -- Counts
+                    ISNULL((SELECT COUNT(*) FROM Recharge
+                            WHERE UserId = @UserId
+                              AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
+                        AS TotalTxnCount,
+
+                    ISNULL((SELECT COUNT(*) FROM Recharge
+                            WHERE UserId = @UserId AND StatusId = 2
+                              AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
+                        AS SuccessCount,
+
+                    ISNULL((SELECT COUNT(*) FROM Recharge
+                            WHERE UserId = @UserId AND StatusId = 3
+                              AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
+                        AS FailedCount,
+
+                    ISNULL((SELECT COUNT(*) FROM Recharge
+                            WHERE UserId = @UserId AND StatusId = 1
+                              AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
+                        AS PendingCount";
+
+            using (var conn = new SqlConnection(_connectionString))
+                return conn.QueryFirstOrDefault<DashboardStats>(sql, new { UserId = userId })
+                       ?? new DashboardStats();
+        }
+
         public List<RechargeHistoryItem> GetRecentRecharges(int top = 10)
         {
             const string sql = @"

@@ -137,7 +137,9 @@
                             <div class="text-muted" style="font-size:.75rem;">Blocked accounts will not appear in wallet dropdown.</div>
                         </div>
                         <div class="form-check form-switch mb-0 ms-3">
-                            @Html.CheckBoxFor(m => m.BlockUser, new { @class = "form-check-input", style = "width:46px;height:24px;cursor:pointer;" })
+                            <input type="checkbox" class="form-check-input" name="BlockUser" value="Yes"
+                                   style="width:46px;height:24px;cursor:pointer;"
+                                   @(Model.BlockUser == "Yes" ? "checked" : "") />
                         </div>
                     </div>
                 </div>

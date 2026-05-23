@@ -102,7 +102,7 @@ namespace VIRENDRA.Models
         public int?    UpdatedById   { get; set; }
         public DateTime? UpdatedDate { get; set; }
         public string  ImageUrl      { get; set; }
-        public bool    BlockUser     { get; set; }
+        public string    BlockUser     { get; set; }
 
         // JOIN-populated (not a DB column)
         public string  AccountTypeName { get; set; }

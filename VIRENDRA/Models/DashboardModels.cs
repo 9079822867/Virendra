@@ -23,6 +23,22 @@ namespace VIRENDRA.Models
         public string PackageName { get; set; }
     }
 
+    // Live stats loaded from DB for the dashboard Overview tab
+    public class DashboardStats
+    {
+        public decimal OpeningBalance  { get; set; }  // OP_Bal of first TxnLedger row today
+        public decimal ClosingBalance  { get; set; }  // User.UserBal (current live balance)
+        public decimal SuccessAmount   { get; set; }  // Today's success recharge amount
+        public decimal FailedAmount    { get; set; }  // Today's failed recharge amount
+        public decimal RefundAmount    { get; set; }  // Today's refunds (0 until refund table exists)
+        public decimal CreditBalance   { get; set; }  // Today's credits from TxnLedger
+        public decimal TodayEarning    { get; set; }  // Today's commission on success recharges
+        public int     TotalTxnCount   { get; set; }  // Today's total recharge count
+        public int     SuccessCount    { get; set; }
+        public int     FailedCount     { get; set; }
+        public int     PendingCount    { get; set; }
+    }
+
     public class WalletSummary
     {
         public decimal OpeningBalance { get; set; }
