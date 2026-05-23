@@ -25,7 +25,7 @@ namespace VIRENDRA.Controllers
         [HttpGet]
         public ActionResult Create()
         {
-            var model = new ApiSource { IsActive = true, CheckTime = 0 };
+            var model = new ApiSource { IsActive = true, StatusCheckTime = 0 };
             model.ApiUrls = _vendorRepo.GetVendorUrls(0);
             return View(model);
         }
