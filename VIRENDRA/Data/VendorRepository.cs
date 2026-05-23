@@ -92,7 +92,7 @@ namespace VIRENDRA.Data
             {
                 var existing = conn.Query<ApiUrl>(@"
                     SELECT u.Id, u.ApiId, u.UrlTypeId, t.TypeName AS UrlType,
-                           u.URL, u.Method, u.ResType, u.PostData, u.IsActive
+                           u.URL, u.Method, u.ResType, u.PostData
                     FROM ApiUrl u
                     JOIN ApiUrlType t ON t.Id = u.UrlTypeId
                     WHERE u.ApiId = @ApiId

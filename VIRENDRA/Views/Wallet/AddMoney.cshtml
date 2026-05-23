@@ -37,32 +37,21 @@
                 <div class="row g-4">
                     <!-- ===== LEFT COLUMN ===== -->
                     <div class="col-md-6 border-end pe-4">
-
-                        <!-- Wallet Type -->
+                        <!-- Bank Account -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Wallet Type <span class="text-danger">*</span></label>
-                            <div class="d-flex gap-4 mt-1">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="WalletType" id="walletMain"
-                                           value="Main" @(Model.WalletType == "Main" ? "checked" : "") required />
-                                    <label class="form-check-label" for="walletMain">Main Wallet</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="WalletType" id="walletBill"
-                                           value="BillPayment" @(Model.WalletType == "BillPayment" ? "checked" : "") />
-                                    <label class="form-check-label" for="walletBill">BillPayment Wallet</label>
-                                </div>
-                            </div>
-                            @Html.ValidationMessageFor(m => m.WalletType, "", new { @class = "text-danger small" })
+                            <label class="form-label fw-semibold">Bank Account</label>
+                            @Html.DropDownListFor(m => m.BankAccountId,
+                                     (SelectList)ViewBag.BankAccountList,
+                                     "-- Select Bank Account --",
+                                     new { @class = "form-select" })
                         </div>
-
                         <!-- User -->
                         <div class="mb-3">
                             <label class="form-label fw-semibold">User <span class="text-danger">*</span></label>
                             @Html.DropDownListFor(m => m.UserId,
-                                (SelectList)ViewBag.UserList,
-                                "Select a User",
-                                new { @class = "form-select", required = "required" })
+                                     (SelectList)ViewBag.UserList,
+                                     "Select a User",
+                                     new { @class = "form-select", required = "required" })
                             @Html.ValidationMessageFor(m => m.UserId, "", new { @class = "text-danger small" })
                         </div>
 
@@ -76,10 +65,6 @@
                         <!-- Checkboxes -->
                         <div class="mb-2">
                             <div class="form-check mb-2">
-                                @Html.CheckBoxFor(m => m.IsPullOut, new { @class = "form-check-input" })
-                                <label class="form-check-label fw-semibold" for="IsPullOut">IsPullOut</label>
-                            </div>
-                            <div class="form-check mb-2">
                                 @Html.CheckBoxFor(m => m.IsCredit, new { @class = "form-check-input" })
                                 <label class="form-check-label fw-semibold" for="IsCredit">IsCredit</label>
                             </div>
@@ -87,10 +72,15 @@
                                 @Html.CheckBoxFor(m => m.IsDebit, new { @class = "form-check-input" })
                                 <label class="form-check-label fw-semibold" for="IsDebit">IsDebit</label>
                             </div>
-                            <div class="form-check">
-                                @Html.CheckBoxFor(m => m.SMS, new { @class = "form-check-input" })
-                                <label class="form-check-label fw-semibold" for="SMS">SMS</label>
+                            <div class="form-check mb-2">
+                                @Html.CheckBoxFor(m => m.IsPullOut, new { @class = "form-check-input" })
+                                <label class="form-check-label fw-semibold" for="IsPullOut">IsPullOut</label>
                             </div>
+
+                            @*<div class="form-check">
+                @Html.CheckBoxFor(m => m.SMS, new { @class = "form-check-input" })
+                <label class="form-check-label fw-semibold" for="SMS">SMS</label>
+            </div>*@
                         </div>
                     </div>
 
@@ -113,21 +103,7 @@
                                 new { @class = "form-control", type = "date" })
                         </div>
 
-                        <!-- Payment Remark -->
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Payment Remark</label>
-                            @Html.TextBoxFor(m => m.PaymentRemark,
-                                new { @class = "form-control", placeholder = "Payment Remark" })
-                        </div>
-
-                        <!-- Bank Account -->
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Bank Account</label>
-                            @Html.DropDownListFor(m => m.BankAccountId,
-                                (SelectList)ViewBag.BankAccountList,
-                                "-- Select Bank Account --",
-                                new { @class = "form-select" })
-                        </div>
+                      
 
                         <!-- Cheque/Ref Number -->
                         <div class="mb-3">
