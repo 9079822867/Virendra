@@ -290,6 +290,12 @@
                             <span>Operators</span>
                         </a>
                     </li>
+                    <li class="@(currentController == "Vendor" ? "mm-active" : "")">
+                        <a href="@Url.Action("Index", "Vendor")" class="@(currentController == "Vendor" ? "active" : "")">
+                            <i class="fas fa-store"></i>
+                            <span>Vendors (API)</span>
+                        </a>
+                    </li>
                 }
 
                 @* My Commission: API User + Retailer *@
@@ -430,5 +436,6 @@
             });
         });
     </script>
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

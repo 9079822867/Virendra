@@ -1,0 +1,37 @@
+@model VIRENDRA.Models.Vendor
+
+@{
+    ViewBag.Title = "Edit Vendor";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between mb-3">
+        <h4 class="mb-sm-0 font-size-18">Edit Vendor — <strong>@Model.VendorName</strong></h4>
+        <a href="@Url.Action("Index")" class="btn btn-light"><i class="fas fa-arrow-left me-1"></i>Vendor List</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <i class="fas fa-check-circle me-1"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @using (Html.BeginForm("Edit", "Vendor", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.Id)
+        @Html.ValidationSummary(true, "", new { @class = "text-danger mb-3" })
+
+        @Html.Partial("_VendorForm", Model)
+
+        <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top">
+            <a href="@Url.Action("Index")" class="btn btn-light px-4">Cancel</a>
+            <button type="submit" class="btn btn-success px-4">
+                <i class="fas fa-save me-1"></i> Update Vendor
+            </button>
+        </div>
+    }
+</div>
