@@ -65,9 +65,9 @@
                                         </label>
                                     </div>
                                 </td>
-                                <td>@v.Balance.ToString("0.##")</td>
-                                <td>@v.VBal.ToString("0.##")</td>
-                                <td>@((v.Balance - v.VBal).ToString("0.##"))</td>
+                                <td>@v.ApiBal.ToString("0.##")</td>
+                                <td>@v.ActualBal.ToString("0.##")</td>
+                                <td>@((v.ApiBal - v.ActualBal).ToString("0.##"))</td>
                                 <td>
                                     <div class="d-flex gap-1 flex-wrap">
                                         <button type="button" class="btn btn-success btn-sm" title="Refresh Balance"

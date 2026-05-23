@@ -19,9 +19,9 @@ namespace VIRENDRA.Models
         public DateTime? AddedDate       { get; set; }
         public int?    AddedById         { get; set; }
         public bool    IsAutoStatusCheck { get; set; }
-        public int?    CheckTime         { get; set; }
-        public decimal Balance           { get; set; }
-        public decimal VBal              { get; set; }
+        public int? StatusCheckTime { get; set; }
+        public decimal ApiBal           { get; set; }
+        public decimal ActualBal { get; set; }
         public int?    ApiTypeId         { get; set; }
 
         public List<ApiUrl> ApiUrls { get; set; } = new List<ApiUrl>();

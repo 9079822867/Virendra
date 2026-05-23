@@ -27,7 +27,7 @@ namespace VIRENDRA.Data
         {
             using (var conn = new SqlConnection(_connectionString))
                 return conn.Query<ApiSource>(
-                    "SELECT Id, ApiName, ApiUserId, ApiPassword, Remark, IsActive, Balance, VBal, IsAutoStatusCheck, CheckTime, ApiTypeId, AddedDate FROM ApiSource ORDER BY Id DESC"
+                    "SELECT Id, ApiName, ApiUserId, ApiPassword, Remark, IsActive, ApiBal, ActualBal, IsAutoStatusCheck, StatusCheckTime, ApiTypeId, AddedDate FROM ApiSource ORDER BY Id DESC"
                 ).ToList();
         }
 
