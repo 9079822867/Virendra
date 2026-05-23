@@ -1,0 +1,71 @@
+@model IEnumerable<VIRENDRA.Models.Package>
+@{
+    ViewBag.Title = "Packages";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between mb-3">
+        <h4 class="mb-sm-0">Packages</h4>
+        <a href="@Url.Action("Create")" class="btn btn-primary"><i class="fas fa-plus"></i> Add Package</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Package Name</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Added Date</th>
+                            <th class="text-center">Commission</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in Model)
+                        {
+                            <tr>
+                                <td>@p.Id</td>
+                                <td><strong>@p.PackageName</strong></td>
+                                <td>@(p.Description ?? "-")</td>
+                                <td>
+                                    <span class="badge @(p.IsActive ? "bg-success" : "bg-secondary")">
+                                        @(p.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </td>
+                                <td>@p.AddedDate.ToString("dd-MMM-yyyy")</td>
+                                <td class="text-center">
+                                    <a href="@Url.Action("Index", "PackageComm", new { packageId = p.Id })" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-percent"></i> Set Commission
+                                    </a>
+                                </td>
+                                <td class="text-end">
+                                    <a href="@Url.Action("Edit", new { id = p.Id })" class="btn btn-sm btn-primary">Edit</a>
+                                    @using (Html.BeginForm("Delete", "Package", new { id = p.Id }, FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Deactivate this package?')">
+                                            Delete
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

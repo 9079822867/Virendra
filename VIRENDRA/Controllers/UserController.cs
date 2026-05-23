@@ -10,11 +10,13 @@ namespace VIRENDRA.Controllers
     [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
     public class UserController : Controller
     {
-        private readonly IUserRepository _userRepository;
+        private readonly IUserRepository    _userRepository;
+        private readonly IPackageRepository _packageRepository;
 
-        public UserController(IUserRepository userRepository)
+        public UserController(IUserRepository userRepository, IPackageRepository packageRepository)
         {
-            _userRepository = userRepository;
+            _userRepository    = userRepository;
+            _packageRepository = packageRepository;
         }
 
         public ActionResult Index()
@@ -42,6 +44,7 @@ namespace VIRENDRA.Controllers
         public ActionResult Create()
         {
             PopulateRoleList();
+            PopulatePackageList();
             return View(BuildNewUser());
         }
 
@@ -68,6 +71,7 @@ namespace VIRENDRA.Controllers
             if (!ModelState.IsValid)
             {
                 PopulateRoleList(user.RoleId);
+                PopulatePackageList(user.PackageId);
                 return View(user);
             }
 
@@ -98,6 +102,7 @@ namespace VIRENDRA.Controllers
             }
 
             PopulateRoleList(user.RoleId);
+            PopulatePackageList(user.PackageId);
             return View(user);
         }
 
@@ -127,6 +132,7 @@ namespace VIRENDRA.Controllers
             {
                 model.Id = id;
                 PopulateRoleList(model.RoleId);
+                PopulatePackageList(model.PackageId);
                 return View(model);
             }
 
@@ -202,6 +208,12 @@ namespace VIRENDRA.Controllers
         {
             ViewBag.RoleList = new SelectList(
                 _userRepository.GetAllRoles(), "Id", "RoleName", selectedRoleId);
+        }
+
+        private void PopulatePackageList(int? selectedPackageId = null)
+        {
+            ViewBag.PackageList = new SelectList(
+                _packageRepository.GetAllPackages().FindAll(p => p.IsActive), "Id", "PackageName", selectedPackageId);
         }
     }
 }

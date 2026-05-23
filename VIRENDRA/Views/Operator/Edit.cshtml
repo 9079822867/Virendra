@@ -1,0 +1,52 @@
+@model VIRENDRA.Models.Operator
+@{
+    ViewBag.Title = "Edit Operator";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between mb-3">
+        <h4 class="mb-sm-0">Edit Operator</h4>
+        <a href="@Url.Action("Index")" class="btn btn-light"><i class="fas fa-arrow-left"></i> Back</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            @using (Html.BeginForm())
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.Id)
+                @Html.ValidationSummary(true, "", new { @class = "text-danger mb-3" })
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        @Html.LabelFor(m => m.OperatorName, new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.OperatorName, new { @class = "form-control", required = "required" })
+                        @Html.ValidationMessageFor(m => m.OperatorName, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="col-md-4">
+                        @Html.LabelFor(m => m.OperatorCode, "Operator Code", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.OperatorCode, new { @class = "form-control" })
+                    </div>
+                    <div class="col-md-4">
+                        @Html.LabelFor(m => m.OperatorType, "Type", new { @class = "form-label" })
+                        @Html.DropDownListFor(m => m.OperatorType,
+                            new SelectList(new[] { "Mobile", "DTH", "Utility", "Other" }, Model.OperatorType),
+                            "-- Select Type --",
+                            new { @class = "form-select" })
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input" })
+                            @Html.LabelFor(m => m.IsActive, "Active", new { @class = "form-check-label" })
+                        </div>
+                    </div>
+                    <div class="col-12 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update</button>
+                        <a href="@Url.Action("Index")" class="btn btn-light">Cancel</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

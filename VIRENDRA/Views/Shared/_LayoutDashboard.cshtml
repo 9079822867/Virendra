@@ -268,7 +268,7 @@
                     </a>
                 </li>
 
-                @* User Management: SuperAdmin + Admin *@
+                @* Administration: SuperAdmin + Admin *@
                 @if (isSuperAdmin || isAdmin)
                 {
                     <li class="menu-title">Administration</li>
@@ -276,6 +276,30 @@
                         <a href="@Url.Action("Index", "User")" class="@(currentController == "User" ? "active" : "")">
                             <i class="fas fa-users"></i>
                             <span>User Management</span>
+                        </a>
+                    </li>
+                    <li class="@(currentController == "Package" ? "mm-active" : "")">
+                        <a href="@Url.Action("Index", "Package")" class="@(currentController == "Package" ? "active" : "")">
+                            <i class="fas fa-box-open"></i>
+                            <span>Packages</span>
+                        </a>
+                    </li>
+                    <li class="@(currentController == "Operator" ? "mm-active" : "")">
+                        <a href="@Url.Action("Index", "Operator")" class="@(currentController == "Operator" ? "active" : "")">
+                            <i class="bx bx-mobile"></i>
+                            <span>Operators</span>
+                        </a>
+                    </li>
+                }
+
+                @* My Commission: API User + Retailer *@
+                @if (isApiUser || isRetailer)
+                {
+                    <li class="menu-title">My Account</li>
+                    <li class="@(currentController == "PackageComm" ? "mm-active" : "")">
+                        <a href="@Url.Action("MyCommission", "PackageComm")" class="@(currentController == "PackageComm" ? "active" : "")">
+                            <i class="fas fa-percent"></i>
+                            <span>My Commission</span>
                         </a>
                     </li>
                 }

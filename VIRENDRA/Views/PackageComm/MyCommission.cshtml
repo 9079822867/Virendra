@@ -1,0 +1,69 @@
+@model IEnumerable<VIRENDRA.Models.PackageComm>
+@{
+    ViewBag.Title = "My Commission Rates";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+    string packageName = Model.FirstOrDefault()?.PackageName ?? "—";
+}
+
+<div class="container-fluid">
+    <div class="page-title-box mb-3">
+        <h4>My Commission Rates
+            <span class="badge bg-primary ms-2">@packageName</span>
+        </h4>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No package assigned to your account. Please contact admin.</div>
+    }
+    else
+    {
+        @foreach (var grp in Model.GroupBy(x => x.OperatorType))
+        {
+            <div class="card mb-3">
+                <div class="card-header fw-bold">
+                    <i class="fas fa-layer-group me-1"></i> @(grp.Key ?? "Other")
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Operator</th>
+                                    <th>Code</th>
+                                    <th class="text-center">Commission</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in grp)
+                                {
+                                    <tr>
+                                        <td><strong>@row.OperatorName</strong></td>
+                                        <td><code>@(row.OperatorCode ?? "-")</code></td>
+                                        <td class="text-center">
+                                            @if (row.CommValue > 0 && row.IsActive)
+                                            {
+                                                if (row.CommType == "P")
+                                                {
+                                                    <span class="badge bg-success fs-6">@row.CommValue.ToString("0.##") %</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-info text-dark fs-6">₹ @row.CommValue.ToString("0.##")</span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

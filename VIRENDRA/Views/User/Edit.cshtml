@@ -44,8 +44,9 @@
                         @Html.ValidationMessageFor(model => model.RoleId, "", new { @class = "text-danger" })
                     </div>
                     <div class="col-md-4">
-                        @Html.LabelFor(model => model.PackageId, new { @class = "form-label" })
-                        @Html.TextBoxFor(model => model.PackageId, new { @class = "form-control", type = "number", min = "0" })
+                        @Html.LabelFor(model => model.PackageId, "Package", new { @class = "form-label" })
+                        @Html.DropDownListFor(model => model.PackageId, (SelectList)ViewBag.PackageList, "-- Select Package --", new { @class = "form-select" })
+                        @Html.ValidationMessageFor(model => model.PackageId, "", new { @class = "text-danger" })
                     </div>
                     <div class="col-md-4">
                         @Html.LabelFor(model => model.ParentID, new { @class = "form-label" })

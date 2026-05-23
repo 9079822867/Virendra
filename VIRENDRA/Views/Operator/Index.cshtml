@@ -1,0 +1,69 @@
+@model IEnumerable<VIRENDRA.Models.Operator>
+@{
+    ViewBag.Title = "Operators";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between mb-3">
+        <h4 class="mb-sm-0">Operators</h4>
+        <a href="@Url.Action("Create")" class="btn btn-primary"><i class="fas fa-plus"></i> Add Operator</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Operator Name</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Added Date</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var op in Model)
+                        {
+                            <tr>
+                                <td>@op.Id</td>
+                                <td><strong>@op.OperatorName</strong></td>
+                                <td><code>@(op.OperatorCode ?? "-")</code></td>
+                                <td>
+                                    <span class="badge bg-info text-dark">@(op.OperatorType ?? "-")</span>
+                                </td>
+                                <td>
+                                    <span class="badge @(op.IsActive ? "bg-success" : "bg-secondary")">
+                                        @(op.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </td>
+                                <td>@op.AddedDate.ToString("dd-MMM-yyyy")</td>
+                                <td class="text-end">
+                                    <a href="@Url.Action("Edit", new { id = op.Id })" class="btn btn-sm btn-primary">Edit</a>
+                                    @using (Html.BeginForm("Delete", "Operator", new { id = op.Id }, FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Deactivate this operator?')">
+                                            Delete
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
