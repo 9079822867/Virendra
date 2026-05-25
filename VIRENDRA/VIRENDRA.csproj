@@ -323,7 +323,6 @@
     <Content Include="Views\Transaction\RechargeHistory.cshtml" />
     <Content Include="Views\Transaction\TransactionHistory.cshtml" />
     <Content Include="Views\Transaction\_HistoryStyles.cshtml" />
-    <Content Include="Views\Reports\RechargeReport.cshtml" />
     <Content Include="Views\User\Index.cshtml" />
     <Content Include="Views\User\Create.cshtml" />
     <Content Include="Views\User\Edit.cshtml" />
