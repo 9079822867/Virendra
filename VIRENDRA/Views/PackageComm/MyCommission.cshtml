@@ -18,7 +18,7 @@
     }
     else
     {
-        @foreach (var grp in Model.GroupBy(x => x.OperatorType))
+        foreach (var grp in Model.GroupBy(x => x.OperatorType))
         {
             <div class="card mb-3">
                 <div class="card-header fw-bold">
@@ -45,16 +45,16 @@
                                             {
                                                 if (row.CommType == "P")
                                                 {
-                                                    <span class="badge bg-success fs-6">@row.CommValue.ToString("0.##") %</span>
+                                                    <span class="badge bg-success fs-6">@row.CommValue %</span>
                                                 }
                                                 else
                                                 {
-                                                    <span class="badge bg-info text-dark fs-6"><i class="fa fa-rupee-sign"></i> @row.CommValue.ToString("0.##")</span>
+                                                    <span class="badge bg-info text-dark fs-6"><i class="fa fa-rupee-sign"></i> @row.CommValue</span>
                                                 }
                                             }
                                             else
                                             {
-                                                <span class="text-muted">—</span>
+                                                <span class="text-muted"></span>
                                             }
                                         </td>
                                     </tr>

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "yms-preview",
+      "runtimeExecutable": "dotnet-serve",
+      "runtimeArgs": ["--directory", "D:\\Development\\YMS\\frontend", "--port", "3456"],
+      "port": 3456
+    }
+  ]
+}

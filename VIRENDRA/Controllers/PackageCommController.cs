@@ -5,7 +5,7 @@ using VIRENDRA.Models;
 
 namespace VIRENDRA.Controllers
 {
-    [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
+    [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin, RoleConstants.ApiUser, RoleConstants.Retailer)]
     public class PackageCommController : Controller
     {
         private readonly IPackageRepository _repo;
