@@ -1,6 +1,7 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 @{
     var currentController = (ViewContext.RouteData.Values["controller"] ?? "").ToString();
+    var currentAction     = (ViewContext.RouteData.Values["action"]     ?? "").ToString();
     byte roleId  = (byte)(Session["RoleId"] ?? (byte)0);
     string uname = (Session["Username"] ?? "User").ToString();
     decimal bal  = (decimal)(Session["UserBal"] ?? 0m);
@@ -14,20 +15,22 @@
                     : isAdmin      ? "Admin"
                     : isApiUser    ? "API User"
                     : "Retailer";
+
+    // Helper: is any of the listed controllers the current one?
+    Func<string[], bool> anyActive = controllers =>
+        System.Array.IndexOf(controllers, currentController) >= 0;
 }
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Recharge Software - Dashboard</title>
+    <title>@(ViewBag.Title != null ? ViewBag.Title + " — " : "")Recharge Software</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Recharge Software Dashboard">
 
     <!-- Bootstrap CSS -->
     <link href="~/Content/css/bootstrap.min.css" rel="stylesheet">
     <link href="~/Content/css/bootstrap-icons.css" rel="stylesheet">
     <link href="~/Content/css/boxicons.min.css" rel="stylesheet">
     <link href="~/Content/css/remixicon.css" rel="stylesheet">
-
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -35,407 +38,456 @@
     <link href="~/Content/css/style.css" rel="stylesheet">
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
+            background-color: #f0f2f5;
         }
 
-        /* Top Header */
-        .top-header {
+        /* ── Top Navbar ───────────────────────────────────────── */
+        .top-navbar {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem 2rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,.18);
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 1040;
+        }
+
+        /* Brand */
+        .top-navbar .navbar-brand {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #fff !important;
+            letter-spacing: .5px;
+            padding: .75rem 1rem .75rem 0;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            gap: .45rem;
         }
 
-            .top-header .logo {
-                font-weight: bold;
-                font-size: 1.5rem;
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-            }
+        /* Hamburger */
+        .top-navbar .navbar-toggler {
+            border: none;
+            padding: .4rem .6rem;
+        }
+        .top-navbar .navbar-toggler-icon {
+            filter: invert(1);
+        }
 
-            .top-header .search-box {
-                flex: 0 0 30%;
-                display: flex;
-                gap: 0.5rem;
-            }
+        /* Primary nav links */
+        .top-navbar .nav-link {
+            color: rgba(255,255,255,.88) !important;
+            font-size: .83rem;
+            font-weight: 500;
+            padding: .85rem .75rem !important;
+            border-bottom: 3px solid transparent;
+            transition: all .2s;
+            white-space: nowrap;
+        }
+        .top-navbar .nav-link:hover {
+            color: #fff !important;
+            border-bottom-color: rgba(255,255,255,.5);
+        }
+        .top-navbar .nav-link.active,
+        .top-navbar .nav-item.active > .nav-link {
+            color: #fff !important;
+            border-bottom-color: #fff;
+            font-weight: 700;
+        }
 
-                .top-header .search-box input {
-                    flex: 1;
-                    padding: 0.5rem 1rem;
-                    border: none;
-                    border-radius: 20px;
-                    outline: none;
-                }
-
-                .top-header .search-box button {
-                    background: #48bb78;
-                    color: white;
-                    border: none;
-                    padding: 0.5rem 1.5rem;
-                    border-radius: 20px;
-                    cursor: pointer;
-                }
-
-            .top-header .user-info {
-                display: flex;
-                align-items: center;
-                gap: 1rem;
-            }
-
-                .top-header .user-info .time,
-                .top-header .user-info .balance {
-                    font-size: 0.9rem;
-                }
-
-            .top-header .user-name {
-                background: rgba(255, 255, 255, 0.2);
-                padding: 0.5rem 1rem;
-                border-radius: 20px;
-                font-weight: 500;
-            }
-
-        /* Main Container */
-        .dashboard-container {
+        /* Dropdown */
+        .top-navbar .dropdown-menu {
+            border: none;
+            box-shadow: 0 8px 32px rgba(0,0,0,.14);
+            border-radius: 10px;
+            overflow: hidden;
+            min-width: 200px;
+            margin-top: 0 !important;
+            padding: .4rem 0;
+        }
+        .top-navbar .dropdown-header {
+            font-size: .7rem;
+            font-weight: 700;
+            color: #9e9e9e;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            padding: .6rem 1rem .3rem;
+        }
+        .top-navbar .dropdown-item {
+            font-size: .83rem;
+            padding: .55rem 1.1rem;
+            color: #343a40;
             display: flex;
-            height: calc(100vh - 80px);
+            align-items: center;
+            gap: .55rem;
+            transition: background .15s;
+        }
+        .top-navbar .dropdown-item i {
+            width: 18px;
+            text-align: center;
+            color: #667eea;
+            font-size: .85rem;
+        }
+        .top-navbar .dropdown-item:hover {
+            background: #f0f2ff;
+            color: #667eea;
+        }
+        .top-navbar .dropdown-item.active,
+        .top-navbar .dropdown-item:active {
+            background: #667eea;
+            color: #fff;
+        }
+        .top-navbar .dropdown-item.active i {
+            color: #fff;
+        }
+        .top-navbar .dropdown-divider {
+            margin: .3rem 0;
+            border-color: #f0f0f0;
         }
 
-        /* Sidebar */
-        .sidebar {
-            width: 220px;
+        /* Right-side user pill */
+        .nav-user-pill {
+            background: rgba(255,255,255,.18);
+            border-radius: 30px;
+            padding: .35rem .9rem;
+            color: #fff;
+            font-size: .82rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            cursor: default;
+            white-space: nowrap;
+        }
+        .nav-balance {
+            color: rgba(255,255,255,.9);
+            font-size: .82rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* Main page area */
+        .page-wrapper {
+            min-height: calc(100vh - 52px);
+            padding: 1.75rem 1.75rem 2rem;
             background: #f0f2f5;
-            padding: 2rem 0;
-            overflow-y: auto;
-            border-right: 1px solid #dee2e6;
         }
 
-            .sidebar .menu-title {
-                padding: 0.5rem 1.5rem;
-                font-size: 0.75rem;
-                font-weight: 600;
-                color: #6c757d;
-                text-transform: uppercase;
-                margin-top: 1rem;
+        /* Responsive: on mobile stack nav items */
+        @@media (max-width: 991.98px) {
+            .top-navbar .nav-link {
+                border-bottom: none;
+                border-left: 3px solid transparent;
+                padding: .6rem 1rem !important;
             }
-
-            .sidebar ul {
-                list-style: none;
-                margin: 0;
+            .top-navbar .nav-link.active,
+            .top-navbar .nav-item.active > .nav-link {
+                border-left-color: #fff;
+                border-bottom: none;
+                background: rgba(255,255,255,.12);
+            }
+            .top-navbar .dropdown-menu {
+                border-radius: 0;
+                box-shadow: none;
+                background: rgba(255,255,255,.08);
                 padding: 0;
             }
-
-            .sidebar li {
-                margin: 0.25rem 0.5rem;
+            .top-navbar .dropdown-item {
+                color: rgba(255,255,255,.85);
+                background: transparent;
             }
-
-            .sidebar a {
-                padding: 0.75rem 1.5rem;
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                color: #495057;
-                text-decoration: none;
-                border-radius: 8px;
-                transition: all 0.3s ease;
-                cursor: pointer;
+            .top-navbar .dropdown-item:hover {
+                background: rgba(255,255,255,.12);
+                color: #fff;
             }
-
-                .sidebar a:hover {
-                    background: #e9ecef;
-                    color: #212529;
-                }
-
-                .sidebar li.mm-active > a,
-                .sidebar a.active {
-                    background: #48bb78;
-                    color: white;
-                    font-weight: 600;
-                }
-
-                .sidebar a i,
-                .sidebar a svg {
-                    font-size: 1.1rem;
-                    width: 24px;
-                    min-width: 24px;
-                }
-
-                .sidebar a.has-arrow::after {
-                    content: '\f078';
-                    font-family: 'Font Awesome 6 Free';
-                    font-weight: 900;
-                    margin-left: auto;
-                    font-size: 0.75rem;
-                }
-
-            .sidebar .sub-menu {
-                display: none;
-                margin: 0.25rem 0 0.5rem 0;
-                padding-left: 1.75rem;
-            }
-
-                .sidebar .sub-menu.mm-show {
-                    display: block;
-                }
-
-                .sidebar .sub-menu li {
-                    margin: 0.15rem 0;
-                }
-
-                .sidebar .sub-menu a {
-                    font-size: 0.9rem;
-                    padding: 0.5rem 1rem;
-                }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 2rem;
+            .top-navbar .dropdown-item i { color: rgba(255,255,255,.7); }
+            .top-navbar .dropdown-header { color: rgba(255,255,255,.5); }
+            .top-navbar .dropdown-divider { border-color: rgba(255,255,255,.1); }
+            .page-wrapper { padding: 1rem; }
         }
-
-        /* Scrollbar Styling */
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 3px;
-        }
-
-            .sidebar::-webkit-scrollbar-thumb:hover {
-                background: #555;
-            }
     </style>
 </head>
 <body>
-    <!-- Top Header -->
-    <div class="top-header">
-        <div class="logo">
+
+<!-- ═══════════════════ TOP NAVBAR ═══════════════════ -->
+<nav class="navbar navbar-expand-lg top-navbar">
+    <div class="container-fluid px-3">
+
+        <!-- Brand / Logo -->
+        <a class="navbar-brand" href="@Url.Action("Dashboard","Home")">
             <i class="fas fa-exchange-alt"></i>
             EXPRESS
-        </div>
+        </a>
 
-        <div class="search-box">
-            <input type="text" placeholder="Search...">
-            <button type="button"><i class="fas fa-search"></i></button>
-        </div>
+        <!-- Mobile toggler -->
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-        <div class="user-info">
-            <div class="balance">
-                <i class="fas fa-wallet me-1"></i> <i class="fa fa-rupee-sign"></i>@bal.ToString("N2")
-            </div>
-            <div class="user-name">
-                <i class="fas fa-user-circle me-1"></i>
-                @uname
-                <span class="badge ms-1" style="background:rgba(255,255,255,.25);font-size:.7rem;">@roleName</span>
-                <i class="fas fa-chevron-down ms-1"></i>
-            </div>
-            <a href="@Url.Action("Logout", "Auth")" class="btn btn-sm btn-outline-light">
-                <i class="fas fa-sign-out-alt"></i>
-            </a>
-        </div>
-    </div>
+        <div class="collapse navbar-collapse" id="mainNavbar">
 
-    <!-- Dashboard Container -->
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <ul class="metismenu list-unstyled mm-show" id="side-menu">
-                <li class="menu-title">Menu</li>
+            <!-- ── Left nav links ──────────────────────────── -->
+            <ul class="navbar-nav me-auto align-items-lg-stretch">
 
-                @* Dashboard: all roles *@
-                <li class="@(currentController == "Home" ? "mm-active" : "")">
-                    <a href="@Url.Action("Dashboard", "Home")" class="@(currentController == "Home" ? "active" : "")">
-                        <i class="fas fa-home"></i>
-                        <span>Dashboard</span>
+                <%-- Dashboard — all roles --%>
+                <li class="nav-item @(currentController == "Home" ? "active" : "")">
+                    <a class="nav-link @(currentController == "Home" ? "active" : "")"
+                       href="@Url.Action("Dashboard","Home")">
+                        <i class="fas fa-home me-1"></i>Dashboard
                     </a>
                 </li>
 
-                @* Administration: SuperAdmin + Admin *@
+                <%-- Administration — SuperAdmin + Admin --%>
                 @if (isSuperAdmin || isAdmin)
                 {
-                    <li class="menu-title">Administration</li>
-                    <li class="@(currentController == "User" ? "mm-active" : "")">
-                        <a href="@Url.Action("Index", "User")" class="@(currentController == "User" ? "active" : "")">
-                            <i class="fas fa-users"></i>
-                            <span>User Management</span>
+                    bool adminActive = anyActive(new[]{"User","Package","Operator","Vendor","BankAccount","Services"});
+                    <li class="nav-item dropdown @(adminActive ? "active" : "")">
+                        <a class="nav-link dropdown-toggle @(adminActive ? "active" : "")"
+                           href="#" id="ddAdmin" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cogs me-1"></i>Administration
                         </a>
-                    </li>
-                    <li class="@(currentController == "Package" ? "mm-active" : "")">
-                        <a href="@Url.Action("Index", "Package")" class="@(currentController == "Package" ? "active" : "")">
-                            <i class="fas fa-box-open"></i>
-                            <span>Packages</span>
-                        </a>
-                    </li>
-                    <li class="@(currentController == "Operator" ? "mm-active" : "")">
-                        <a href="@Url.Action("Index", "Operator")" class="@(currentController == "Operator" ? "active" : "")">
-                            <i class="bx bx-mobile"></i>
-                            <span>Operators</span>
-                        </a>
-                    </li>
-                    <li class="@(currentController == "Vendor" ? "mm-active" : "")">
-                        <a href="@Url.Action("Index", "Vendor")" class="@(currentController == "Vendor" ? "active" : "")">
-                            <i class="fas fa-store"></i>
-                            <span>Vendors (API)</span>
-                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="ddAdmin">
+                            <li><h6 class="dropdown-header">Manage</h6></li>
+                            <li>
+                                <a class="dropdown-item @(currentController=="User" ? "active" : "")"
+                                   href="@Url.Action("Index","User")">
+                                    <i class="fas fa-users"></i> User Management
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController=="Package" ? "active" : "")"
+                                   href="@Url.Action("Index","Package")">
+                                    <i class="fas fa-box-open"></i> Packages
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController=="Operator" ? "active" : "")"
+                                   href="@Url.Action("Index","Operator")">
+                                    <i class="bx bx-mobile"></i> Operators
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController=="Vendor" ? "active" : "")"
+                                   href="@Url.Action("Index","Vendor")">
+                                    <i class="fas fa-store"></i> Vendors (API)
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">Finance</h6></li>
+                            <li>
+                                <a class="dropdown-item @(currentController=="BankAccount" ? "active" : "")"
+                                   href="@Url.Action("Index","BankAccount")">
+                                    <i class="fas fa-university"></i> Bank Accounts
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">Config</h6></li>
+                            <li>
+                                <a class="dropdown-item @(currentController=="Services" ? "active" : "")"
+                                   href="@Url.Action("Index","Services")">
+                                    <i class="bx bx-mobile"></i> Services
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 }
 
-                @* My Commission: API User + Retailer *@
+                <%-- My Account — ApiUser + Retailer --%>
                 @if (isApiUser || isRetailer)
                 {
-                    <li class="menu-title">My Account</li>
-                    <li class="@(currentController == "PackageComm" ? "mm-active" : "")">
-                        <a href="@Url.Action("MyCommission", "PackageComm")" class="@(currentController == "PackageComm" ? "active" : "")">
-                            <i class="fas fa-percent"></i>
-                            <span>My Commission</span>
+                    <li class="nav-item @(currentController=="PackageComm" ? "active" : "")">
+                        <a class="nav-link @(currentController=="PackageComm" ? "active" : "")"
+                           href="@Url.Action("MyCommission","PackageComm")">
+                            <i class="fas fa-percent me-1"></i>My Commission
                         </a>
                     </li>
                 }
 
-                @* Services: SuperAdmin + Admin *@
-                @if (isSuperAdmin || isAdmin)
-                {
-                    <li class="@(currentController == "Services" ? "mm-active" : "")">
-                        <a href="@Url.Action("Index", "Services")" class="@(currentController == "Services" ? "active" : "")">
-                            <i class="bx bx-mobile"></i>
-                            <span>Services</span>
-                        </a>
-                    </li>
-                }
-
-                @* Recharge: all roles *@
-                <li class="menu-title">Recharge</li>
-                <li class="@(currentController == "Recharge" ? "mm-active" : "")">
-                    <a href="@Url.Action("Index", "Recharge")" class="@(currentController == "Recharge" ? "active" : "")">
-                        <i class="bx bx-mobile-alt"></i>
-                        <span>Do Recharge</span>
+                <%-- Recharge — all roles --%>
+                <li class="nav-item @(currentController=="Recharge" ? "active" : "")">
+                    <a class="nav-link @(currentController=="Recharge" ? "active" : "")"
+                       href="@Url.Action("Index","Recharge")">
+                        <i class="bx bx-mobile-alt me-1"></i>Recharge
                     </a>
                 </li>
 
-                @* Transactions: all roles *@
-                <li class="@(currentController == "Transaction" ? "mm-active" : "")">
-                    <a href="javascript:void(0);" class="has-arrow @(currentController == "Transaction" ? "active" : "")">
-                        <i class="far fa-file-alt"></i>
-                        <span>Transaction</span>
+                <%-- Transaction — all roles --%>
+                @{
+                    bool txnActive = currentController == "Transaction";
+                }
+                <li class="nav-item dropdown @(txnActive ? "active" : "")">
+                    <a class="nav-link dropdown-toggle @(txnActive ? "active" : "")"
+                       href="#" id="ddTxn" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="far fa-file-alt me-1"></i>Transactions
                     </a>
-                    <ul class="sub-menu mm-collapse @(currentController == "Transaction" ? "mm-show" : "")" aria-expanded="@(currentController == "Transaction" ? "true" : "false")">
-                        <li><a href="@Url.Action("RechargeHistory", "Transaction")">Recharge History</a></li>
-                        <li><a href="@Url.Action("TransactionHistory", "Transaction")">Transaction History</a></li>
+                    <ul class="dropdown-menu" aria-labelledby="ddTxn">
+                        <li>
+                            <a class="dropdown-item @(txnActive && currentAction=="RechargeHistory" ? "active" : "")"
+                               href="@Url.Action("RechargeHistory","Transaction")">
+                                <i class="fas fa-history"></i> Recharge History
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item @(txnActive && currentAction=="TransactionHistory" ? "active" : "")"
+                               href="@Url.Action("TransactionHistory","Transaction")">
+                                <i class="fas fa-list-alt"></i> Transaction History
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
-                @* Payment: SuperAdmin + Admin + Retailer *@
+                <%-- Payment — SuperAdmin + Admin + Retailer --%>
                 @if (isSuperAdmin || isAdmin || isRetailer)
                 {
-                    <li class="@(currentController == "Wallet" ? "mm-active" : "")">
-                        <a href="javascript:void(0);" class="has-arrow @(currentController == "Wallet" ? "active" : "")">
-                            <i class="fas fa-wallet"></i>
-                            <span>Payment</span>
+                    bool walletActive = currentController == "Wallet";
+                    <li class="nav-item dropdown @(walletActive ? "active" : "")">
+                        <a class="nav-link dropdown-toggle @(walletActive ? "active" : "")"
+                           href="#" id="ddWallet" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-wallet me-1"></i>Payment
                         </a>
-                        <ul class="sub-menu mm-collapse @(currentController == "Wallet" ? "mm-show" : "")" aria-expanded="@(currentController == "Wallet" ? "true" : "false")">
-                            <li><a href="javascript:void(0);">Payment Request</a></li>
-                            <li><a href="@Url.Action("AddMoney", "Wallet")">Add Money</a></li>
+                        <ul class="dropdown-menu" aria-labelledby="ddWallet">
+                            <li>
+                                <a class="dropdown-item @(walletActive && currentAction=="Index" ? "active" : "")"
+                                   href="@Url.Action("Index","Wallet")">
+                                    <i class="fas fa-inbox"></i> Payment Requests
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(walletActive && currentAction=="AddMoney" ? "active" : "")"
+                                   href="@Url.Action("AddMoney","Wallet")">
+                                    <i class="fas fa-plus-circle"></i> Add Money
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 }
 
-                @* Reports: SuperAdmin + Admin *@
+                <%-- Reports — SuperAdmin + Admin --%>
                 @if (isSuperAdmin || isAdmin)
                 {
-                    <li class="menu-title">Reports</li>
-                    <li class="@(currentController == "Reports" ? "mm-active" : "")">
-                        <a href="javascript:void(0);" class="has-arrow @(currentController == "Reports" ? "active" : "")">
-                            <i class="bx bx-file"></i>
-                            <span>Reports</span>
+                    bool rptActive = currentController == "Reports";
+                    <li class="nav-item dropdown @(rptActive ? "active" : "")">
+                        <a class="nav-link dropdown-toggle @(rptActive ? "active" : "")"
+                           href="#" id="ddReports" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bx bx-file me-1"></i>Reports
                         </a>
-                        <ul class="sub-menu mm-collapse @(currentController == "Reports" ? "mm-show" : "")" aria-expanded="@(currentController == "Reports" ? "true" : "false")">
-                            <li><a href="@Url.Action("OperatorwiseReport", "Reports")">Operatorwise Report</a></li>
-                            <li><a href="javascript:void(0);">Payment Report</a></li>
+                        <ul class="dropdown-menu" aria-labelledby="ddReports">
+                            <li>
+                                <a class="dropdown-item @(rptActive && currentAction=="OperatorwiseReport" ? "active" : "")"
+                                   href="@Url.Action("OperatorwiseReport","Reports")">
+                                    <i class="fas fa-chart-bar"></i> Operatorwise Report
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="javascript:void(0);">
+                                    <i class="fas fa-file-invoice"></i> Payment Report
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 }
 
-                @* Developer Tools: SuperAdmin + API User *@
+                <%-- Developer — SuperAdmin + ApiUser --%>
                 @if (isSuperAdmin || isApiUser)
                 {
-                    <li class="menu-title">Developer</li>
-                    <li class="@(currentController == "ApiDocument" || currentController == "ApiSettings" ? "mm-active" : "")">
-                        <a href="javascript:void(0);" class="has-arrow @(currentController == "ApiDocument" || currentController == "ApiSettings" ? "active" : "")">
-                            <i class="bx bxs-wrench"></i>
-                            <span>Developer Tools</span>
+                    bool devActive = anyActive(new[]{"ApiDocument","ApiSettings"});
+                    <li class="nav-item dropdown @(devActive ? "active" : "")">
+                        <a class="nav-link dropdown-toggle @(devActive ? "active" : "")"
+                           href="#" id="ddDev" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bx bxs-wrench me-1"></i>Developer
                         </a>
-                        <ul class="sub-menu mm-collapse @(currentController == "ApiDocument" || currentController == "ApiSettings" ? "mm-show" : "")" aria-expanded="@(currentController == "ApiDocument" || currentController == "ApiSettings" ? "true" : "false")">
-                            <li class="@(currentController == "ApiSettings" ? "mm-active" : "")">
-                                <a href="@Url.Action("Index", "ApiSettings")" class="@(currentController == "ApiSettings" ? "active" : "")">API Setting</a>
+                        <ul class="dropdown-menu" aria-labelledby="ddDev">
+                            <li>
+                                <a class="dropdown-item @(currentController=="ApiSettings" ? "active" : "")"
+                                   href="@Url.Action("Index","ApiSettings")">
+                                    <i class="fas fa-key"></i> API Setting
+                                </a>
                             </li>
-                            <li class="@(currentController == "ApiDocument" ? "mm-active" : "")">
-                                <a href="@Url.Action("Index", "ApiDocument")" class="@(currentController == "ApiDocument" ? "active" : "")">API Integration Tool</a>
+                            <li>
+                                <a class="dropdown-item @(currentController=="ApiDocument" ? "active" : "")"
+                                   href="@Url.Action("Index","ApiDocument")">
+                                    <i class="fas fa-code"></i> API Integration Tool
+                                </a>
                             </li>
                         </ul>
                     </li>
                 }
 
-                @* Support: all roles *@
-                <li class="menu-title">Support</li>
-                <li>
-                    <a href="javascript:void(0);" class="has-arrow">
-                        <i class="fas fa-headphones"></i>
-                        <span>Support</span>
+                <%-- Support — all roles --%>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="ddSupport" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-headphones me-1"></i>Support
                     </a>
-                    <ul class="sub-menu mm-collapse" aria-expanded="false">
-                        <li><a href="javascript:void(0);">Dispute</a></li>
+                    <ul class="dropdown-menu" aria-labelledby="ddSupport">
+                        <li>
+                            <a class="dropdown-item" href="javascript:void(0);">
+                                <i class="fas fa-exclamation-circle"></i> Dispute
+                            </a>
+                        </li>
                     </ul>
                 </li>
-            </ul>
-        </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            @RenderBody()
-        </div>
-    </div>
+            </ul><!-- /navbar-nav -->
 
-    <!-- jQuery -->
-    <script src="~/Content/js/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap JS -->
-    <script src="~/Content/js/bootstrap.bundle.min.js"></script>
+            <!-- ── Right-side: balance + user + logout ───────── -->
+            <div class="d-flex align-items-center gap-2 py-2 py-lg-0 ms-lg-3">
 
-    <script>
-        document.querySelectorAll('.sidebar .has-arrow').forEach(item => {
-            item.addEventListener('click', function () {
-                var submenu = this.nextElementSibling;
+                <!-- Balance -->
+                <span class="nav-balance d-none d-md-inline">
+                    <i class="fas fa-wallet me-1"></i>
+                    <i class="fa fa-rupee-sign"></i>@bal.ToString("N2")
+                </span>
 
-                if (submenu && submenu.classList.contains('sub-menu')) {
-                    submenu.classList.toggle('mm-show');
-                }
-            });
+                <!-- User pill -->
+                <div class="nav-user-pill d-none d-md-flex">
+                    <i class="fas fa-user-circle"></i>
+                    <span>@uname</span>
+                    <span class="badge ms-1"
+                          style="background:rgba(255,255,255,.25);font-size:.65rem;">@roleName</span>
+                </div>
+
+                <!-- Logout -->
+                <a href="@Url.Action("Logout","Auth")"
+                   class="btn btn-sm btn-outline-light ms-1"
+                   title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="d-inline d-lg-none ms-1">Logout</span>
+                </a>
+            </div>
+
+        </div><!-- /collapse -->
+    </div><!-- /container-fluid -->
+</nav>
+<!-- ═══════════════════ /TOP NAVBAR ═══════════════════ -->
+
+<!-- Page Content -->
+<div class="page-wrapper">
+    @RenderBody()
+</div>
+
+<!-- jQuery -->
+<script src="~/Content/js/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="~/Content/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Close dismissible alerts
+    document.querySelectorAll('[data-dismiss="alert"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            this.closest('.alert').style.display = 'none';
         });
-
-        // Close alert
-        document.querySelectorAll('[data-dismiss="alert"]').forEach(btn => {
-            btn.addEventListener('click', function () {
-                this.closest('.alert').style.display = 'none';
-            });
-        });
-    </script>
-    @RenderSection("Scripts", required: false)
+    });
+</script>
+@RenderSection("Scripts", required: false)
 </body>
 </html>
