@@ -13,6 +13,9 @@ namespace VIRENDRA
         {
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
+            // Prevent MVC from intercepting Web API requests
+            routes.IgnoreRoute("api/{*pathInfo}");
+
             routes.MapRoute(
                 name: "Default",
                 url: "{controller}/{action}/{id}",
