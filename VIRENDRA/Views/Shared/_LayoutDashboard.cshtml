@@ -405,7 +405,7 @@
                     }
 
                     @*<%-- Reports — SuperAdmin + Admin --%>*@
-                    @if (isSuperAdmin || isAdmin)
+                    @if (isSuperAdmin || isAdmin || isRetailer || isApiUser)
                     {
                         bool rptActive = currentController == "Reports";
                         <li class="nav-item dropdown @(rptActive ? "active" : "")">
