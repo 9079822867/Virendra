@@ -1,4 +1,4 @@
-@model VIRENDRA.Models.ApiKeySettingsViewModel
+﻿@model VIRENDRA.Models.ApiKeySettingsViewModel
 @{
     ViewBag.Title = "API Settings";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
@@ -108,7 +108,7 @@
                             <code id="tokenDisplay"
                                   class="text-dark fw-semibold"
                                   style="word-break:break-all;font-size:.82rem;">
-                                @(string.IsNullOrEmpty(Model.Token) ? "—" : new string('•', 24))
+                                @(string.IsNullOrEmpty(Model.Token) ? "--" : new string('\u2022', 24))
                             </code>
                             <span id="tokenValue" class="d-none">@Model.Token</span>
                             <div class="d-flex gap-1 ms-auto flex-shrink-0">
@@ -424,3 +424,4 @@
     })();
 </script>
 }
+
