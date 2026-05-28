@@ -1,154 +1,426 @@
 @model VIRENDRA.Models.ApiKeySettingsViewModel
 @{
-    ViewBag.Title = "API Key & Settings";
+    ViewBag.Title = "API Settings";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
 }
 
-<div class="page-content">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0 font-size-18">API Key &amp; Settings</h4>
-                    <div class="page-title-right">
-                        <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a href="javascript:void(0);">Developer Tools</a></li>
-                            <li class="breadcrumb-item active">API Key &amp; Settings</li>
+<div class="container-fluid">
+
+    <!-- Page Title -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                    <h4 class="mb-1 fw-bold text-dark">
+                        <i class="fas fa-key text-primary me-2"></i>API Settings
+                    </h4>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0" style="font-size:.82rem;">
+                            <li class="breadcrumb-item"><a href="@Url.Action("Dashboard","Home")">Dashboard</a></li>
+                            <li class="breadcrumb-item active">API Settings</li>
                         </ol>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="apiSettingsAlert" class="alert d-none mt-3" role="alert"></div>
-
-        <div class="card mt-4">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">IP Address</th>
-                                <th scope="col">Token</th>
-                                <th scope="col">Callback</th>
-                                <th scope="col">Status</th>
-                                <th scope="col" class="text-end">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>1</td>
-                                <td id="apiIpAddress">@Model.IpAddress</td>
-                                <td id="apiToken" class="text-break">@Model.Token</td>
-                                <td id="apiCallback" class="text-break">@Model.CallbackUrl</td>
-                                <td>
-                                    <span id="apiStatus" class="badge @(Model.IsVerified ? "bg-success" : "bg-warning text-dark")">
-                                        @(Model.IsVerified ? "Verified" : "Pending")
-                                    </span>
-                                </td>
-                                <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#apiSettingsModal" title="Edit API settings">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    </nav>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Alerts -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-4" style="border-radius:10px;">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible mb-4" style="border-radius:10px;">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    <div id="apiSettingsAlert" class="d-none mb-4"></div>
+
+    <div class="row g-4">
+
+        <!-- ── Left: Credential Card ─────────────────────────── -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:14px;overflow:hidden;">
+
+                <!-- Card header -->
+                <div class="card-header border-0 py-3 px-4"
+                     style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                 style="width:36px;height:36px;background:rgba(255,255,255,.2);">
+                                <i class="fas fa-id-badge text-white" style="font-size:.9rem;"></i>
+                            </div>
+                            <h6 class="mb-0 text-white fw-bold">API Credentials</h6>
+                        </div>
+                        <span class="badge px-3 py-2
+                            @(Model.IsVerified ? "" : "bg-warning text-dark")"
+                              style="@(Model.IsVerified ? "background:#4CAF50;" : "")font-size:.75rem;">
+                            <i class="fas fa-@(Model.IsVerified ? "check" : "clock") me-1"></i>
+                            @(Model.IsVerified ? "Verified" : "Pending")
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Card body -->
+                <div class="card-body px-4 py-4">
+
+                    <!-- User -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="text-muted mb-1" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;">
+                            <i class="fas fa-user me-1"></i>Account
+                        </div>
+                        <div class="fw-semibold fs-6">@Model.Username</div>
+                        <div class="text-muted small">User ID: @Model.UserId</div>
+                    </div>
+
+                    <!-- IP Address -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="text-muted mb-1" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;">
+                            <i class="fas fa-network-wired me-1"></i>Whitelisted IP
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <code class="fs-6 text-dark fw-semibold">
+                                @(string.IsNullOrEmpty(Model.IpAddress) ? "Not set" : Model.IpAddress)
+                            </code>
+                            @if (!string.IsNullOrEmpty(Model.IpAddress))
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                        onclick="copyText('@Model.IpAddress', this)" title="Copy IP">
+                                    <i class="fas fa-copy" style="font-size:.75rem;"></i>
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Token -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="text-muted mb-1" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;">
+                            <i class="fas fa-key me-1"></i>API Token
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <code id="tokenDisplay"
+                                  class="text-dark fw-semibold"
+                                  style="word-break:break-all;font-size:.82rem;">
+                                @(string.IsNullOrEmpty(Model.Token) ? "—" : new string('•', 24))
+                            </code>
+                            <span id="tokenValue" class="d-none">@Model.Token</span>
+                            <div class="d-flex gap-1 ms-auto flex-shrink-0">
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2"
+                                        id="btnToggleToken" onclick="toggleToken()" title="Show / Hide">
+                                    <i class="fas fa-eye" style="font-size:.75rem;"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2"
+                                        onclick="copyText('@Model.Token', this)" title="Copy token">
+                                    <i class="fas fa-copy" style="font-size:.75rem;"></i>
+                                </button>
+                                @using (Html.BeginForm("ChangeToken", "ApiSettings", FormMethod.Post,
+                                    new { id = "changeTokenForm", style = "display:inline;" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2"
+                                            id="btnChangeToken" title="Regenerate token"
+                                            onclick="confirmChangeToken()">
+                                        <i class="bx bx-revision" style="font-size:.85rem;"></i>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                        <div class="text-muted mt-1" style="font-size:.72rem;">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Regenerating creates a new token — update all your API calls immediately.
+                        </div>
+                    </div>
+
+                    <!-- Callback URL -->
+                    <div class="mb-2">
+                        <div class="text-muted mb-1" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;">
+                            <i class="fas fa-link me-1"></i>Callback URL
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-break" style="font-size:.84rem;word-break:break-all;">
+                                @if (string.IsNullOrEmpty(Model.CallbackUrl))
+                                {
+                                    <span class="text-muted fst-italic">Not configured</span>
+                                }
+                                else
+                                {
+                                    @Model.CallbackUrl
+                                }
+                            </span>
+                            @if (!string.IsNullOrEmpty(Model.CallbackUrl))
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 flex-shrink-0"
+                                        onclick="copyText('@Html.Raw(Model.CallbackUrl)', this)" title="Copy URL">
+                                    <i class="fas fa-copy" style="font-size:.75rem;"></i>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card footer -->
+                <div class="card-footer border-0 px-4 py-3"
+                     style="background:#f8f9fa;">
+                    <button type="button"
+                            class="btn btn-primary btn-sm px-4"
+                            data-bs-toggle="modal" data-bs-target="#apiSettingsModal">
+                        <i class="fas fa-edit me-1"></i>Edit Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Right: Quick Guide ─────────────────────────────── -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:14px;overflow:hidden;">
+                <div class="card-header border-0 py-3 px-4"
+                     style="background:linear-gradient(135deg,#11998e,#38ef7d);">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:36px;height:36px;background:rgba(255,255,255,.25);">
+                            <i class="fas fa-book text-white" style="font-size:.9rem;"></i>
+                        </div>
+                        <h6 class="mb-0 text-white fw-bold">Quick Start</h6>
+                    </div>
+                </div>
+                <div class="card-body px-4 py-4">
+
+                    <!-- Step 1 -->
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:36px;height:36px;background:#667eea15;color:#667eea;font-weight:700;font-size:.85rem;">1</div>
+                        <div>
+                            <div class="fw-semibold mb-1" style="font-size:.85rem;">Whitelist your IP</div>
+                            <div class="text-muted small">Click <em>Edit Settings</em> and enter your server's public IP address. Only requests from this IP will be accepted.</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:36px;height:36px;background:#667eea15;color:#667eea;font-weight:700;font-size:.85rem;">2</div>
+                        <div>
+                            <div class="fw-semibold mb-1" style="font-size:.85rem;">Copy your token</div>
+                            <div class="text-muted small">Use the <i class="fas fa-copy"></i> button to copy your API token. Pass it as <code>token</code> in every API request.</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:36px;height:36px;background:#667eea15;color:#667eea;font-weight:700;font-size:.85rem;">3</div>
+                        <div>
+                            <div class="fw-semibold mb-1" style="font-size:.85rem;">Set callback URL</div>
+                            <div class="text-muted small">Configure a HTTPS endpoint that receives recharge status updates in real time.</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="d-flex gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:36px;height:36px;background:#667eea15;color:#667eea;font-weight:700;font-size:.85rem;">4</div>
+                        <div>
+                            <div class="fw-semibold mb-1" style="font-size:.85rem;">Test the integration</div>
+                            <div class="text-muted small">
+                                Visit <a href="@Url.Action("Index","ApiDocument")" class="text-primary fw-semibold">API Integration Tool</a>
+                                to test endpoints and view request/response samples.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer border-0 px-4 py-3" style="background:#f8f9fa;">
+                    <div class="d-flex gap-3 text-muted" style="font-size:.78rem;">
+                        <span><i class="fas fa-shield-alt text-success me-1"></i>Token is hashed in transit</span>
+                        <span><i class="fas fa-lock text-warning me-1"></i>Keep token secret</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /row -->
 </div>
 
-<div class="modal fade" id="apiSettingsModal" tabindex="-1" aria-labelledby="apiSettingsModalLabel" aria-hidden="true">
+<!-- ── Edit Settings Modal ───────────────────────────────────────── -->
+<div class="modal fade" id="apiSettingsModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="apiSettingsModalLabel">Files.UpdateAPIKeys</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+            <div class="modal-header border-0 pb-0"
+                 style="background:linear-gradient(135deg,#667eea,#764ba2);">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fas fa-edit text-white"></i>
+                    <h5 class="modal-title text-white fw-bold mb-0">Edit API Settings</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form id="apiSettingsForm" method="post" action="@Url.Action("UpdateAPIKeys", "ApiSettings")">
+
+            <form id="apiSettingsForm" method="post" action="@Url.Action("UpdateAPIKeys","ApiSettings")">
                 @Html.AntiForgeryToken()
-                @Html.HiddenFor(model => model.UserId)
-                @Html.HiddenFor(model => model.Username)
-                @Html.HiddenFor(model => model.Token)
-                <div class="modal-body">
-                    <div class="mb-4">
-                        <strong>User ID :</strong>
-                        <span class="text-success fw-semibold">@Model.Username</span>
+                @Html.HiddenFor(m => m.UserId)
+                @Html.HiddenFor(m => m.Username)
+                @Html.HiddenFor(m => m.Token)
+
+                <div class="modal-body px-4 pt-4 pb-2">
+
+                    <div class="mb-3 p-3 rounded" style="background:#f8f9fa;">
+                        <div class="text-muted small mb-0">
+                            <i class="fas fa-user me-1 text-primary"></i>
+                            Account: <strong class="text-dark">@Model.Username</strong>
+                        </div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="IpAddress" class="form-label fw-semibold">IP Address : <span class="text-danger">*</span></label>
-                        @Html.TextBoxFor(model => model.IpAddress, new { @class = "form-control", required = "required", placeholder = "198.38.88.40" })
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-network-wired text-muted me-1"></i>
+                            IP Address <span class="text-danger">*</span>
+                        </label>
+                        @Html.TextBoxFor(m => m.IpAddress,
+                            new { @class = "form-control", required = "required", placeholder = "e.g. 103.21.55.100" })
+                        <div class="form-text">Only API requests from this IP will be allowed.</div>
                     </div>
 
-                    <div class="mb-2">
-                        <label for="CallbackUrl" class="form-label fw-semibold">Callback Url :</label>
-                        @Html.TextBoxFor(model => model.CallbackUrl, new { @class = "form-control", placeholder = "https://domain.com/api/service/reccallback/token" })
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-link text-muted me-1"></i>
+                            Callback URL
+                        </label>
+                        @Html.TextBoxFor(m => m.CallbackUrl,
+                            new { @class = "form-control", placeholder = "https://yourdomain.com/api/callback" })
+                        <div class="form-text">Must be a valid HTTPS URL. Leave blank to disable callbacks.</div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-success" id="saveApiSettings">Save</button>
+
+                <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4" id="saveApiSettings">
+                        <i class="fas fa-save me-1"></i>Save Settings
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<script>
-    (function () {
-        var form = document.getElementById('apiSettingsForm');
-        var alertBox = document.getElementById('apiSettingsAlert');
-        var saveButton = document.getElementById('saveApiSettings');
+<!-- ── Confirm Change Token Modal ─────────────────────────────────── -->
+<div class="modal fade" id="changeTokenModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+            <div class="modal-header border-0"
+                 style="background:linear-gradient(135deg,#F44336,#c62828);">
+                <h5 class="modal-title text-white fw-bold">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Regenerate Token?
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-4 text-center">
+                <p class="mb-1">Your current token will be <strong>invalidated</strong>.</p>
+                <p class="text-muted small mb-0">All apps using the old token will stop working until you update them.</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4 pt-0">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger px-4"
+                        onclick="document.getElementById('changeTokenForm').submit()">
+                    <i class="bx bx-revision me-1"></i>Yes, Regenerate
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-        function showAlert(message, isSuccess) {
-            alertBox.textContent = message;
-            alertBox.className = 'alert mt-3 ' + (isSuccess ? 'alert-success' : 'alert-danger');
+@section Scripts {
+<script>
+    /* ── Token visibility toggle ────────────────── */
+    var tokenVisible = false;
+    var rawToken = document.getElementById('tokenValue').textContent.trim();
+
+    function toggleToken() {
+        tokenVisible = !tokenVisible;
+        var disp = document.getElementById('tokenDisplay');
+        var btn  = document.getElementById('btnToggleToken');
+        if (tokenVisible) {
+            disp.textContent = rawToken || '—';
+            btn.innerHTML = '<i class="fas fa-eye-slash" style="font-size:.75rem;"></i>';
+        } else {
+            disp.textContent = rawToken ? new Array(25).join('•') : '—';
+            btn.innerHTML = '<i class="fas fa-eye" style="font-size:.75rem;"></i>';
+        }
+    }
+
+    /* ── Copy to clipboard ──────────────────────── */
+    function copyText(text, btn) {
+        if (!text || text === '—') return;
+        navigator.clipboard.writeText(text).then(function () {
+            var orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check" style="font-size:.75rem;color:#4CAF50;"></i>';
+            setTimeout(function () { btn.innerHTML = orig; }, 1500);
+        });
+    }
+
+    /* ── Change Token confirm ───────────────────── */
+    function confirmChangeToken() {
+        new bootstrap.Modal(document.getElementById('changeTokenModal')).show();
+    }
+
+    /* ── AJAX settings save ─────────────────────── */
+    (function () {
+        var form      = document.getElementById('apiSettingsForm');
+        var alertBox  = document.getElementById('apiSettingsAlert');
+        var saveBtn   = document.getElementById('saveApiSettings');
+
+        function showAlert(msg, ok) {
+            alertBox.className = 'alert alert-dismissible ' + (ok ? 'alert-success' : 'alert-danger');
+            alertBox.innerHTML = '<i class="fas fa-' + (ok ? 'check' : 'exclamation') + '-circle me-2"></i>' +
+                                 msg +
+                                 '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+            alertBox.classList.remove('d-none');
         }
 
-        form.addEventListener('submit', function (event) {
-            event.preventDefault();
-            saveButton.disabled = true;
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            saveBtn.disabled = true;
 
             fetch(form.action, {
                 method: 'POST',
                 body: new FormData(form),
                 credentials: 'same-origin'
             })
-                .then(function (response) {
-                    return response.json().then(function (payload) {
-                        return { ok: response.ok, payload: payload };
-                    });
-                })
-                .then(function (result) {
-                    if (!result.ok || !result.payload.success) {
-                        showAlert(result.payload.message || 'Unable to update API settings.', false);
-                        return;
-                    }
+            .then(function (r) {
+                return r.json().then(function (p) { return { ok: r.ok, p: p }; });
+            })
+            .then(function (res) {
+                var modal = bootstrap.Modal.getInstance(document.getElementById('apiSettingsModal'));
+                if (!res.ok || !res.p.success) {
+                    showAlert(res.p.message || 'Unable to save settings.', false);
+                    if (modal) modal.hide();
+                    return;
+                }
 
-                    document.getElementById('apiIpAddress').textContent = result.payload.data.ipAddress;
-                    document.getElementById('apiToken').textContent = result.payload.data.token;
-                    document.getElementById('apiCallback').textContent = result.payload.data.callbackUrl;
+                // Update displayed values
+                var d = res.p.data;
+                document.querySelectorAll('code.fs-6.text-dark.fw-semibold')[0].textContent = d.ipAddress || '—';
+                rawToken = d.token;
+                if (tokenVisible) {
+                    document.getElementById('tokenDisplay').textContent = d.token;
+                }
 
-                    var statusBadge = document.getElementById('apiStatus');
-                    statusBadge.textContent = 'Verified';
-                    statusBadge.className = 'badge bg-success';
-
-                    var modalElement = document.getElementById('apiSettingsModal');
-                    var modal = bootstrap.Modal.getInstance(modalElement);
-                    modal.hide();
-
-                    showAlert(result.payload.message, true);
-                })
-                .catch(function () {
-                    showAlert('Unable to update API settings.', false);
-                })
-                .finally(function () {
-                    saveButton.disabled = false;
-                });
+                if (modal) modal.hide();
+                showAlert(res.p.message, true);
+                setTimeout(function () { location.reload(); }, 1500);
+            })
+            .catch(function () {
+                showAlert('Unexpected error. Please try again.', false);
+            })
+            .finally(function () {
+                saveBtn.disabled = false;
+            });
         });
     })();
 </script>
+}

@@ -91,6 +91,25 @@ namespace VIRENDRA.Controllers
             });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ChangeToken()
+        {
+            User user = GetCurrentUser();
+            if (user == null)
+                return RedirectToAction("Login", "Auth");
+
+            string newToken = GenerateToken();
+            _userRepository.UpdateApiSettings(
+                user.Id,
+                user.LoginIP      ?? string.Empty,
+                user.CallbackURL  ?? string.Empty,
+                newToken);
+
+            TempData["SuccessMessage"] = "API token regenerated successfully.";
+            return RedirectToAction("Index");
+        }
+
         private User GetCurrentUser()
         {
             if (User != null && User.Identity != null && User.Identity.IsAuthenticated)
