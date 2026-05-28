@@ -29,9 +29,9 @@
                         </ol>
                     </nav>
                 </div>
-                <a href="@Url.Action("AddMoney","Wallet")" class="btn btn-success px-3 fw-semibold">
+                @*<a href="@Url.Action("AddMoney","Wallet")" class="btn btn-success px-3 fw-semibold">
                     <i class="fas fa-plus me-1"></i>Add Money
-                </a>
+                </a>*@
             </div>
         </div>
     </div>
@@ -72,9 +72,9 @@
             </a>
         </div>
         <div class="col-sm-6 col-xl-3">
-            <a href="@Url.Action("Index", new { statusId = 1 })" class="text-decoration-none">
+            <a href="@Url.Action("Index", new { statusId = 3 })" class="text-decoration-none">
                 <div class="card border-0 shadow-sm"
-                     style="border-radius:12px;border-left:4px solid #FF9800!important;@(currentStatus == 1 ? "box-shadow:0 0 0 2px #FF980040!important;" : "")">
+                     style="border-radius:12px;border-left:4px solid #FF9800!important;@(currentStatus == 3 ? "box-shadow:0 0 0 2px #FF980040!important;" : "")">
                     <div class="card-body d-flex align-items-center gap-3 py-3">
                         <div class="rounded-circle d-flex align-items-center justify-content-center"
                              style="width:46px;height:46px;background:#FF980015;flex-shrink:0;">
@@ -89,9 +89,9 @@
             </a>
         </div>
         <div class="col-sm-6 col-xl-3">
-            <a href="@Url.Action("Index", new { statusId = 2 })" class="text-decoration-none">
+            <a href="@Url.Action("Index", new { statusId = 6 })" class="text-decoration-none">
                 <div class="card border-0 shadow-sm"
-                     style="border-radius:12px;border-left:4px solid #4CAF50!important;@(currentStatus == 2 ? "box-shadow:0 0 0 2px #4CAF5040!important;" : "")">
+                     style="border-radius:12px;border-left:4px solid #4CAF50!important;@(currentStatus == 6 ? "box-shadow:0 0 0 2px #4CAF5040!important;" : "")">
                     <div class="card-body d-flex align-items-center gap-3 py-3">
                         <div class="rounded-circle d-flex align-items-center justify-content-center"
                              style="width:46px;height:46px;background:#4CAF5015;flex-shrink:0;">
@@ -106,9 +106,9 @@
             </a>
         </div>
         <div class="col-sm-6 col-xl-3">
-            <a href="@Url.Action("Index", new { statusId = 3 })" class="text-decoration-none">
+            <a href="@Url.Action("Index", new { statusId = 7 })" class="text-decoration-none">
                 <div class="card border-0 shadow-sm"
-                     style="border-radius:12px;border-left:4px solid #F44336!important;@(currentStatus == 3 ? "box-shadow:0 0 0 2px #F4433640!important;" : "")">
+                     style="border-radius:12px;border-left:4px solid #F44336!important;@(currentStatus == 7 ? "box-shadow:0 0 0 2px #F4433640!important;" : "")">
                     <div class="card-body d-flex align-items-center gap-3 py-3">
                         <div class="rounded-circle d-flex align-items-center justify-content-center"
                              style="width:46px;height:46px;background:#F4433615;flex-shrink:0;">
@@ -138,7 +138,7 @@
             {
                 <a href="@Url.Action("Index")" class="btn btn-outline-light btn-sm px-3">
                     <i class="fas fa-filter me-1"></i>
-                    @(currentStatus == 1 ? "Pending" : currentStatus == 2 ? "Approved" : "Rejected") — Clear Filter
+                    @(currentStatus == 3 ? "Pending" : currentStatus == 6 ? "Approved" : "Rejected") — Clear Filter
                 </a>
             }
             else
@@ -163,7 +163,7 @@
                     {
                         <span class="badge ms-2 text-dark"
                               style="background:rgba(255,255,255,.3);font-size:.7rem;">
-                            @(currentStatus == 1 ? "Pending" : currentStatus == 2 ? "Approved" : "Rejected")
+                            @(currentStatus == 3 ? "Pending" : currentStatus == 6 ? "Approved" : "Rejected")
                         </span>
                     }
                 </h6>
@@ -213,13 +213,13 @@
                                 <td>@(w.PaymentDate.HasValue ? w.PaymentDate.Value.ToString("dd MMM yyyy") : "—")</td>
                                 <td>@(w.AddedDate.HasValue ? w.AddedDate.Value.ToString("dd MMM yyyy HH:mm") : "—")</td>
                                 <td class="text-center">
-                                    @if (w.StatusId == 2)
+                                    @if (w.StatusId == 6)
                                     {
                                         <span class="badge" style="background:#4CAF50;font-size:.75rem;">
                                             <i class="fas fa-check me-1"></i>Approved
                                         </span>
                                     }
-                                    else if (w.StatusId == 3)
+                                    else if (w.StatusId == 7)
                                     {
                                         <span class="badge" style="background:#F44336;font-size:.75rem;">
                                             <i class="fas fa-times me-1"></i>Rejected
@@ -238,7 +238,7 @@
                                            class="btn btn-sm btn-outline-info" title="Edit">
                                             <i class="fas fa-pencil-alt"></i>
                                         </a>
-                                        @if (w.StatusId == null || w.StatusId == 1)
+                                        @if (w.StatusId == null || w.StatusId == 3)
                                         {
                                             <button type="button"
                                                     class="btn btn-sm btn-outline-success btn-approve"

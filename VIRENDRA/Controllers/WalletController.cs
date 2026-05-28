@@ -58,9 +58,9 @@ namespace VIRENDRA.Controllers
 
             ViewBag.StatusId     = statusId;
             ViewBag.TotalCount   = list.Count;
-            ViewBag.PendingCount = list.Count(w => w.StatusId == 1 || w.StatusId == null);
-            ViewBag.ApprovedCount= list.Count(w => w.StatusId == 2);
-            ViewBag.RejectedCount= list.Count(w => w.StatusId == 3);
+            ViewBag.PendingCount = list.Count(w => w.StatusId == 3 || w.StatusId == null);
+            ViewBag.ApprovedCount= list.Count(w => w.StatusId == 6);
+            ViewBag.RejectedCount= list.Count(w => w.StatusId == 7);
             ViewBag.TotalAmount  = list.Sum(w => w.Amount);
 
             return View(list);
