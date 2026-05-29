@@ -275,7 +275,7 @@
                     @*<%-- Administration — SuperAdmin + Admin --%>*@
                     @if (isSuperAdmin || isAdmin)
                     {
-                        bool adminActive = anyActive(new[] { "User", "Package", "Operator", "Vendor", "BankAccount", "Services" });
+                        bool adminActive = anyActive(new[] { "User", "Package", "Operator", "Vendor", "BankAccount", "Services", "CommonRouting" });
                         <li class="nav-item dropdown @(adminActive ? "active" : "")">
                             <a class="nav-link dropdown-toggle @(adminActive ? "active" : "")"
                                href="#" id="ddAdmin" role="button"
@@ -322,6 +322,12 @@
                                     <a class="dropdown-item @(currentController=="Services" ? "active" : "")"
                                        href="@Url.Action("Index","Services")">
                                         <i class="bx bx-mobile"></i> Services
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item @(currentController=="CommonRouting" ? "active" : "")"
+                                       href="@Url.Action("Index","CommonRouting")">
+                                        <i class="fas fa-route"></i> Route Settings
                                     </a>
                                 </li>
                             </ul>

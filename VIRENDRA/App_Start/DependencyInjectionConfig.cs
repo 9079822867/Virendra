@@ -15,37 +15,41 @@ namespace VIRENDRA.App_Start
             if (string.IsNullOrEmpty(connectionString))
                 throw new ConfigurationErrorsException("sqlconn is not configured in Web.config");
 
-            var userRepository        = new UserRepository(connectionString);
-            var packageRepository     = new PackageRepository();
-            var walletRepository      = new WalletRepository();
-            var vendorRepository      = new VendorRepository();
-            var transactionRepository = new TransactionRepository();
-            var rechargeRepository    = new RechargeRepository();
-            var rechargeService       = new RechargeService(rechargeRepository);
+            var userRepository           = new UserRepository(connectionString);
+            var packageRepository        = new PackageRepository();
+            var walletRepository         = new WalletRepository();
+            var vendorRepository         = new VendorRepository();
+            var transactionRepository    = new TransactionRepository();
+            var rechargeRepository       = new RechargeRepository();
+            var rechargeService          = new RechargeService(rechargeRepository);
+            var commonRoutingRepository  = new CommonRoutingRepository(connectionString);
 
             ControllerBuilder.Current.SetControllerFactory(
                 new CustomControllerFactory(
                     userRepository, packageRepository, walletRepository,
                     vendorRepository, transactionRepository,
-                    rechargeRepository, rechargeService));
+                    rechargeRepository, rechargeService,
+                    commonRoutingRepository));
         }
     }
 
     public class CustomControllerFactory : DefaultControllerFactory
     {
-        private readonly IUserRepository        _userRepo;
-        private readonly IPackageRepository     _pkgRepo;
-        private readonly IWalletRepository      _walletRepo;
-        private readonly IVendorRepository      _vendorRepo;
-        private readonly ITransactionRepository _txnRepo;
-        private readonly IRechargeRepository    _rechargeRepo;
-        private readonly RechargeService        _rechargeSvc;
+        private readonly IUserRepository           _userRepo;
+        private readonly IPackageRepository        _pkgRepo;
+        private readonly IWalletRepository         _walletRepo;
+        private readonly IVendorRepository         _vendorRepo;
+        private readonly ITransactionRepository    _txnRepo;
+        private readonly IRechargeRepository       _rechargeRepo;
+        private readonly RechargeService           _rechargeSvc;
+        private readonly ICommonRoutingRepository  _routingRepo;
 
         public CustomControllerFactory(
             IUserRepository userRepo, IPackageRepository pkgRepo,
             IWalletRepository walletRepo, IVendorRepository vendorRepo,
             ITransactionRepository txnRepo,
-            IRechargeRepository rechargeRepo, RechargeService rechargeSvc)
+            IRechargeRepository rechargeRepo, RechargeService rechargeSvc,
+            ICommonRoutingRepository routingRepo)
         {
             _userRepo      = userRepo;
             _pkgRepo       = pkgRepo;
@@ -54,6 +58,7 @@ namespace VIRENDRA.App_Start
             _txnRepo       = txnRepo;
             _rechargeRepo  = rechargeRepo;
             _rechargeSvc   = rechargeSvc;
+            _routingRepo   = routingRepo;
         }
 
         protected override IController GetControllerInstance(
@@ -95,6 +100,9 @@ namespace VIRENDRA.App_Start
 
             if (controllerType == typeof(RechargeController))
                 return new RechargeController(_rechargeSvc, _rechargeRepo);
+
+            if (controllerType == typeof(CommonRoutingController))
+                return new CommonRoutingController(_routingRepo, _userRepo, _vendorRepo);
 
             return base.GetControllerInstance(requestContext, controllerType);
         }

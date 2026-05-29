@@ -1,0 +1,220 @@
+@model VIRENDRA.Models.CommonRouting
+
+<div class="row g-4">
+
+    <!-- ── LEFT COLUMN ──────────────────────────────────────────── -->
+    <div class="col-md-6 border-end pe-4">
+
+        <!-- Operator -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-mobile-alt text-muted me-1"></i>
+                Operator <span class="text-danger">*</span>
+            </label>
+            @Html.DropDownListFor(m => m.OpId,
+                (SelectList)ViewBag.OperatorList,
+                "-- Select Operator --",
+                new { @class = "form-select", required = "required" })
+            @Html.ValidationMessageFor(m => m.OpId, "", new { @class = "text-danger small" })
+        </div>
+
+        <!-- Circle -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-map-marker-alt text-muted me-1"></i>
+                Circle
+            </label>
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                    <input type="checkbox" id="circleAllChk" class="form-check-input mt-0"
+                           @(Model.CircleFilter == "All" ? "checked" : "")
+                           onchange="toggleCircleAll(this)">
+                    <label class="form-check-label ms-1 small" for="circleAllChk">All</label>
+                </span>
+                @Html.DropDownListFor(m => m.CircleFilter,
+                    (SelectList)ViewBag.CircleList,
+                    "-- Select Circle --",
+                    new { @class = "form-select border-start-0", id = "circleSelect",
+                          disabled = (Model.CircleFilter == "All" ? "disabled" : "") })
+            </div>
+        </div>
+
+        <!-- Vendor (API) -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-server text-muted me-1"></i>
+                Vendor (API)
+            </label>
+            @Html.DropDownListFor(m => m.ApiId,
+                (SelectList)ViewBag.VendorList,
+                "-- Select Vendor --",
+                new { @class = "form-select" })
+        </div>
+
+        <!-- Priority -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-sort-numeric-up text-muted me-1"></i>
+                Priority <span class="text-danger">*</span>
+            </label>
+            @Html.TextBoxFor(m => m.Priority,
+                new { @class = "form-control", type = "number", min = "1", max = "9999", required = "required" })
+            @Html.ValidationMessageFor(m => m.Priority, "", new { @class = "text-danger small" })
+        </div>
+
+        <!-- Wait Minute -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-clock text-muted me-1"></i>
+                Wait Minute
+            </label>
+            @Html.TextBoxFor(m => m.WaitMinute,
+                new { @class = "form-control", type = "number", min = "0", max = "255" })
+        </div>
+
+        <!-- RO% -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-percent text-muted me-1"></i>
+                RO%
+            </label>
+            @Html.TextBoxFor(m => m.MinRO,
+                new { @class = "form-control", type = "number", step = "0.001", min = "0", max = "100" })
+            @Html.ValidationMessageFor(m => m.MinRO, "", new { @class = "text-danger small" })
+        </div>
+
+    </div>
+
+    <!-- ── RIGHT COLUMN ─────────────────────────────────────────── -->
+    <div class="col-md-6 ps-4">
+
+        <!-- Filter Type -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-filter text-muted me-1"></i>
+                Filter Type
+            </label>
+            @Html.DropDownListFor(m => m.FTypeId,
+                (SelectList)ViewBag.FilterTypeList,
+                new { @class = "form-select" })
+        </div>
+
+        <!-- Amount Filter -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fa fa-rupee-sign text-muted me-1"></i>
+                Filter Amount(s) <span class="text-danger">*</span>
+            </label>
+            @Html.TextBoxFor(m => m.AmountFilter,
+                new { @class = "form-control", required = "required",
+                      placeholder = "Range: 10-5000  |  Amounts: 10,20,100" })
+            @Html.ValidationMessageFor(m => m.AmountFilter, "", new { @class = "text-danger small" })
+            <div class="form-text">For Range enter <code>min-max</code>. For Amounts enter comma-separated values.</div>
+        </div>
+
+        <!-- Lapu Filter -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-sim-card text-muted me-1"></i>
+                Lapu IDs
+            </label>
+            @Html.TextBoxFor(m => m.LapuFilter,
+                new { @class = "form-control", placeholder = "0  or  comma-separated IDs" })
+        </div>
+
+        <!-- User Filter -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-users text-muted me-1"></i>
+                User Filter
+            </label>
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                    <input type="checkbox" id="userAllChk" class="form-check-input mt-0"
+                           @(Model.UserFilter == "All" ? "checked" : "")
+                           onchange="toggleUserAll(this)">
+                    <label class="form-check-label ms-1 small" for="userAllChk">All</label>
+                </span>
+                @Html.TextBoxFor(m => m.UserFilter,
+                    new { @class = "form-control border-start-0", id = "userFilterInput",
+                          placeholder = "comma-separated user IDs",
+                          disabled = (Model.UserFilter == "All" ? "disabled" : "") })
+            </div>
+            <div class="form-text">Leave "All" or enter specific User IDs.</div>
+        </div>
+
+        <!-- Block User -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-ban text-muted me-1"></i>
+                Block UIDs
+            </label>
+            @Html.TextBoxFor(m => m.BlockUser,
+                new { @class = "form-control", placeholder = "comma-separated user IDs to block" })
+        </div>
+
+        <!-- OP1 (highlighted) -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold" style="color:#e65100;">
+                <i class="fas fa-star text-warning me-1"></i>
+                OP1
+            </label>
+            @Html.TextBoxFor(m => m.RouteOP1,
+                new { @class = "form-control", style = "background:#fffde7;border-color:#ffe082;",
+                      placeholder = "Optional parameter 1" })
+        </div>
+
+        <!-- OP2 -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-star-half-alt text-muted me-1"></i>
+                OP2
+            </label>
+            @Html.TextBoxFor(m => m.RouteOP2,
+                new { @class = "form-control", placeholder = "Optional parameter 2" })
+        </div>
+
+        <!-- Optional1 -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-tag text-muted me-1"></i>
+                Optional Note
+            </label>
+            @Html.TextBoxFor(m => m.Optional1,
+                new { @class = "form-control", placeholder = "Internal note / tag" })
+        </div>
+
+        <!-- IsActive -->
+        <div class="mb-2 p-3 rounded" style="background:#f8f9fa;">
+            <div class="form-check form-switch">
+                @Html.CheckBoxFor(m => m.IsActive,
+                    new { @class = "form-check-input", style = "width:44px;height:22px;" })
+                <label class="form-check-label fw-semibold" for="IsActive">
+                    Active Route
+                </label>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function toggleCircleAll(chk) {
+        var sel = document.getElementById('circleSelect');
+        sel.disabled = chk.checked;
+        if (chk.checked) { sel.value = ''; }
+    }
+    function toggleUserAll(chk) {
+        var inp = document.getElementById('userFilterInput');
+        inp.disabled = chk.checked;
+        if (chk.checked) { inp.value = 'All'; }
+    }
+    // On load: sync hidden inputs when "All" checked
+    (function() {
+        var cc = document.getElementById('circleAllChk');
+        if (cc && cc.checked) {
+            var s = document.getElementById('circleSelect');
+            if (s) { s.disabled = true; }
+        }
+    })();
+</script>

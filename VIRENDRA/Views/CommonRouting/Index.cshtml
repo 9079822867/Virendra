@@ -1,0 +1,258 @@
+@model IEnumerable<VIRENDRA.Models.CommonRouting>
+@{
+    ViewBag.Title = "Common Route Settings";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+    int total   = Model.Count();
+    int active  = Model.Count(r => r.IsActive);
+    int inactive = total - active;
+}
+
+<div class="container-fluid">
+
+    <!-- Page Title -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+        <div>
+            <h4 class="mb-1 fw-bold text-dark">
+                <i class="fas fa-route text-primary me-2"></i>Common Route Settings
+            </h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0" style="font-size:.82rem;">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard","Home")">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Route Settings</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="@Url.Action("Create")" class="btn btn-success px-3 fw-semibold">
+            <i class="fas fa-plus me-1"></i>Add Route
+        </a>
+    </div>
+
+    <!-- Alerts -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-3" style="border-radius:10px;">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible mb-3" style="border-radius:10px;">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-4">
+            <div class="card border-0 shadow-sm" style="border-radius:12px;border-left:4px solid #667eea!important;">
+                <div class="card-body d-flex align-items-center gap-3 py-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                         style="width:44px;height:44px;background:#667eea15;flex-shrink:0;">
+                        <i class="fas fa-route" style="color:#667eea;font-size:1rem;"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size:.73rem;">Total Routes</div>
+                        <div class="fw-bold fs-5 text-dark">@total</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card border-0 shadow-sm" style="border-radius:12px;border-left:4px solid #4CAF50!important;">
+                <div class="card-body d-flex align-items-center gap-3 py-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                         style="width:44px;height:44px;background:#4CAF5015;flex-shrink:0;">
+                        <i class="fas fa-toggle-on" style="color:#4CAF50;font-size:1rem;"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size:.73rem;">Active</div>
+                        <div class="fw-bold fs-5 text-dark">@active</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card border-0 shadow-sm" style="border-radius:12px;border-left:4px solid #F44336!important;">
+                <div class="card-body d-flex align-items-center gap-3 py-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                         style="width:44px;height:44px;background:#F4433615;flex-shrink:0;">
+                        <i class="fas fa-toggle-off" style="color:#F44336;font-size:1rem;"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size:.73rem;">Inactive</div>
+                        <div class="fw-bold fs-5 text-dark">@inactive</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">
+        <div class="card-header border-0 py-3 px-4"
+             style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                     style="width:36px;height:36px;background:rgba(255,255,255,.2);">
+                    <i class="fas fa-table text-white" style="font-size:.85rem;"></i>
+                </div>
+                <h6 class="mb-0 text-white fw-bold">Route List</h6>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="routeTable" class="table table-hover align-middle mb-0" style="font-size:.83rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3" style="width:90px;">Actions</th>
+                            <th style="width:80px;" class="text-center">Status</th>
+                            <th>Users</th>
+                            <th>Operator</th>
+                            <th>Circle</th>
+                            <th>Vendor</th>
+                            <th>LapuIds</th>
+                            <th>Filter Type</th>
+                            <th>Filter Amount(s)</th>
+                            <th>RO%</th>
+                            <th>Priority</th>
+                            <th>Block UIDs</th>
+                            <th style="background:#fffde7;">OP1</th>
+                            <th>OP2</th>
+                            <th>Wait (min)</th>
+                            <th>Updated On</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model)
+                        {
+                            <tr id="row-@r.Id">
+                                <td class="ps-3">
+                                    <div class="d-flex gap-1">
+                                        <a href="@Url.Action("Edit", new { id = r.Id })"
+                                           class="btn btn-sm btn-outline-info py-1 px-2" title="Edit">
+                                            <i class="fas fa-pencil-alt" style="font-size:.7rem;"></i>
+                                        </a>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger py-1 px-2"
+                                                title="Delete"
+                                                onclick="confirmDelete(@r.Id, '@(r.OperatorName ?? r.OpId.ToString())', '@r.AmountFilter')">
+                                            <i class="fas fa-trash" style="font-size:.7rem;"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="form-check form-switch d-inline-flex align-items-center gap-1 mb-0">
+                                        <input class="form-check-input toggle-active" type="checkbox"
+                                               data-id="@r.Id"
+                                               style="width:38px;height:20px;cursor:pointer;"
+                                               @(r.IsActive ? "checked" : "") />
+                                        <span class="status-label fw-semibold @(r.IsActive ? "text-success" : "text-danger")"
+                                              style="font-size:.7rem;min-width:26px;">
+                                            @(r.IsActive ? "ON" : "OFF")
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>@(r.UserFilter ?? "All")</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border" style="font-size:.73rem;">
+                                        @(r.OperatorName ?? "—")
+                                    </span>
+                                </td>
+                                <td>@(r.CircleFilter ?? "All")</td>
+                                <td class="fw-semibold text-primary">@(r.VendorName ?? "—")</td>
+                                <td><code class="text-dark">@(string.IsNullOrEmpty(r.LapuFilter) ? "0" : r.LapuFilter)</code></td>
+                                <td>
+                                    <span class="badge @(r.FTypeId == 2 ? "bg-info text-dark" : "bg-secondary")"
+                                          style="font-size:.72rem;">@r.FilterTypeName</span>
+                                </td>
+                                <td><code class="text-dark">@(r.AmountFilter ?? "—")</code></td>
+                                <td>@(r.MinRO.HasValue ? r.MinRO.Value.ToString("0.000") : "0.000")</td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border fw-bold">@r.Priority</span>
+                                </td>
+                                <td>@(r.BlockUser ?? "—")</td>
+                                <td style="background:#fffde7;">
+                                    <strong class="text-warning-emphasis">@(r.RouteOP1 ?? "—")</strong>
+                                </td>
+                                <td>@(r.RouteOP2 ?? "—")</td>
+                                <td>@(r.WaitMinute.HasValue ? r.WaitMinute.ToString() : "0")</td>
+                                <td class="text-muted" style="font-size:.75rem;">
+                                    @(r.UpdatedDate.HasValue ? r.UpdatedDate.Value.ToString("dd MMM yy HH:mm") : (r.AddedDate != default ? r.AddedDate.ToString("dd MMM yy HH:mm") : "—"))
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:12px;overflow:hidden;">
+            <div class="modal-header border-0"
+                 style="background:linear-gradient(135deg,#F44336,#c62828);">
+                <h5 class="modal-title text-white fw-bold">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 pt-4">
+                <p class="mb-1">Delete route for operator: <strong id="delOp"></strong></p>
+                <p class="mb-3">Amount filter: <code id="delAmt"></code></p>
+                <p class="text-muted small mb-0"><i class="fas fa-info-circle me-1"></i>This cannot be undone.</p>
+            </div>
+            <div class="modal-footer border-0">
+                @using (Html.BeginForm("Delete", "CommonRouting", FormMethod.Post, new { id = "deleteForm" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteId" />
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(function () {
+            $('#routeTable').DataTable({
+                pageLength: 50,
+                order: [[10, 'asc']],  // sort by Priority
+                columnDefs: [{ orderable: false, targets: [0, 1] }]
+            });
+
+            $(document).on('change', '.toggle-active', function () {
+                var id      = $(this).data('id');
+                var active  = $(this).is(':checked');
+                var label   = $(this).siblings('.status-label');
+
+                $.post('@Url.Action("ToggleActive")', { id: id, isActive: active }, function (res) {
+                    if (res.success) {
+                        label.text(active ? 'ON' : 'OFF')
+                             .removeClass('text-success text-danger')
+                             .addClass(active ? 'text-success' : 'text-danger');
+                    }
+                });
+            });
+        });
+
+        function confirmDelete(id, op, amt) {
+            document.getElementById('deleteId').value  = id;
+            document.getElementById('delOp').textContent  = op;
+            document.getElementById('delAmt').textContent = amt;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+    </script>
+}

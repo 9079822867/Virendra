@@ -161,6 +161,7 @@
     <Compile Include="Controllers\AuthController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\MobileController.cs" />
+    <Compile Include="Controllers\CommonRoutingController.cs" />
     <Compile Include="Controllers\RechargeController.cs" />
     <Compile Include="Controllers\ReportsController.cs" />
     <Compile Include="Controllers\ServicesController.cs" />
@@ -179,6 +180,8 @@
     <Compile Include="Data\IPackageRepository.cs" />
     <Compile Include="Data\PackageRepository.cs" />
     <Compile Include="Data\IWalletRepository.cs" />
+    <Compile Include="Data\ICommonRoutingRepository.cs" />
+    <Compile Include="Data\CommonRoutingRepository.cs" />
     <Compile Include="Data\WalletRepository.cs" />
     <Compile Include="Data\IVendorRepository.cs" />
     <Compile Include="Data\VendorRepository.cs" />
@@ -203,6 +206,7 @@
     <Compile Include="Models\RoleConstants.cs" />
     <Compile Include="Models\TxnLedger.cs" />
     <Compile Include="Models\User.cs" />
+    <Compile Include="Models\CommonRouting.cs" />
     <Compile Include="Models\WalletTransaction.cs" />
     <Compile Include="Models\Vendor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -350,6 +354,10 @@
     <Content Include="Views\Wallet\AddMoney.cshtml" />
     <Content Include="Views\Wallet\Edit.cshtml" />
     <Content Include="Views\Wallet\Index.cshtml" />
+    <Content Include="Views\CommonRouting\Create.cshtml" />
+    <Content Include="Views\CommonRouting\Edit.cshtml" />
+    <Content Include="Views\CommonRouting\Index.cshtml" />
+    <Content Include="Views\CommonRouting\_RouteForm.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

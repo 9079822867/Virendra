@@ -8,6 +8,8 @@ namespace VIRENDRA.Data
     {
         List<Role> GetAllRoles();
         List<User> GetAllUsers();
+        List<Operator> GetAllOperators();
+        List<Circle>   GetAllCircles();
         User GetUserByUsername(string username);
         User GetUserById(int id);
         void CreateUser(User user);

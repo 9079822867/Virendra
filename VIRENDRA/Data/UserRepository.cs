@@ -24,6 +24,22 @@ namespace VIRENDRA.Data
             _connectionString = connectionString;
         }
 
+        public List<Operator> GetAllOperators()
+        {
+            using (var db = new SqlConnection(_connectionString))
+                return db.Query<Operator>(
+                    "SELECT Id, Name AS OperatorName, OpCode AS OperatorCode, IsActive FROM [Operator] ORDER BY Name"
+                ).ToList();
+        }
+
+        public List<Circle> GetAllCircles()
+        {
+            using (var db = new SqlConnection(_connectionString))
+                return db.Query<Circle>(
+                    "SELECT Id, CircleName, CircleCode FROM Circle ORDER BY CircleName"
+                ).ToList();
+        }
+
         public List<Role> GetAllRoles()
         {
             using (IDbConnection db = new SqlConnection(_connectionString))

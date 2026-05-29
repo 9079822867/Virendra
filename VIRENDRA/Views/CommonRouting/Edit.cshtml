@@ -1,0 +1,71 @@
+@model VIRENDRA.Models.CommonRouting
+@{
+    ViewBag.Title = "Edit Route";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+        <div>
+            <h4 class="mb-1 fw-bold text-dark">
+                <i class="fas fa-edit text-primary me-2"></i>Edit Route #@Model.Id
+            </h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0" style="font-size:.82rem;">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard","Home")">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index","CommonRouting")">Route Settings</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="@Url.Action("Index","CommonRouting")" class="btn btn-light px-3">
+            <i class="fas fa-arrow-left me-1"></i>Back
+        </a>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger alert-dismissible mb-3" style="border-radius:10px;">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            @Html.ValidationSummary(true, "Please fix the errors below.")
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @using (Html.BeginForm("Edit", "CommonRouting", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.Id)
+        <div class="card border-0 shadow-sm" style="border-radius:14px;overflow:hidden;">
+            <div class="card-header border-0 py-3 px-4"
+                 style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:34px;height:34px;background:rgba(255,255,255,.2);">
+                            <i class="fas fa-route text-white" style="font-size:.85rem;"></i>
+                        </div>
+                        <h6 class="mb-0 text-white fw-bold">Route Details</h6>
+                    </div>
+                    <span class="badge px-3 py-2 @(Model.IsActive ? "" : "bg-danger")"
+                          style="@(Model.IsActive ? "background:#4CAF50;" : "")font-size:.75rem;">
+                        @(Model.IsActive ? "Active" : "Inactive")
+                    </span>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                @Html.Partial("_RouteForm")
+            </div>
+            <div class="card-footer border-0 py-3 px-4" style="background:#f8f9fa;">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="@Url.Action("Index","CommonRouting")" class="btn btn-light px-4">
+                        <i class="fas fa-times-circle me-1"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-save me-1"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
