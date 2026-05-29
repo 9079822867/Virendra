@@ -28,7 +28,7 @@ namespace VIRENDRA.Data
             const string sql = @"
                 SELECT cr.Id, cr.OpId, cr.CircleFilter, cr.ApiId,
                        cr.Priority, cr.WaitMinute, cr.AmountFilter, cr.UserFilter,
-                       cr.FTypeId, cr.LapuFilter, cr.Optional1, cr.MinRO,
+                       cr.FTypeId,  cr.Optional1, cr.MinRO,
                        cr.BlockUser, cr.RouteOP1, cr.RouteOP2, cr.IsActive,
                        cr.AddedDate, cr.AddedById, cr.UpdatedDate, cr.UpdatedById,
                        o.Name  AS OperatorName,
@@ -47,7 +47,7 @@ namespace VIRENDRA.Data
             const string sql = @"
                 SELECT cr.Id, cr.OpId, cr.CircleFilter, cr.ApiId,
                        cr.Priority, cr.WaitMinute, cr.AmountFilter, cr.UserFilter,
-                       cr.FTypeId, cr.LapuFilter, cr.Optional1, cr.MinRO,
+                       cr.FTypeId,  cr.Optional1, cr.MinRO,
                        cr.BlockUser, cr.RouteOP1, cr.RouteOP2, cr.IsActive,
                        cr.AddedDate, cr.AddedById, cr.UpdatedDate, cr.UpdatedById,
                        o.Name  AS OperatorName,
@@ -66,11 +66,11 @@ namespace VIRENDRA.Data
             const string sql = @"
                 INSERT INTO CommanRouting
                     (OpId, CircleFilter, ApiId, Priority, WaitMinute,
-                     AmountFilter, UserFilter, FTypeId, LapuFilter, Optional1,
+                     AmountFilter, UserFilter, FTypeId,  Optional1,
                      MinRO, BlockUser, RouteOP1, RouteOP2, IsActive, AddedById)
                 VALUES
                     (@OpId, @CircleFilter, @ApiId, @Priority, @WaitMinute,
-                     @AmountFilter, @UserFilter, @FTypeId, @LapuFilter, @Optional1,
+                     @AmountFilter, @UserFilter, @FTypeId, @Optional1,
                      @MinRO, @BlockUser, @RouteOP1, @RouteOP2, @IsActive, @AddedById);
                 SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
@@ -90,7 +90,6 @@ namespace VIRENDRA.Data
                     AmountFilter  = @AmountFilter,
                     UserFilter    = @UserFilter,
                     FTypeId       = @FTypeId,
-                    LapuFilter    = @LapuFilter,
                     Optional1     = @Optional1,
                     MinRO         = @MinRO,
                     BlockUser     = @BlockUser,

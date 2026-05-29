@@ -371,7 +371,6 @@ namespace VIRENDRA.Data
         private const string _routeSelectSql = @"
             SELECT cr.ApiId,
                    cr.Priority       AS PriorityId,
-                   cr.LapuFilter,
                    cr.CircleFilter,
                    cr.BlockUser,
                    cr.UserFilter,
@@ -457,10 +456,6 @@ namespace VIRENDRA.Data
             p.Add("@OpBal",      0m,            DbType.Decimal, ParameterDirection.Output);
             p.Add("@ApiURL",     string.Empty,  DbType.String,  ParameterDirection.Output, 2000);
             p.Add("@PostData",   string.Empty,  DbType.String,  ParameterDirection.Output, 2000);
-            p.Add("@LapuId",     0,             DbType.Int32,   ParameterDirection.Output);
-            p.Add("@LapuNo",     string.Empty,  DbType.String,  ParameterDirection.Output, 100);
-            p.Add("@LapuPass",   string.Empty,  DbType.String,  ParameterDirection.Output, 100);
-            p.Add("@LapuPIN",    string.Empty,  DbType.String,  ParameterDirection.Output, 100);
             p.Add("@OP1",        string.Empty,  DbType.String,  ParameterDirection.Output, 200);
             p.Add("@OP2",        string.Empty,  DbType.String,  ParameterDirection.Output, 200);
             p.Add("@ApiTypeId",  0,             DbType.Int32,   ParameterDirection.Output);
@@ -477,10 +472,6 @@ namespace VIRENDRA.Data
                 OpBal      = p.Get<decimal>("@OpBal"),
                 ApiUrl     = p.Get<string>("@ApiURL")   ?? string.Empty,
                 PostData   = p.Get<string>("@PostData") ?? string.Empty,
-                LapuId     = p.Get<int>("@LapuId"),
-                LapuNo     = p.Get<string>("@LapuNo")   ?? string.Empty,
-                LapuPass   = p.Get<string>("@LapuPass") ?? string.Empty,
-                LapuPIN    = p.Get<string>("@LapuPIN")  ?? string.Empty,
                 OP1        = p.Get<string>("@OP1")       ?? string.Empty,
                 OP2        = p.Get<string>("@OP2")       ?? string.Empty,
                 ApiTypeId  = p.Get<int>("@ApiTypeId"),

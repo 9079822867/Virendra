@@ -112,7 +112,6 @@
                             <th>Operator</th>
                             <th>Circle</th>
                             <th>Vendor</th>
-                            <th>LapuIds</th>
                             <th>Filter Type</th>
                             <th>Filter Amount(s)</th>
                             <th>RO%</th>
@@ -162,7 +161,6 @@
                                 </td>
                                 <td>@(r.CircleFilter ?? "All")</td>
                                 <td class="fw-semibold text-primary">@(r.VendorName ?? "—")</td>
-                                <td><code class="text-dark">@(string.IsNullOrEmpty(r.LapuFilter) ? "0" : r.LapuFilter)</code></td>
                                 <td>
                                     <span class="badge @(r.FTypeId == 2 ? "bg-info text-dark" : "bg-secondary")"
                                           style="font-size:.72rem;">@r.FilterTypeName</span>

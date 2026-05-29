@@ -285,7 +285,6 @@ namespace VIRENDRA.Controllers
                 helper.RouteOP1          = route.RouteOP1;
                 helper.RoutePriorityId   = route.RoutePriorityId;
                 helper.MinRO             = route.MinRO;
-                helper.LapuFilter        = route.LapuFilter;
                 helper.CircleFilter      = route.CircleFilter;
                 helper.BlockUser         = route.BlockUser;
                 helper.UserFilter        = route.UserFilter;
@@ -317,10 +316,6 @@ namespace VIRENDRA.Controllers
 
                     helper.RecId    = cr.RecId;
                     helper.TxnId    = cr.TxnId;
-                    helper.LapuId   = cr.LapuId;
-                    helper.LapuNo   = cr.LapuNo;
-                    helper.LapuPass = cr.LapuPass;
-                    helper.LapuPIN  = cr.LapuPIN;
                     helper.OP1      = !string.IsNullOrWhiteSpace(route.RouteOP1)
                                         ? route.RouteOP1 : cr.OP1;
                     helper.OP2      = cr.OP2;
@@ -603,12 +598,6 @@ namespace VIRENDRA.Controllers
                 .Replace("[CCC]",  rm.CircleCode  ?? string.Empty)
                 .Replace("[VVV]",  rm.RefTxnId    ?? string.Empty)
                 .Replace("[TTT]",  rm.RefTxnId    ?? string.Empty)
-                .Replace("[FFF1]", h.LapuNo       ?? string.Empty)
-                .Replace("[FFF2]", h.LapuPass     ?? string.Empty)
-                .Replace("[FFF3]", h.LapuPIN      ?? string.Empty)
-                .Replace("[FFF4]", h.LapuId > 0
-                                    ? h.LapuId.ToString(CultureInfo.InvariantCulture)
-                                    : string.Empty)
                 .Replace("[OP1]",  h.OP1          ?? string.Empty)
                 .Replace("[OP2]",  h.OP2          ?? string.Empty)
                 .Replace("[EEE]",  extraUrl       ?? string.Empty)

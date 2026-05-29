@@ -33,10 +33,6 @@ namespace VIRENDRA.Models
         public int     CurrentApiId      { get; set; }
         public long    RecId             { get; set; }
         public long    TxnId             { get; set; }
-        public int     LapuId            { get; set; }
-        public string  LapuNo            { get; set; }
-        public string  LapuPass          { get; set; }
-        public string  LapuPIN           { get; set; }
         public string  OP1               { get; set; }
         public string  OP2               { get; set; }
         public int     ApiTypeId         { get; set; }
@@ -45,7 +41,6 @@ namespace VIRENDRA.Models
         public string  RouteOP1          { get; set; }
         public int     RoutePriorityId   { get; set; }
         public decimal MinRO             { get; set; }
-        public string  LapuFilter        { get; set; }
         public string  CircleFilter      { get; set; }
         public string  BlockUser         { get; set; }
         public string  UserFilter        { get; set; }
@@ -56,7 +51,6 @@ namespace VIRENDRA.Models
     {
         public int     ApiId            { get; set; }
         public int     PriorityId       { get; set; }
-        public string  LapuFilter       { get; set; }
         public string  CircleFilter     { get; set; }
         public string  BlockUser        { get; set; }
         public string  UserFilter       { get; set; }
@@ -91,10 +85,6 @@ namespace VIRENDRA.Models
         public decimal OpBal      { get; set; }
         public string  ApiUrl     { get; set; }
         public string  PostData   { get; set; }
-        public int     LapuId     { get; set; }
-        public string  LapuNo     { get; set; }
-        public string  LapuPass   { get; set; }
-        public string  LapuPIN    { get; set; }
         public string  OP1        { get; set; }
         public string  OP2        { get; set; }
         public int     ApiTypeId  { get; set; }

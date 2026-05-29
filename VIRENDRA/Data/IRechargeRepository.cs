@@ -63,7 +63,7 @@ namespace VIRENDRA.Data
 
         /// <summary>
         /// Call usp_RechargeCreate to insert the Recharge + TxnLedger debit and
-        /// return the API URL, lapu credentials and status.
+        /// return the API URL credentials and status.
         /// </summary>
         CreateRechargeResult CreateRecharge(
             int userId, string mobileNo, decimal debitAmt, decimal commAmt,

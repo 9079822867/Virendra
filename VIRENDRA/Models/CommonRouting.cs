@@ -25,7 +25,6 @@ namespace VIRENDRA.Models
 
         public string UserFilter    { get; set; } = "All"; // "All" or comma-sep user IDs
         public int?   FTypeId       { get; set; } = 1;     // 1=Range, 2=Amounts
-        public string LapuFilter    { get; set; }
         public string Optional1     { get; set; }
 
         [Range(0, 100, ErrorMessage = "RO% must be 0-100")]
