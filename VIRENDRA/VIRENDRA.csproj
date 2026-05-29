@@ -207,6 +207,7 @@
     <Compile Include="Models\TxnLedger.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Models\CommonRouting.cs" />
+    <Compile Include="Models\RechargeApiModels.cs" />
     <Compile Include="Models\WalletTransaction.cs" />
     <Compile Include="Models\Vendor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
