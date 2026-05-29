@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -352,9 +354,13 @@ namespace VIRENDRA.Controllers
                     // Mark record as processing / retrying
                     try
                     {
-                        _rcRepo.UpdateStatusWithCheck(
-                            helper.RecId, RechargeStatusCodes.PROCESS, string.Empty,
-                            "Retrying route " + routeIndex, 0, 0);
+                        bool _dl = false, _rf = false;
+                        string _log = string.Empty;
+                        UpdateStatusWithCheck(
+                            helper.RecId, rm.UserId, RechargeStatusCodes.PROCESS,
+                            string.Empty, string.Empty, "Retrying route " + routeIndex, "Retry",
+                            ref _dl, ref _rf, ref _log,
+                            0, null, rm.OpId ?? 0, 0, 0);
                     }
                     catch { /* non-fatal */ }
                 }
@@ -391,13 +397,18 @@ namespace VIRENDRA.Controllers
                 // ── Handle result ───────────────────────────────────────────
                 if (respStatus == RechargeStatusCodes.SUCCESS)
                 {
+                    bool dl = false, rf = false;
+                    string spLog = string.Empty;
                     try
                     {
-                        _rcRepo.UpdateStatusWithCheck(
-                            helper.RecId, RechargeStatusCodes.SUCCESS,
-                            operRef, truncMsg, 0, 0);
+                        UpdateStatusWithCheck(
+                            helper.RecId, rm.UserId, RechargeStatusCodes.SUCCESS,
+                            operRef, string.Empty, truncMsg, "API Success",
+                            ref dl, ref rf, ref spLog,
+                            0, null, rm.OpId ?? 0, 0, rm.ROfferAmount);
 
-                        if (helper.CommAmount > 0)
+                        // If SP didn't handle downline commission, credit it now
+                        if (!dl && helper.CommAmount > 0)
                             _rcRepo.InsertCommissionLedger(
                                 helper.RecId, rm.UserId, rm.RefTxnId,
                                 0, helper.CommAmount, rm.UserId);
@@ -419,9 +430,13 @@ namespace VIRENDRA.Controllers
                 {
                     try
                     {
-                        _rcRepo.UpdateStatusWithCheck(
-                            helper.RecId, RechargeStatusCodes.PROCESS,
-                            operRef, truncMsg, 0, 0);
+                        bool dl = false, rf = false;
+                        string spLog = string.Empty;
+                        UpdateStatusWithCheck(
+                            helper.RecId, rm.UserId, RechargeStatusCodes.PROCESS,
+                            operRef, string.Empty, truncMsg, "API Pending",
+                            ref dl, ref rf, ref spLog,
+                            0, null, rm.OpId ?? 0, 0, 0);
                     }
                     catch { /* non-fatal */ }
 
@@ -436,12 +451,16 @@ namespace VIRENDRA.Controllers
                     };
                 }
 
-                // FAILED → try next route
+                // FAILED → mark and try next route
                 try
                 {
-                    _rcRepo.UpdateStatusWithCheck(
-                        helper.RecId, RechargeStatusCodes.FAILED,
-                        string.Empty, truncMsg, 0, 0);
+                    bool dl = false, rf = false;
+                    string spLog = string.Empty;
+                    UpdateStatusWithCheck(
+                        helper.RecId, rm.UserId, RechargeStatusCodes.FAILED,
+                        string.Empty, string.Empty, truncMsg, "API Failed",
+                        ref dl, ref rf, ref spLog,
+                        0, null, rm.OpId ?? 0, 0, 0);
                 }
                 catch { /* non-fatal */ }
             }
@@ -449,16 +468,28 @@ namespace VIRENDRA.Controllers
             // ── All routes exhausted ────────────────────────────────────────
             if (helper.RecId > 0)
             {
+                bool dl = false, rfDone = false;
+                string spLog = string.Empty;
                 try
                 {
-                    _rcRepo.UpdateStatusWithCheck(
-                        helper.RecId, RechargeStatusCodes.FAILED,
-                        string.Empty, "All routes failed", 0, 0);
-                    _rcRepo.InsertRefundLedger(
-                        helper.RecId, rm.UserId, rm.RefTxnId,
-                        0, helper.DebitAmount, rm.UserId);
+                    UpdateStatusWithCheck(
+                        helper.RecId, rm.UserId, RechargeStatusCodes.FAILED,
+                        string.Empty, string.Empty, "All routes failed", "Final Failure",
+                        ref dl, ref rfDone, ref spLog,
+                        0, null, rm.OpId ?? 0, 0, 0);
                 }
                 catch { /* non-fatal */ }
+
+                // SP sets IsRefund=true when it performs the refund internally;
+                // only fall back to manual refund if the SP didn't do it.
+                if (!rfDone)
+                    try
+                    {
+                        _rcRepo.InsertRefundLedger(
+                            helper.RecId, rm.UserId, rm.RefTxnId,
+                            0, helper.DebitAmount, rm.UserId);
+                    }
+                    catch { /* non-fatal */ }
             }
 
             return new
@@ -699,6 +730,74 @@ namespace VIRENDRA.Controllers
             }
 
             return string.Empty;
+        }
+
+        // ── usp_UpdateRechargeStatus wrapper ────────────────────────────────
+        /// <summary>
+        /// Calls usp_UpdateRechargeStatus to update the recharge record and
+        /// handle commission / refund distribution.
+        /// <paramref name="isRefund"/> is set true by the SP when a refund was performed.
+        /// <paramref name="isDownline"/> is set true when downline commission was distributed.
+        /// </summary>
+        private void UpdateStatusWithCheck(
+            long recId, int userId, int statusId,
+            string apiTxnId, string optTxnId, string statusMsg, string remark,
+            ref bool isDownline, ref bool isRefund, ref string log,
+            long lapuId = 0, string lapuNo = null, int opId = 0,
+            decimal apiBal = 0, decimal rOffer = 0,
+            string updateType = "StatusWithCheck", string comment = "")
+        {
+            remark = string.IsNullOrEmpty(remark) ? "StatusWithCheck" : remark;
+
+            using (var con = new SqlConnection(_conn))
+            {
+                var cmd = new SqlCommand("usp_UpdateRechargeStatus", con)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+
+                cmd.Parameters.AddWithValue("@UpdateType", updateType);
+                cmd.Parameters.AddWithValue("@RecId",      recId);
+                cmd.Parameters.AddWithValue("@StatusId",   statusId);
+
+                if (userId > 0)
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                if (!string.IsNullOrWhiteSpace(apiTxnId))
+                    cmd.Parameters.AddWithValue("@ApiTxnId", apiTxnId);
+                if (!string.IsNullOrWhiteSpace(optTxnId))
+                    cmd.Parameters.AddWithValue("@OptTxnId", optTxnId);
+                if (!string.IsNullOrWhiteSpace(statusMsg))
+                    cmd.Parameters.AddWithValue("@StatusMsg", statusMsg);
+                if (!string.IsNullOrWhiteSpace(remark))
+                    cmd.Parameters.AddWithValue("@Remark", remark);
+                if (lapuId > 0)
+                    cmd.Parameters.AddWithValue("@LapuId", lapuId);
+                if (!string.IsNullOrWhiteSpace(lapuNo))
+                    cmd.Parameters.AddWithValue("@LapuNo", lapuNo);
+                if (opId > 0)
+                    cmd.Parameters.AddWithValue("@OpId", opId);
+                if (apiBal > 0)
+                    cmd.Parameters.AddWithValue("@ApiBal", apiBal);
+                if (rOffer > 0)
+                    cmd.Parameters.AddWithValue("@ROfferAmt", rOffer);
+                if (!string.IsNullOrWhiteSpace(comment))
+                    cmd.Parameters.AddWithValue("@Comment", comment);
+
+                cmd.Parameters.Add("@Log",        SqlDbType.NVarChar, 250).Direction = ParameterDirection.Output;
+                cmd.Parameters.Add("@IsRefund",   SqlDbType.Bit).Direction            = ParameterDirection.Output;
+                cmd.Parameters.Add("@IsDownline", SqlDbType.Bit).Direction            = ParameterDirection.Output;
+
+                con.Open();
+                cmd.ExecuteNonQuery();
+
+                string rfVal  = Convert.ToString(cmd.Parameters["@IsRefund"].Value);
+                string dlVal  = Convert.ToString(cmd.Parameters["@IsDownline"].Value);
+                string spLog  = Convert.ToString(cmd.Parameters["@Log"].Value);
+
+                isRefund   = !string.IsNullOrEmpty(rfVal) && Convert.ToBoolean(rfVal);
+                isDownline = !string.IsNullOrEmpty(dlVal) && Convert.ToBoolean(dlVal);
+                log       += spLog;
+            }
         }
 
         // ── Status check DB query ────────────────────────────────────────────

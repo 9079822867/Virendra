@@ -70,10 +70,6 @@ namespace VIRENDRA.Data
             int opId, int circleId, int apiId, int routeId,
             string refTxnId, int addedById);
 
-        /// <summary>Update recharge status (preserves ApiTxnId / ApiComm / ApiBal if already set).</summary>
-        void UpdateStatusWithCheck(long recId, int statusId, string apiTxnId,
-            string statusMsg, decimal apiComm, decimal apiBal);
-
         /// <summary>Insert or update the RequestResponse log row for a recharge attempt.</summary>
         void AddUpdateReqRes(long recId, string reqTxt, string respTxt, int apiId);
 

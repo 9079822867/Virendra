@@ -480,24 +480,6 @@ namespace VIRENDRA.Data
             };
         }
 
-        public void UpdateStatusWithCheck(long recId, int statusId, string apiTxnId,
-            string statusMsg, decimal apiComm, decimal apiBal)
-        {
-            using (var c = new SqlConnection(_conn))
-                c.Execute(@"
-                    UPDATE Recharge SET
-                        StatusId     = @StatusId,
-                        ApiTxnId     = CASE WHEN @ApiTxnId <> '' THEN @ApiTxnId ELSE ApiTxnId END,
-                        StatusMsg    = @StatusMsg,
-                        ResponseTime = GETDATE(),
-                        Recharge_Commision = CASE WHEN @ApiComm > 0 THEN @ApiComm ELSE Recharge_Commision END,
-                        ApiBal       = CASE WHEN @ApiBal  > 0 THEN @ApiBal  ELSE ApiBal          END
-                    WHERE Id = @RecId",
-                    new { RecId=recId, StatusId=statusId,
-                          ApiTxnId=apiTxnId ?? string.Empty, StatusMsg=statusMsg,
-                          ApiComm=apiComm, ApiBal=apiBal });
-        }
-
         public void AddUpdateReqRes(long recId, string reqTxt, string respTxt, int apiId)
         {
             using (var c = new SqlConnection(_conn))
