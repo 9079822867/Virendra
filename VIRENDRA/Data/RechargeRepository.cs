@@ -331,38 +331,52 @@ namespace VIRENDRA.Data
 
         public RechargeValidationResult ValidateRechargeRequest(
             int userId, string mobileNo, decimal amount,
-            int opId, int circleId, string refTxnId)
+            int opId, int circleId, string refTxnId, string ipAddress = null)
         {
             var p = new DynamicParameters();
-            p.Add("@UserId",      userId);
-            p.Add("@MobileNo",    mobileNo,    DbType.String);
-            p.Add("@Amount",      amount,      DbType.Decimal);
-            p.Add("@OpId",        opId,        DbType.Int32);
-            p.Add("@CircleId",    circleId,    DbType.Int32);
-            p.Add("@RefTxnId",    refTxnId,    DbType.String);
-            p.Add("@StatusCode",  0,           DbType.Int32,   ParameterDirection.Output);
-            p.Add("@StatusMsg",   string.Empty, DbType.String,  ParameterDirection.Output, 500);
-            p.Add("@SwitchId",    0,           DbType.Int32,   ParameterDirection.Output);
-            p.Add("@Api1",        0,           DbType.Int32,   ParameterDirection.Output);
-            p.Add("@Api2",        0,           DbType.Int32,   ParameterDirection.Output);
-            p.Add("@Api3",        0,           DbType.Int32,   ParameterDirection.Output);
-            p.Add("@DebitAmount", 0m,          DbType.Decimal, ParameterDirection.Output);
-            p.Add("@CommAmount",  0m,          DbType.Decimal, ParameterDirection.Output);
+            // ── Input params (match SP signature exactly) ────────────────────
+            p.Add("@UserId",    userId,               DbType.Int32);
+            p.Add("@MobileNo",  mobileNo,             DbType.String);
+            p.Add("@Amount",    amount,               DbType.Decimal);
+            p.Add("@OpId",      opId,                 DbType.Int32);
+            p.Add("@CircleId",  circleId,             DbType.Int32);
+            p.Add("@RefTxnId",  refTxnId,             DbType.String);
+            p.Add("@IPAddress", ipAddress ?? string.Empty, DbType.String);
+
+            // ── Output params – use nullable types to survive DBNull ─────────
+            // @ErrorCode: 0 = success; non-zero = specific error code
+            p.Add("@ErrorCode",        null, DbType.Int32,   ParameterDirection.Output);
+            p.Add("@ErrorDesc",        null, DbType.String,  ParameterDirection.Output, 250);
+            p.Add("@Log",              null, DbType.String,  ParameterDirection.Output, 250);
+            p.Add("@SwitchTypeId",     null, DbType.Int32,   ParameterDirection.Output);
+            p.Add("@Api1",             null, DbType.Int32,   ParameterDirection.Output);
+            p.Add("@Api2",             null, DbType.Int32,   ParameterDirection.Output);
+            p.Add("@Api3",             null, DbType.Int32,   ParameterDirection.Output);
+            p.Add("@OpTypeId",         null, DbType.Int32,   ParameterDirection.Output);
+            p.Add("@SerialCircleId",   null, DbType.Int32,   ParameterDirection.Output);
+            p.Add("@SerialCircleCode", null, DbType.String,  ParameterDirection.Output, 10);
+            p.Add("@DebitAmount",      null, DbType.Decimal, ParameterDirection.Output);
+            p.Add("@CommAmount",       null, DbType.Decimal, ParameterDirection.Output);
 
             using (var c = new SqlConnection(_conn))
                 c.Execute("SP_RechargeRequestValidation", p,
                     commandType: CommandType.StoredProcedure);
 
+            // Read all outputs safely with null coalescing
             return new RechargeValidationResult
             {
-                StatusCode   = p.Get<int>("@StatusCode"),
-                StatusMsg    = p.Get<string>("@StatusMsg") ?? string.Empty,
-                SwitchTypeId = p.Get<int>("@SwitchId"),
-                Api1         = p.Get<int>("@Api1"),
-                Api2         = p.Get<int>("@Api2"),
-                Api3         = p.Get<int>("@Api3"),
-                DebitAmount  = p.Get<decimal>("@DebitAmount"),
-                CommAmount   = p.Get<decimal>("@CommAmount")
+                StatusCode       = p.Get<int?>   ("@ErrorCode")        ?? 1,
+                StatusMsg        = p.Get<string> ("@ErrorDesc")        ?? string.Empty,
+                Log              = p.Get<string> ("@Log")              ?? string.Empty,
+                SwitchTypeId     = p.Get<int?>   ("@SwitchTypeId")     ?? RouteType.COMMON_ROUTE,
+                Api1             = p.Get<int?>   ("@Api1")             ?? 0,
+                Api2             = p.Get<int?>   ("@Api2")             ?? 0,
+                Api3             = p.Get<int?>   ("@Api3")             ?? 0,
+                OpTypeId         = p.Get<int?>   ("@OpTypeId")         ?? 0,
+                SerialCircleId   = p.Get<int?>   ("@SerialCircleId")   ?? 0,
+                SerialCircleCode = p.Get<string> ("@SerialCircleCode") ?? string.Empty,
+                DebitAmount      = p.Get<decimal?>("@DebitAmount")     ?? 0m,
+                CommAmount       = p.Get<decimal?>("@CommAmount")      ?? 0m
             };
         }
 

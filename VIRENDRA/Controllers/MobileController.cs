@@ -196,11 +196,12 @@ namespace VIRENDRA.Controllers
             {
                 val = _rcRepo.ValidateRechargeRequest(
                     rm.UserId, rm.MobileNo, rm.Amount,
-                    rm.OpId ?? 0, rm.CircleId ?? 0, rm.RefTxnId);
+                    rm.OpId ?? 0, rm.CircleId ?? 0, rm.RefTxnId,
+                    rm.IpAddress);
             }
             catch
             {
-                // SP doesn't exist or failed → manual balance check
+                // SP not available → manual balance check only
                 decimal bal = 0;
                 try { bal = _rcRepo.GetUserBalance(rm.UserId); } catch { }
 
@@ -209,7 +210,7 @@ namespace VIRENDRA.Controllers
 
                 val = new RechargeValidationResult
                 {
-                    StatusCode   = 1,
+                    StatusCode   = 0,   // 0 = success in SP conventions
                     StatusMsg    = "OK",
                     SwitchTypeId = RouteType.COMMON_ROUTE,
                     DebitAmount  = rm.Amount,
@@ -217,8 +218,16 @@ namespace VIRENDRA.Controllers
                 };
             }
 
-            if (val.StatusCode != 1)
+            // SP uses ErrorCode 0 for success; all non-zero codes are failures
+            // except 104 (Callback Thread) which means "create & pending"
+            if (val.StatusCode == 104)
+            {
+                // Callback thread: proceed but routing will handle it as pending
+            }
+            else if (val.StatusCode != 0)
+            {
                 return new { status = "0", message = val.StatusMsg };
+            }
 
             // ── 2. Build helper ─────────────────────────────────────────────
             var helper = new RechargeHelperDto

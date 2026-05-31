@@ -65,16 +65,21 @@ namespace VIRENDRA.Models
     /// <summary>Result from SP_RechargeRequestValidation.</summary>
     public class RechargeValidationResult
     {
-        public int     StatusCode    { get; set; }
-        public string  StatusMsg     { get; set; }
-        public int     SwitchTypeId  { get; set; }
-        public int     Api1          { get; set; }
-        public int     Api2          { get; set; }
-        public int     Api3          { get; set; }
-        public decimal DebitAmount   { get; set; }
-        public decimal CommAmount    { get; set; }
-        public bool    IsROffer      { get; set; }
-        public decimal ROAmount      { get; set; }
+        /// <summary>0 = success; non-zero = error code from the SP.</summary>
+        public int     StatusCode       { get; set; }
+        public string  StatusMsg        { get; set; }
+        public string  Log              { get; set; }
+        public int     SwitchTypeId     { get; set; }
+        public int     Api1             { get; set; }
+        public int     Api2             { get; set; }
+        public int     Api3             { get; set; }
+        public int     OpTypeId         { get; set; }
+        public int     SerialCircleId   { get; set; }
+        public string  SerialCircleCode { get; set; }
+        public decimal DebitAmount      { get; set; }
+        public decimal CommAmount       { get; set; }
+        public bool    IsROffer         { get; set; }
+        public decimal ROAmount         { get; set; }
     }
 
     /// <summary>Result from usp_RechargeCreate.</summary>

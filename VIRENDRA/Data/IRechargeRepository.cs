@@ -47,7 +47,7 @@ namespace VIRENDRA.Data
         /// </summary>
         RechargeValidationResult ValidateRechargeRequest(
             int userId, string mobileNo, decimal amount,
-            int opId, int circleId, string refTxnId);
+            int opId, int circleId, string refTxnId, string ipAddress = null);
 
         /// <summary>Common-route routing: no circle restriction, purely priority-ordered.</summary>
         List<ApiPriorityDto> GetCommanRouting(int opId, decimal amount, string circleCode);
