@@ -177,7 +177,7 @@
                                 <td>@(r.RouteOP2 ?? "—")</td>
                                 <td>@(r.WaitMinute.HasValue ? r.WaitMinute.ToString() : "0")</td>
                                 <td class="text-muted" style="font-size:.75rem;">
-                                    @(r.UpdatedDate.HasValue ? r.UpdatedDate.Value.ToString("dd MMM yy HH:mm") : (r.AddedDate != default ? r.AddedDate.ToString("dd MMM yy HH:mm") : "—"))
+                                    @(r.UpdatedDate.HasValue ? r.UpdatedDate.Value.ToString("dd MMM yy HH:mm") : (r.AddedDate != default(DateTime) ? r.AddedDate.ToString("dd MMM yy HH:mm") : "—"))
                                 </td>
                             </tr>
                         }
