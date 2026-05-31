@@ -449,48 +449,95 @@ namespace VIRENDRA.Data
         }
 
         public CreateRechargeResult CreateRecharge(
-            int userId, string mobileNo, decimal debitAmt, decimal commAmt,
-            int opId, int circleId, int apiId, int routeId,
-            string refTxnId, int addedById)
+            int    userId,
+            string customerNo,
+            decimal amount,
+            decimal debitAmount,
+            int    opId,
+            int    circleId,
+            int    apiId,
+            string userTxnId,
+            string ourRef,
+            string ipAddress     = null,
+            int    switchTypeId  = 0,
+            long   switchedRecId = 0,
+            int    mediumId      = 2,
+            string circleFilter  = null)
         {
             var p = new DynamicParameters();
-            p.Add("@UserId",     userId,    DbType.Int32);
-            p.Add("@MobileNo",   mobileNo,  DbType.String);
-            p.Add("@Amount",     debitAmt,  DbType.Decimal);
-            p.Add("@CommAmt",    commAmt,   DbType.Decimal);
-            p.Add("@OpId",       opId,      DbType.Int32);
-            p.Add("@CircleId",   circleId,  DbType.Int32);
-            p.Add("@ApiId",      apiId,     DbType.Int32);
-            p.Add("@RouteId",    routeId,   DbType.Int32);
-            p.Add("@RefTxnId",   refTxnId,  DbType.String);
-            p.Add("@AddedById",  addedById, DbType.Int32);
 
-            p.Add("@RecId",      0L,            DbType.Int64,   ParameterDirection.Output);
-            p.Add("@TxnId",      0L,            DbType.Int64,   ParameterDirection.Output);
-            p.Add("@OpBal",      0m,            DbType.Decimal, ParameterDirection.Output);
-            p.Add("@ApiURL",     string.Empty,  DbType.String,  ParameterDirection.Output, 2000);
-            p.Add("@PostData",   string.Empty,  DbType.String,  ParameterDirection.Output, 2000);
-            p.Add("@OP1",        string.Empty,  DbType.String,  ParameterDirection.Output, 200);
-            p.Add("@OP2",        string.Empty,  DbType.String,  ParameterDirection.Output, 200);
-            p.Add("@ApiTypeId",  0,             DbType.Int32,   ParameterDirection.Output);
-            p.Add("@StatusCode", 0,             DbType.Int32,   ParameterDirection.Output);
-            p.Add("@StatusMsg",  string.Empty,  DbType.String,  ParameterDirection.Output, 500);
+            // ── Input parameters (match usp_RechargeCreate exactly) ──────────
+            p.Add("@ApiId",         apiId,                          DbType.Int32);
+            p.Add("@UserId",        userId,                         DbType.Int32);
+            p.Add("@IPAddress",     ipAddress ?? string.Empty,      DbType.String);
+            p.Add("@CustomerNo",    customerNo,                     DbType.String);
+            p.Add("@Amount",        amount,                         DbType.Decimal);
+            p.Add("@OpId",          opId,                           DbType.Int32);
+            p.Add("@CircleId",      circleId,                       DbType.Int32);
+            p.Add("@UserTxnId",     userTxnId,                      DbType.String);
+            p.Add("@OurRef",        ourRef ?? userTxnId,            DbType.String);
+            p.Add("@DebitAmount",   debitAmount,                    DbType.Decimal);
+            p.Add("@IsSwitch",      switchedRecId > 0 ? 1 : 0,     DbType.Boolean);
+            p.Add("@SwitchedRecId", switchedRecId,                  DbType.Int64);
+            p.Add("@MediumId",      mediumId,                       DbType.Int32);
+            p.Add("@SwitchTypeId",  switchTypeId,                   DbType.Int32);
+            p.Add("@CircleFilter",  circleFilter,                   DbType.String);
+
+            // ── Output parameters — all nullable to survive DBNull ────────────
+            p.Add("@ApiUrl",         null, DbType.String,  ParameterDirection.Output, 500);
+            p.Add("@Method",         null, DbType.String,  ParameterDirection.Output, 50);
+            p.Add("@ContentType",    null, DbType.String,  ParameterDirection.Output, 100);
+            p.Add("@ResType",        null, DbType.String,  ParameterDirection.Output, 100);
+            p.Add("@PostData",       null, DbType.String,  ParameterDirection.Output, 500);
+            p.Add("@UrlId",          null, DbType.Int32,   ParameterDirection.Output);
+            p.Add("@ApiUserId",      null, DbType.String,  ParameterDirection.Output, 50);
+            p.Add("@ApiPassword",    null, DbType.String,  ParameterDirection.Output, 100);
+            p.Add("@ApiOptional",    null, DbType.String,  ParameterDirection.Output, 100);
+            p.Add("@OpCode",         null, DbType.String,  ParameterDirection.Output, 50);
+            p.Add("@ExtraUrl",       null, DbType.String,  ParameterDirection.Output, 500);
+            p.Add("@ExtraUrlData",   null, DbType.String,  ParameterDirection.Output, 500);
+            p.Add("@RecId",          null, DbType.Int64,   ParameterDirection.Output);
+            p.Add("@TxnId",          null, DbType.Int64,   ParameterDirection.Output);
+            p.Add("@ErrorCode",      null, DbType.Int32,   ParameterDirection.Output);
+            p.Add("@ErrorDesc",      null, DbType.String,  ParameterDirection.Output, 50);
+            p.Add("@Log",            null, DbType.String,  ParameterDirection.Output, 250);
+            p.Add("@ApiTypeId",      null, DbType.Int32,   ParameterDirection.Output);
+            p.Add("@ApiBal",         null, DbType.Decimal, ParameterDirection.Output);
+            p.Add("@LapuBal",        null, DbType.Decimal, ParameterDirection.Output);
+            p.Add("@Comm1",          null, DbType.Decimal, ParameterDirection.Output);
+            p.Add("@CircleCode",     null, DbType.String,  ParameterDirection.Output, 100);
+            p.Add("@CircleExtraUrl", null, DbType.String,  ParameterDirection.Output, 100);
+            p.Add("@CircleExtraData",null, DbType.String,  ParameterDirection.Output, 100);
 
             using (var c = new SqlConnection(_conn))
                 c.Execute("usp_RechargeCreate", p, commandType: CommandType.StoredProcedure);
 
             return new CreateRechargeResult
             {
-                RecId      = p.Get<long>("@RecId"),
-                TxnId      = p.Get<long>("@TxnId"),
-                OpBal      = p.Get<decimal>("@OpBal"),
-                ApiUrl     = p.Get<string>("@ApiURL")   ?? string.Empty,
-                PostData   = p.Get<string>("@PostData") ?? string.Empty,
-                OP1        = p.Get<string>("@OP1")       ?? string.Empty,
-                OP2        = p.Get<string>("@OP2")       ?? string.Empty,
-                ApiTypeId  = p.Get<int>("@ApiTypeId"),
-                StatusCode = p.Get<int>("@StatusCode"),
-                StatusMsg  = p.Get<string>("@StatusMsg") ?? string.Empty
+                RecId           = p.Get<long?>   ("@RecId")           ?? 0L,
+                TxnId           = p.Get<long?>   ("@TxnId")           ?? 0L,
+                ApiUrl          = p.Get<string>  ("@ApiUrl")          ?? string.Empty,
+                Method          = p.Get<string>  ("@Method")          ?? "GET",
+                ContentType     = p.Get<string>  ("@ContentType")     ?? string.Empty,
+                ResType         = p.Get<string>  ("@ResType")         ?? string.Empty,
+                PostData        = p.Get<string>  ("@PostData")        ?? string.Empty,
+                UrlId           = p.Get<int?>    ("@UrlId")           ?? 0,
+                ApiUserId       = p.Get<string>  ("@ApiUserId")       ?? string.Empty,
+                ApiPassword     = p.Get<string>  ("@ApiPassword")     ?? string.Empty,
+                ApiOptional     = p.Get<string>  ("@ApiOptional")     ?? string.Empty,
+                OpCode          = p.Get<string>  ("@OpCode")          ?? string.Empty,
+                ExtraUrl        = p.Get<string>  ("@ExtraUrl")        ?? string.Empty,
+                ExtraUrlData    = p.Get<string>  ("@ExtraUrlData")    ?? string.Empty,
+                CircleCode      = p.Get<string>  ("@CircleCode")      ?? string.Empty,
+                CircleExtraUrl  = p.Get<string>  ("@CircleExtraUrl")  ?? string.Empty,
+                CircleExtraData = p.Get<string>  ("@CircleExtraData") ?? string.Empty,
+                ApiTypeId       = p.Get<int?>    ("@ApiTypeId")       ?? 0,
+                ApiBal          = p.Get<decimal?>("@ApiBal")          ?? 0m,
+                LapuBal         = p.Get<decimal?>("@LapuBal")         ?? 0m,
+                Comm1           = p.Get<decimal?>("@Comm1")           ?? 0m,
+                StatusCode      = p.Get<int?>    ("@ErrorCode")       ?? 1,
+                StatusMsg       = p.Get<string>  ("@ErrorDesc")       ?? string.Empty,
+                Log             = p.Get<string>  ("@Log")             ?? string.Empty
             };
         }
 

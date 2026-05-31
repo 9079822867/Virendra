@@ -276,18 +276,13 @@ namespace VIRENDRA.Controllers
 
         private object RechargeProcess(RechargeModel rm, RechargeHelperDto helper)
         {
-            bool recordCreated = false;
-            int  routeIndex    = 0;
+            bool firstRoute = true;
 
             foreach (var route in helper.ApiRouteList)
             {
-                routeIndex++;
-
                 // ── Filter checks ───────────────────────────────────────────
-                if (!UserAllowed(rm.UserId, route.UserFilter, route.BlockUser))
-                    continue;
-                if (!CircleAllowed(rm.CircleCode, route.CircleFilter))
-                    continue;
+                if (!UserAllowed(rm.UserId, route.UserFilter, route.BlockUser)) continue;
+                if (!CircleAllowed(rm.CircleCode, route.CircleFilter)) continue;
 
                 helper.CurrentApiId      = route.ApiId;
                 helper.CurrentPriorityId = route.PriorityId;
@@ -300,114 +295,95 @@ namespace VIRENDRA.Controllers
                 helper.BlockUser         = route.BlockUser;
                 helper.UserFilter        = route.UserFilter;
 
-                string apiUrl  = string.Empty;
-                string postData = string.Empty;
-
-                // ── Obtain URL + create / update record ─────────────────────
-                if (!recordCreated)
-                {
-                    // First route: call usp_RechargeCreate
-                    CreateRechargeResult cr;
-                    try
-                    {
-                        cr = _rcRepo.CreateRecharge(
-                            rm.UserId, rm.MobileNo,
-                            helper.DebitAmount, helper.CommAmount,
-                            rm.OpId ?? 0, rm.CircleId ?? 0,
-                            route.ApiId, route.RouteId,
-                            rm.RefTxnId, rm.UserId);
-                    }
-                    catch (Exception ex)
-                    {
-                        return new { status = "0", message = "Recharge creation error: " + ex.Message };
-                    }
-
-                    if (cr.StatusCode != 1)
-                        return new { status = "0", message = cr.StatusMsg };
-
-                    helper.RecId    = cr.RecId;
-                    helper.TxnId    = cr.TxnId;
-                    helper.OP1      = !string.IsNullOrWhiteSpace(route.RouteOP1)
-                                        ? route.RouteOP1 : cr.OP1;
-                    helper.OP2      = cr.OP2;
-                    helper.ApiTypeId = cr.ApiTypeId;
-
-                    apiUrl   = cr.ApiUrl;
-                    postData = cr.PostData;
-                    recordCreated = true;
-                }
-                else
-                {
-                    // Subsequent route: get URL for this API without re-debiting
-                    ApiUrlInfo ui = null;
-                    try { ui = _rcRepo.GetApiUrlByApiId(route.ApiId); } catch { }
-
-                    if (ui == null) continue;   // can't get URL -> skip this route
-
-                    string opCode = null;
-                    string extraUrl = null, extraData = null;
-                    try
-                    {
-                        opCode = _rcRepo.GetOperatorApiCode(
-                            rm.OpId ?? 0, route.ApiId, out extraUrl, out extraData);
-                    }
-                    catch { /* use operator code from rm */ }
-
-                    helper.OP1 = !string.IsNullOrWhiteSpace(route.RouteOP1)
-                                    ? route.RouteOP1
-                                    : (helper.OP1 ?? string.Empty);
-
-                    apiUrl   = BuildUrl(ui.Url,      rm, opCode, helper, extraUrl, extraData);
-                    postData = BuildUrl(ui.PostData,  rm, opCode, helper, extraUrl, extraData);
-
-                    // Mark record as processing / retrying
-                    try
-                    {
-                        bool _dl = false, _rf = false;
-                        string _log = string.Empty;
-                        UpdateStatusWithCheck(
-                            helper.RecId, rm.UserId, RechargeStatusCodes.PROCESS,
-                            string.Empty, string.Empty, "Retrying route " + routeIndex, "Retry",
-                            ref _dl, ref _rf, ref _log,
-                            0, null, rm.OpId ?? 0, 0, 0);
-                    }
-                    catch { /* non-fatal */ }
-                }
-
-                if (string.IsNullOrWhiteSpace(apiUrl))
-                    continue;   // no URL to call -> skip
-
-                // ── Make API call ───────────────────────────────────────────
-                string response = string.Empty;
+                // ── Call usp_RechargeCreate ─────────────────────────────────
+                // First call (switchedRecId=0): creates record + debits balance
+                // Retry (switchedRecId=helper.RecId): updates existing record,
+                //   no extra debit, returns URL for the new API
+                CreateRechargeResult cr;
                 try
                 {
-                    response = ApiGet(apiUrl, postData);
+                    cr = _rcRepo.CreateRecharge(
+                        rm.UserId,
+                        rm.MobileNo,
+                        rm.Amount,
+                        helper.DebitAmount,
+                        rm.OpId ?? 0,
+                        rm.CircleId ?? 0,
+                        route.ApiId,
+                        rm.RefTxnId,
+                        rm.OurTxnId ?? rm.RefTxnId,
+                        rm.IpAddress,
+                        helper.SwitchId,
+                        firstRoute ? 0L : helper.RecId,
+                        2,                       // mediumId = 2 (web)
+                        route.CircleFilter);
                 }
                 catch (Exception ex)
                 {
-                    response = "HTTP_ERROR:" + ex.Message;
+                    if (firstRoute)
+                        return new { status = "0", message = "Error creating recharge: " + ex.Message };
+                    continue;
                 }
 
-                // ── Log request/response ────────────────────────────────────
+                firstRoute = false;
+
+                // Store/update RecId; update commission from SP's accurate calculation
+                if (cr.RecId > 0) { helper.RecId = cr.RecId; helper.TxnId = cr.TxnId; }
+                if (cr.Comm1  > 0) helper.CommAmount = cr.Comm1;
+                helper.ApiTypeId = cr.ApiTypeId;
+
+                // ── Handle SP-level error codes ─────────────────────────────
+                if (cr.StatusCode == 9)
+                    // Insufficient balance — hard stop, no point retrying
+                    return new { status = "0", message = cr.StatusMsg };
+
+                if (cr.StatusCode == 102)
+                {
+                    // "Processing" default API — record created, return pending
+                    return new
+                    {
+                        status             = "3",
+                        txn_id             = rm.RefTxnId,
+                        our_txn_id         = helper.RecId.ToString(CultureInfo.InvariantCulture),
+                        operator_reference = string.Empty,
+                        message            = cr.StatusMsg,
+                        amount             = Fmt(helper.DebitAmount)
+                    };
+                }
+
+                // 100 = Offline default, 101 = Failed default → try next route
+                if (cr.StatusCode == 100 || cr.StatusCode == 101) continue;
+
+                // Any other non-zero code → try next route
+                if (cr.StatusCode != 0) continue;
+
+                // ── Build actual API URL (SP returns raw templates + all creds) ─
+                string apiUrl  = BuildUrl(cr.ApiUrl,   rm, cr);
+                string postData = BuildUrl(cr.PostData, rm, cr);
+
+                if (string.IsNullOrWhiteSpace(apiUrl)) continue;
+
+                // ── Make API call ───────────────────────────────────────────
+                string response = string.Empty;
+                try { response = ApiGet(apiUrl, postData, cr.Method, cr.ContentType); }
+                catch (Exception ex) { response = "HTTP_ERROR:" + ex.Message; }
+
+                // ── Log ─────────────────────────────────────────────────────
                 try { _rcRepo.AddUpdateReqRes(helper.RecId, apiUrl, response, route.ApiId); }
                 catch { /* non-fatal */ }
 
-                // ── Parse response ──────────────────────────────────────────
+                // ── Parse response ───────────────────────────────────────────
                 List<FilterTag> tags = null;
                 try { tags = _rcRepo.GetFilterTags(route.ApiId); }
-                catch { /* fallback to keyword matching */ }
+                catch { /* keyword fallback */ }
 
                 int    respStatus = ClassifyResponse(response, tags);
                 string operRef    = ExtractOperRef(response, tags);
-                string truncMsg   = response.Length > 500
-                                    ? response.Substring(0, 500)
-                                    : response;
+                string truncMsg   = response.Length > 500 ? response.Substring(0, 500) : response;
 
-                // ── Handle result ───────────────────────────────────────────
                 if (respStatus == RechargeStatusCodes.SUCCESS)
                 {
-                    bool dl = false, rf = false;
-                    string spLog = string.Empty;
+                    bool dl = false, rf = false; string spLog = string.Empty;
                     try
                     {
                         UpdateStatusWithCheck(
@@ -416,7 +392,6 @@ namespace VIRENDRA.Controllers
                             ref dl, ref rf, ref spLog,
                             0, null, rm.OpId ?? 0, 0, rm.ROfferAmount);
 
-                        // If SP didn't handle downline commission, credit it now
                         if (!dl && helper.CommAmount > 0)
                             _rcRepo.InsertCommissionLedger(
                                 helper.RecId, rm.UserId, rm.RefTxnId,
@@ -437,10 +412,9 @@ namespace VIRENDRA.Controllers
 
                 if (respStatus == RechargeStatusCodes.PROCESS)
                 {
+                    bool dl = false, rf = false; string spLog = string.Empty;
                     try
                     {
-                        bool dl = false, rf = false;
-                        string spLog = string.Empty;
                         UpdateStatusWithCheck(
                             helper.RecId, rm.UserId, RechargeStatusCodes.PROCESS,
                             operRef, string.Empty, truncMsg, "API Pending",
@@ -460,11 +434,10 @@ namespace VIRENDRA.Controllers
                     };
                 }
 
-                // FAILED → mark and try next route
+                // FAILED → update and try next route
                 try
                 {
-                    bool dl = false, rf = false;
-                    string spLog = string.Empty;
+                    bool dl = false, rf = false; string spLog = string.Empty;
                     UpdateStatusWithCheck(
                         helper.RecId, rm.UserId, RechargeStatusCodes.FAILED,
                         string.Empty, string.Empty, truncMsg, "API Failed",
@@ -477,8 +450,7 @@ namespace VIRENDRA.Controllers
             // ── All routes exhausted ────────────────────────────────────────
             if (helper.RecId > 0)
             {
-                bool dl = false, rfDone = false;
-                string spLog = string.Empty;
+                bool dl = false, rfDone = false; string spLog = string.Empty;
                 try
                 {
                     UpdateStatusWithCheck(
@@ -489,24 +461,12 @@ namespace VIRENDRA.Controllers
                 }
                 catch { /* non-fatal */ }
 
-                // SP sets IsRefund=true when it performs the refund internally;
-                // only fall back to manual refund if the SP didn't do it.
                 if (!rfDone)
-                    try
-                    {
-                        _rcRepo.InsertRefundLedger(
-                            helper.RecId, rm.UserId, rm.RefTxnId,
-                            0, helper.DebitAmount, rm.UserId);
-                    }
+                    try { _rcRepo.InsertRefundLedger(helper.RecId, rm.UserId, rm.RefTxnId, 0, helper.DebitAmount, rm.UserId); }
                     catch { /* non-fatal */ }
             }
 
-            return new
-            {
-                status  = "2",
-                txn_id  = rm.RefTxnId,
-                message = "Recharge failed. Amount refunded to wallet."
-            };
+            return new { status = "2", txn_id = rm.RefTxnId, message = "Recharge failed. Amount refunded to wallet." };
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -621,44 +581,60 @@ namespace VIRENDRA.Controllers
                 .Any(f => f.Trim().Equals(circleCode.Trim(), StringComparison.OrdinalIgnoreCase));
         }
 
-        // ── URL builder (placeholder replacement for retry routes) ───────────
-        private static string BuildUrl(string template, RechargeModel rm,
-            string opCode, RechargeHelperDto h, string extraUrl, string extraData)
+        // ── URL placeholder replacement ──────────────────────────────────────
+        /// <summary>
+        /// Replace all [XXX] placeholders using credentials and operator codes
+        /// returned directly by usp_RechargeCreate.
+        /// </summary>
+        private static string BuildUrl(string template, RechargeModel rm, CreateRechargeResult cr)
         {
-            if (string.IsNullOrWhiteSpace(template)) return template ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(template)) return string.Empty;
 
             string rnd = new Random().Next(100000, 999999).ToString(CultureInfo.InvariantCulture);
             string dt  = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
 
             return template
-                .Replace("[MMM]",  rm.MobileNo   ?? string.Empty)
-                .Replace("[HHH]",  rm.MobileNo   ?? string.Empty)
+                .Replace("[UUU]",  cr.ApiUserId    ?? string.Empty)   // API user ID
+                .Replace("[PPP]",  cr.ApiPassword  ?? string.Empty)   // API password
+                .Replace("[RRR]",  cr.ApiOptional  ?? string.Empty)   // remark/optional
+                .Replace("[MMM]",  rm.MobileNo     ?? string.Empty)   // mobile number
+                .Replace("[HHH]",  rm.MobileNo     ?? string.Empty)   // account (bill pay)
                 .Replace("[AAA]",  rm.Amount.ToString("0.##", CultureInfo.InvariantCulture))
-                .Replace("[OOO]",  opCode         ?? string.Empty)
-                .Replace("[CCC]",  rm.CircleCode  ?? string.Empty)
-                .Replace("[VVV]",  rm.RefTxnId    ?? string.Empty)
-                .Replace("[TTT]",  rm.RefTxnId    ?? string.Empty)
-                .Replace("[OP1]",  h.OP1          ?? string.Empty)
-                .Replace("[OP2]",  h.OP2          ?? string.Empty)
-                .Replace("[EEE]",  extraUrl       ?? string.Empty)
-                .Replace("[DDD]",  extraData      ?? string.Empty)
+                .Replace("[OOO]",  cr.OpCode       ?? string.Empty)   // operator code
+                .Replace("[CCC]",  rm.CircleCode   ?? string.Empty)   // circle code
+                .Replace("[VVV]",  rm.RefTxnId     ?? string.Empty)   // user txn id
+                .Replace("[TTT]",  rm.RefTxnId     ?? string.Empty)
+                .Replace("[NNN]",  string.Empty)
+                .Replace("[EEE]",  cr.ExtraUrl     ?? string.Empty)   // extra url
+                .Replace("[DDD]",  cr.ExtraUrlData ?? string.Empty)   // extra data
+                .Replace("[COMM1]",cr.Comm1.ToString("0.##", CultureInfo.InvariantCulture))
                 .Replace("[FFFT]", dt)
                 .Replace("[FFFR]", rnd);
         }
 
         // ── HTTP call ────────────────────────────────────────────────────────
-        private static string ApiGet(string url, string postBody)
+        /// <summary>
+        /// Make an HTTP call; uses Method and ContentType from usp_RechargeCreate when provided.
+        /// </summary>
+        private static string ApiGet(string url, string postBody,
+            string method = null, string contentType = null)
         {
             var req = (HttpWebRequest)WebRequest.Create(url);
             req.Timeout   = 30000;
             req.UserAgent = "VRecharge/1.0";
 
-            if (!string.IsNullOrWhiteSpace(postBody))
+            bool isPost = string.Equals(method, "POST", StringComparison.OrdinalIgnoreCase)
+                          || (!string.IsNullOrEmpty(method) == false && !string.IsNullOrWhiteSpace(postBody));
+
+            if (isPost && !string.IsNullOrWhiteSpace(postBody))
             {
                 req.Method      = "POST";
-                req.ContentType = postBody.TrimStart().StartsWith("{")
-                    ? "application/json"
-                    : "application/x-www-form-urlencoded";
+                req.ContentType = !string.IsNullOrWhiteSpace(contentType)
+                    ? contentType
+                    : (postBody.TrimStart().StartsWith("{")
+                        ? "application/json"
+                        : "application/x-www-form-urlencoded");
+
                 byte[] bytes = Encoding.UTF8.GetBytes(postBody);
                 req.ContentLength = bytes.Length;
                 using (var s = req.GetRequestStream())

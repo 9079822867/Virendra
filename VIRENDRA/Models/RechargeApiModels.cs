@@ -82,19 +82,46 @@ namespace VIRENDRA.Models
         public decimal ROAmount         { get; set; }
     }
 
-    /// <summary>Result from usp_RechargeCreate.</summary>
+    /// <summary>Result from usp_RechargeCreate (aligned with real SP output params).</summary>
     public class CreateRechargeResult
     {
-        public long    RecId      { get; set; }
-        public long    TxnId      { get; set; }
-        public decimal OpBal      { get; set; }
-        public string  ApiUrl     { get; set; }
-        public string  PostData   { get; set; }
-        public string  OP1        { get; set; }
-        public string  OP2        { get; set; }
-        public int     ApiTypeId  { get; set; }
-        public int     StatusCode { get; set; }
-        public string  StatusMsg  { get; set; }
+        // ── Record IDs ───────────────────────────────────────────────────────
+        public long    RecId           { get; set; }
+        public long    TxnId           { get; set; }
+
+        // ── API URL template + call metadata (placeholder replacement needed) ─
+        public string  ApiUrl          { get; set; }  // raw [MMM]/[AAA]… template
+        public string  Method          { get; set; }  // GET | POST
+        public string  ContentType     { get; set; }
+        public string  ResType         { get; set; }
+        public string  PostData        { get; set; }  // raw POST body template
+        public int     UrlId           { get; set; }
+
+        // ── Credentials & operator codes (replace placeholders [UUU]…[DDD]) ──
+        public string  ApiUserId       { get; set; }  // [UUU]
+        public string  ApiPassword     { get; set; }  // [PPP]
+        public string  ApiOptional     { get; set; }  // [RRR]
+        public string  OpCode          { get; set; }  // [OOO]
+        public string  ExtraUrl        { get; set; }  // [EEE]
+        public string  ExtraUrlData    { get; set; }  // [DDD]
+
+        // ── Circle info ──────────────────────────────────────────────────────
+        public string  CircleCode      { get; set; }
+        public string  CircleExtraUrl  { get; set; }
+        public string  CircleExtraData { get; set; }
+
+        // ── Balances / commission ────────────────────────────────────────────
+        public decimal ApiBal          { get; set; }
+        public decimal LapuBal         { get; set; }
+        public decimal Comm1           { get; set; }  // user commission amount
+
+        // ── Misc ─────────────────────────────────────────────────────────────
+        public int     ApiTypeId       { get; set; }
+
+        // ── Status (0 = success, non-zero = SP error code) ───────────────────
+        public int     StatusCode      { get; set; }  // mapped from @ErrorCode
+        public string  StatusMsg       { get; set; }  // mapped from @ErrorDesc
+        public string  Log             { get; set; }
     }
 
     /// <summary>A tag-value rule used to classify an API response string.</summary>

@@ -62,13 +62,25 @@ namespace VIRENDRA.Data
         List<ApiPriorityDto> GetOperatorRoutes(int opId, decimal amount);
 
         /// <summary>
-        /// Call usp_RechargeCreate to insert the Recharge + TxnLedger debit and
-        /// return the API URL credentials and status.
+        /// Call usp_RechargeCreate.
+        /// Pass switchedRecId = 0 for a new recharge (creates record + debits balance).
+        /// Pass switchedRecId = existing RecId to retry with a different API (no extra debit).
         /// </summary>
         CreateRechargeResult CreateRecharge(
-            int userId, string mobileNo, decimal debitAmt, decimal commAmt,
-            int opId, int circleId, int apiId, int routeId,
-            string refTxnId, int addedById);
+            int userId,
+            string customerNo,
+            decimal amount,
+            decimal debitAmount,
+            int opId,
+            int circleId,
+            int apiId,
+            string userTxnId,
+            string ourRef,
+            string ipAddress     = null,
+            int    switchTypeId  = 0,
+            long   switchedRecId = 0,
+            int    mediumId      = 2,
+            string circleFilter  = null);
 
         /// <summary>Insert or update the RequestResponse log row for a recharge attempt.</summary>
         void AddUpdateReqRes(long recId, string reqTxt, string respTxt, int apiId);
