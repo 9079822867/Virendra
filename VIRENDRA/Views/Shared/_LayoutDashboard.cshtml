@@ -334,8 +334,8 @@
                         </li>
                     }
 
-                    @*<%-- My Account — ApiUser + Retailer --%>*@
-                    @if (isApiUser || isRetailer)
+                    @*<%-- My Commission — all roles can view their own commission --%>*@
+                    @if (isSuperAdmin || isAdmin || isApiUser || isRetailer)
                     {
                         <li class="nav-item @(currentController=="PackageComm" ? "active" : "")">
                             <a class="nav-link @(currentController=="PackageComm" ? "active" : "")"
@@ -344,16 +344,13 @@
                             </a>
                         </li>
                     }
-                    @if (isSuperAdmin || isAdmin || isRetailer)
-                    {
-                        @*<%-- Recharge — all roles --%>*@
-                        <li class="nav-item @(currentController == "Recharge" ? "active" : "")">
-                            <a class="nav-link @(currentController == "Recharge" ? "active" : "")"
-                               href="@Url.Action("Index", "Recharge")">
-                                <i class="bx bx-mobile-alt me-1"></i>Recharge
-                            </a>
-                        </li>
-                    }
+                    @*<%-- Recharge — all roles --%>*@
+                    <li class="nav-item @(currentController == "Recharge" ? "active" : "")">
+                        <a class="nav-link @(currentController == "Recharge" ? "active" : "")"
+                           href="@Url.Action("Index", "Recharge")">
+                            <i class="bx bx-mobile-alt me-1"></i>Recharge
+                        </a>
+                    </li>
                     @*<%-- Transaction — all roles --%>*@
                     @{
                         bool txnActive = currentController == "Transaction";
