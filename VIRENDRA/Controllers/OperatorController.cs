@@ -25,8 +25,8 @@ namespace VIRENDRA.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public ActionResult Create(Operator model)
         {
-            if (string.IsNullOrWhiteSpace(model.OperatorName))
-                ModelState.AddModelError("OperatorName", "Operator name is required.");
+            if (string.IsNullOrWhiteSpace(model.Name))
+                ModelState.AddModelError("Name", "Operator name is required.");
 
             if (!ModelState.IsValid) return View(model);
 
@@ -45,8 +45,8 @@ namespace VIRENDRA.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public ActionResult Edit(Operator model)
         {
-            if (string.IsNullOrWhiteSpace(model.OperatorName))
-                ModelState.AddModelError("OperatorName", "Operator name is required.");
+            if (string.IsNullOrWhiteSpace(model.Name))
+                ModelState.AddModelError("Name", "Operator name is required.");
 
             if (!ModelState.IsValid) return View(model);
 

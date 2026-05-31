@@ -20,9 +20,9 @@
 
                 <div class="row g-3">
                     <div class="col-md-5">
-                        @Html.LabelFor(m => m.OperatorName, "Operator Name", new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.OperatorName, new { @class = "form-control", required = "required" })
-                        @Html.ValidationMessageFor(m => m.OperatorName, "", new { @class = "text-danger" })
+                        @Html.LabelFor(m => m.Name, "Operator Name", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.Name, new { @class = "form-control", required = "required" })
+                        @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
                     </div>
                     <div class="col-md-4">
                         @Html.LabelFor(m => m.OperatorCode, "Operator Code", new { @class = "form-label" })

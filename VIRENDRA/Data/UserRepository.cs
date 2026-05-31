@@ -28,7 +28,7 @@ namespace VIRENDRA.Data
         {
             using (var db = new SqlConnection(_connectionString))
                 return db.Query<Operator>(
-                    "SELECT Id, Name AS OperatorName, OpCode AS OperatorCode, IsActive FROM [Operator] ORDER BY Name"
+                    "SELECT Id, Name , OpCode AS OperatorCode, IsActive FROM [Operator] ORDER BY Name"
                 ).ToList();
         }
 

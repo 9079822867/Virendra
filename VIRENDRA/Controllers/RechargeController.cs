@@ -53,7 +53,7 @@ namespace VIRENDRA.Controllers
 
             return new RechargeFormViewModel
             {
-                OperatorList   = new System.Web.Mvc.SelectList(operators, "Id", "OperatorName"),
+                OperatorList   = new System.Web.Mvc.SelectList(operators, "Id", "Name"),
                 CircleList     = new System.Web.Mvc.SelectList(circles,   "Id", "CircleName"),
                 RecentRecharges= _rechargeRepo.GetRecentRecharges(
                                     Session["UserId"] is int uid ? uid : 0),

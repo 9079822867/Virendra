@@ -26,7 +26,7 @@ namespace VIRENDRA.Data
         {
             using (var c = new SqlConnection(_conn))
                 return c.Query<Operator>(
-                    "SELECT Id, Name AS OperatorName, OpCode AS OperatorCode, API1_Id FROM [Operator] WHERE IsActive = 1 ORDER BY Name"
+                    "SELECT Id, Name, OpCode AS OperatorCode, API1_Id FROM [Operator] WHERE IsActive = 1 ORDER BY Name"
                 ).ToList();
         }
 
@@ -294,7 +294,7 @@ namespace VIRENDRA.Data
         {
             using (var c = new SqlConnection(_conn))
                 return c.QueryFirstOrDefault<Operator>(
-                    @"SELECT Id, Name AS OperatorName, OpCode AS OperatorCode,
+                    @"SELECT Id, Name, OpCode AS OperatorCode,
                              API1_Id, SwitchTypeId, IsActive
                       FROM [Operator]
                       WHERE OpCode = @OpCode AND IsActive = 1",

@@ -7,7 +7,7 @@ namespace VIRENDRA.Models
         public int Id { get; set; }
 
         // DB column: Name  (aliased in queries as OperatorName)
-        public string OperatorName { get; set; }
+        public string Name { get; set; }
 
         // DB column: OpCode  (aliased in queries as OperatorCode)
         public string OperatorCode { get; set; }

@@ -65,7 +65,7 @@ namespace VIRENDRA.Data
         {
             using (IDbConnection db = new SqlConnection(_conn))
                 return db.Query<Operator>(
-                    "SELECT Id, Name AS OperatorName, OpCode AS OperatorCode, IsActive, IsSwitch, API1_Id, API2_Id, API3_Id, OpTypeId, AddedDate FROM [Operator] ORDER BY Name"
+                    "SELECT Id, Name, OpCode AS OperatorCode, IsActive, IsSwitch, API1_Id, API2_Id, API3_Id, OpTypeId, AddedDate FROM [Operator] ORDER BY Name"
                 ).ToList();
         }
 
@@ -73,7 +73,7 @@ namespace VIRENDRA.Data
         {
             using (IDbConnection db = new SqlConnection(_conn))
                 return db.QueryFirstOrDefault<Operator>(
-                    "SELECT Id, Name AS OperatorName, OpCode AS OperatorCode, IsActive, IsSwitch, API1_Id, API2_Id, API3_Id, OpTypeId, Validate_ApiId, IsPartial, IsFetch, AddedDate FROM [Operator] WHERE Id=@Id",
+                    "SELECT Id, Name, OpCode AS OperatorCode, IsActive, IsSwitch, API1_Id, API2_Id, API3_Id, OpTypeId, Validate_ApiId, IsPartial, IsFetch, AddedDate FROM [Operator] WHERE Id=@Id",
                     new { Id = id });
         }
 
