@@ -156,28 +156,28 @@
                                 <td>@(r.UserFilter ?? "All")</td>
                                 <td>
                                     <span class="badge bg-light text-dark border" style="font-size:.73rem;">
-                                        @(r.OperatorName ?? "—")
+                                        @(r.OperatorName ?? "\u2014")
                                     </span>
                                 </td>
                                 <td>@(r.CircleFilter ?? "All")</td>
-                                <td class="fw-semibold text-primary">@(r.VendorName ?? "—")</td>
+                                <td class="fw-semibold text-primary">@(r.VendorName ?? "\u2014")</td>
                                 <td>
                                     <span class="badge @(r.FTypeId == 2 ? "bg-info text-dark" : "bg-secondary")"
                                           style="font-size:.72rem;">@r.FilterTypeName</span>
                                 </td>
-                                <td><code class="text-dark">@(r.AmountFilter ?? "—")</code></td>
+                                <td><code class="text-dark">@(r.AmountFilter ?? "\u2014")</code></td>
                                 <td>@(r.MinRO.HasValue ? r.MinRO.Value.ToString("0.000") : "0.000")</td>
                                 <td class="text-center">
                                     <span class="badge bg-light text-dark border fw-bold">@r.Priority</span>
                                 </td>
-                                <td>@(r.BlockUser ?? "—")</td>
+                                <td>@(r.BlockUser ?? "\u2014")</td>
                                 <td style="background:#fffde7;">
-                                    <strong class="text-warning-emphasis">@(r.RouteOP1 ?? "—")</strong>
+                                    <strong class="text-warning-emphasis">@(r.RouteOP1 ?? "\u2014")</strong>
                                 </td>
-                                <td>@(r.RouteOP2 ?? "—")</td>
+                                <td>@(r.RouteOP2 ?? "\u2014")</td>
                                 <td>@(r.WaitMinute.HasValue ? r.WaitMinute.ToString() : "0")</td>
                                 <td class="text-muted" style="font-size:.75rem;">
-                                    @(r.UpdatedDate.HasValue ? r.UpdatedDate.Value.ToString("dd MMM yy HH:mm") : (r.AddedDate != default(DateTime) ? r.AddedDate.ToString("dd MMM yy HH:mm") : "—"))
+                                    @(r.UpdatedDate.HasValue ? r.UpdatedDate.Value.ToString("dd MMM yy HH:mm") : (r.AddedDate != default(DateTime) ? r.AddedDate.ToString("dd MMM yy HH:mm") : "\u2014"))
                                 </td>
                             </tr>
                         }

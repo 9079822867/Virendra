@@ -134,7 +134,7 @@
                         </div>
                         <div class="text-muted mt-1" style="font-size:.72rem;">
                             <i class="fas fa-info-circle me-1"></i>
-                            Regenerating creates a new token — update all your API calls immediately.
+                            Regenerating creates a new token &mdash; update all your API calls immediately.
                         </div>
                     </div>
 
@@ -345,17 +345,17 @@
         var disp = document.getElementById('tokenDisplay');
         var btn  = document.getElementById('btnToggleToken');
         if (tokenVisible) {
-            disp.textContent = rawToken || '—';
+            disp.textContent = rawToken || '\u2014';
             btn.innerHTML = '<i class="fas fa-eye-slash" style="font-size:.75rem;"></i>';
         } else {
-            disp.textContent = rawToken ? new Array(25).join('•') : '—';
+            disp.textContent = rawToken ? new Array(25).join('•') : '\u2014';
             btn.innerHTML = '<i class="fas fa-eye" style="font-size:.75rem;"></i>';
         }
     }
 
     /* ── Copy to clipboard ──────────────────────── */
     function copyText(text, btn) {
-        if (!text || text === '—') return;
+        if (!text || text === '\u2014') return;
         navigator.clipboard.writeText(text).then(function () {
             var orig = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-check" style="font-size:.75rem;color:#4CAF50;"></i>';
@@ -404,7 +404,7 @@
 
                 // Update displayed values
                 var d = res.p.data;
-                document.querySelectorAll('code.fs-6.text-dark.fw-semibold')[0].textContent = d.ipAddress || '—';
+                document.querySelectorAll('code.fs-6.text-dark.fw-semibold')[0].textContent = d.ipAddress || '\u2014';
                 rawToken = d.token;
                 if (tokenVisible) {
                     document.getElementById('tokenDisplay').textContent = d.token;

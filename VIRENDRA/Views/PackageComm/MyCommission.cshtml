@@ -2,7 +2,7 @@
 @{
     ViewBag.Title = "My Commission Rates";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
-    string packageName = Model.FirstOrDefault()?.PackageName ?? "—";
+    string packageName = Model.FirstOrDefault()?.PackageName ?? "\u2014";
 }
 
 <div class="container-fluid">

@@ -327,7 +327,7 @@
                                                     <i class="fas @statusIcon fa-lg" style="color:@statusColor;" title="@r.Status @r.StatusMsg"></i>
                                                 </td>
                                                 <td>
-                                                    <div class="fw-semibold text-dark">@(r.TxnId ?? "—")</div>
+                                                    <div class="fw-semibold text-dark">@(r.TxnId ?? "\u2014")</div>
                                                     <small class="text-muted">@r.Number</small>
                                                 </td>
                                                 <td>
@@ -337,7 +337,7 @@
                                                     }
                                                     else
                                                     {
-                                                        <span class="text-muted">—</span>
+                                                        <span class="text-muted">&mdash;</span>
                                                     }
                                                     @if (!string.IsNullOrEmpty(r.ApiTxnId))
                                                     {
@@ -363,7 +363,7 @@
                                                     }
                                                     else
                                                     {
-                                                        <span class="text-muted">—</span>
+                                                        <span class="text-muted">&mdash;</span>
                                                     }
                                                 </td>
                                                 <td>

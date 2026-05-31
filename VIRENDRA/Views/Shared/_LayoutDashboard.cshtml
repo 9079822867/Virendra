@@ -23,7 +23,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>@(ViewBag.Title != null ? ViewBag.Title + " — " : "")Recharge Software</title>
+    <title>@(ViewBag.Title != null ? ViewBag.Title + " \u2014 " : "")Recharge Software</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Bootstrap CSS -->
@@ -264,7 +264,7 @@
                 <!-- ── Left nav links ──────────────────────────── -->
                 <ul class="navbar-nav me-auto align-items-lg-stretch">
 
-                    @*<%-- Dashboard — all roles --%>*@
+                    @*<%-- Dashboard \u2014 all roles --%>*@
                     <li class="nav-item @(currentController == "Home" ? "active" : "")">
                         <a class="nav-link @(currentController == "Home" ? "active" : "")"
                            href="@Url.Action("Dashboard","Home")">
@@ -272,7 +272,7 @@
                         </a>
                     </li>
 
-                    @*<%-- Administration — SuperAdmin + Admin --%>*@
+                    @*<%-- Administration \u2014 SuperAdmin + Admin --%>*@
                     @if (isSuperAdmin || isAdmin)
                     {
                         bool adminActive = anyActive(new[] { "User", "Package", "Operator", "Vendor", "BankAccount", "Services", "CommonRouting" });
@@ -334,7 +334,7 @@
                         </li>
                     }
 
-                    @*<%-- My Commission — all roles can view their own commission --%>*@
+                    @*<%-- My Commission \u2014 all roles can view their own commission --%>*@
                     @if (isSuperAdmin || isAdmin || isApiUser || isRetailer)
                     {
                         <li class="nav-item @(currentController=="PackageComm" ? "active" : "")">
@@ -344,14 +344,14 @@
                             </a>
                         </li>
                     }
-                    @*<%-- Recharge — all roles --%>*@
+                    @*<%-- Recharge \u2014 all roles --%>*@
                     <li class="nav-item @(currentController == "Recharge" ? "active" : "")">
                         <a class="nav-link @(currentController == "Recharge" ? "active" : "")"
                            href="@Url.Action("Index", "Recharge")">
                             <i class="bx bx-mobile-alt me-1"></i>Recharge
                         </a>
                     </li>
-                    @*<%-- Transaction — all roles --%>*@
+                    @*<%-- Transaction \u2014 all roles --%>*@
                     @{
                         bool txnActive = currentController == "Transaction";
                     }
@@ -377,7 +377,7 @@
                         </ul>
                     </li>
 
-                    @*<%-- Payment — SuperAdmin + Admin + Retailer --%>*@
+                    @*<%-- Payment \u2014 SuperAdmin + Admin + Retailer --%>*@
                     @if (isSuperAdmin || isAdmin || isRetailer || isApiUser)
                     {
                         bool walletActive = currentController == "Wallet";
@@ -407,7 +407,7 @@
                         </li>
                     }
 
-                    @*<%-- Reports — SuperAdmin + Admin --%>*@
+                    @*<%-- Reports \u2014 SuperAdmin + Admin --%>*@
                     @if (isSuperAdmin || isAdmin || isRetailer || isApiUser)
                     {
                         bool rptActive = currentController == "Reports";
@@ -433,7 +433,7 @@
                         </li>
                     }
 
-                    @*<%-- Developer — SuperAdmin + ApiUser --%>*@
+                    @*<%-- Developer \u2014 SuperAdmin + ApiUser --%>*@
                     @if (isSuperAdmin || isApiUser)
                     {
                         bool devActive = anyActive(new[] { "ApiDocument", "ApiSettings" });
@@ -460,7 +460,7 @@
                         </li>
                     }
 
-                    @*<%-- Support — all roles --%>*@
+                    @*<%-- Support \u2014 all roles --%>*@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="ddSupport" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">

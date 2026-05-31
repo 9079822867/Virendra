@@ -159,10 +159,10 @@
                                     }
                                     else
                                     {
-                                        <span class="text-muted">—</span>
+                                        <span class="text-muted">&mdash;</span>
                                     }
                                 </td>
-                                <td>@(b.BranchName ?? "&mdash;")</td>
+                                <td>@(b.BranchName ?? "\u2014")</td>
                                 <td>
                                     @if (b.BlockAmount.HasValue && b.BlockAmount > 0)
                                     {
@@ -170,7 +170,7 @@
                                     }
                                     else
                                     {
-                                        <span class="text-muted">—</span>
+                                        <span class="text-muted">&mdash;</span>
                                     }
                                 </td>
                                 <td class="text-center">
