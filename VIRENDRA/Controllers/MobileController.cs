@@ -271,10 +271,10 @@ namespace VIRENDRA.Controllers
             if (helper.ApiRouteList == null || !helper.ApiRouteList.Any())
                 return new { status = "0", message = "No active route found for this recharge" };
 
-            return RechargeProcess(rm, helper);
+            return RechargeProcess(rm, helper,0);
         }
 
-        private object RechargeProcess(RechargeModel rm, RechargeHelperDto helper)
+        private object RechargeProcess(RechargeModel rm, RechargeHelperDto helper,int SwitchId=0)
         {
             bool firstRoute = true;
 
@@ -313,7 +313,7 @@ namespace VIRENDRA.Controllers
                         rm.RefTxnId,
                         rm.OurTxnId ?? rm.RefTxnId,
                         rm.IpAddress,
-                        helper.SwitchId,
+                        SwitchId,
                         firstRoute ? 0L : helper.RecId,
                         2,                       // mediumId = 2 (web)
                         route.CircleFilter);

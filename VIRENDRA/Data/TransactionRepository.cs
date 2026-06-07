@@ -128,14 +128,14 @@ namespace VIRENDRA.Data
             const string sql = @"
                 SELECT
                     ROW_NUMBER() OVER (ORDER BY r.RequestTime DESC) AS SrNo,
-                    r.UserTxnId  AS TxnId,
+                    r.TxnId  AS TxnId,
                     r.OurRefTxnId,
                     r.ApiTxnId,
                     r.CustomerNo AS Number,
                     ISNULL(o.Name, '-') AS Operator,
                     r.Amount,
                     ISNULL(r.Recharge_Commision, 0) AS Commission,
-                    CASE r.StatusId WHEN 2 THEN 'Success' WHEN 3 THEN 'Failed' ELSE 'Pending' END AS Status,
+                    CASE r.StatusId WHEN 1 THEN 'Success' WHEN 2 THEN 'Failed' ELSE 'Pending' END AS Status,
                     r.StatusMsg,
                     r.RequestTime AS Date
                 FROM Recharge r
@@ -144,7 +144,7 @@ namespace VIRENDRA.Data
                   AND r.RequestTime <  DATEADD(DAY, 1, @ToDate)
                   AND (@UserId IS NULL OR r.UserId = @UserId)
                   AND (@Status IS NULL OR
-                       CASE r.StatusId WHEN 2 THEN 'Success' WHEN 3 THEN 'Failed' ELSE 'Pending' END = @Status)
+                       CASE r.StatusId WHEN 1 THEN 'Success' WHEN 2 THEN 'Failed' ELSE 'Pending' END = @Status)
                   AND (@Search IS NULL OR
                        r.UserTxnId  LIKE '%' + @Search + '%' OR
                        r.CustomerNo LIKE '%' + @Search + '%' OR

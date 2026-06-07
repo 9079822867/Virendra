@@ -144,10 +144,10 @@ namespace VIRENDRA.Models
 
     public static class RechargeStatusCodes
     {
-        public const int PENDING  = 1;
-        public const int SUCCESS  = 2;
-        public const int FAILED   = 3;
+        public const int PENDING  = 3;
+        public const int SUCCESS  = 1;
+        public const int FAILED   = 2;
         public const int REFUND   = 4;
-        public const int PROCESS  = 5;
+        public const int PROCESS  = 3;
     }
 }

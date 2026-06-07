@@ -44,7 +44,7 @@
         @Html.AntiForgeryToken()
         @Html.HiddenFor(m => m.Id)
 
-        @if (!ViewData.ModelState.IsValid)
+        if (!ViewData.ModelState.IsValid)
         {
             <div class="alert alert-danger alert-dismissible mb-3" style="border-radius:10px;">
                 <i class="fas fa-exclamation-circle me-2"></i>
