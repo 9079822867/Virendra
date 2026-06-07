@@ -97,6 +97,55 @@ namespace VIRENDRA.Controllers
             }
         }
 
+        // ── Operator-code margin (vendor op-codes + commission) ──────────────
+
+        [HttpGet]
+        public ActionResult ApiOpcode(int id)
+        {
+            var model = _vendorRepo.GetVendorMargins(id);
+            if (model == null) return HttpNotFound();
+
+            ViewBag.AmtTypes  = AmtTypeOptions();
+            ViewBag.CommTypes = CommTypeOptions();
+            return View(model);
+        }
+
+        [HttpPost]
+        public JsonResult ApiOpcode(List<OperatorMarginDto> data)
+        {
+            try
+            {
+                if (data == null || data.Count == 0)
+                    return Json(new { success = false, message = "No data received." });
+
+                int apiId  = data[0].ApiId;
+                int userId = Session["UserId"] is int uid ? uid : 0;
+
+                _vendorRepo.SaveVendorMargins(apiId, userId, data);
+                return Json(new { success = true, message = "Operator codes and commission saved." });
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.GetBaseException().Message;
+                return Json(new { success = false, message = msg });
+            }
+        }
+
+        // Commission-relevant amount types (see AmtType table: 5=Discount, 4=Surcharge)
+        private static List<SelectListItem> AmtTypeOptions() => new List<SelectListItem>
+        {
+            new SelectListItem { Value = "5", Text = "Discount"  },
+            new SelectListItem { Value = "4", Text = "Surcharge" }
+        };
+
+        // Commission types (see CommType table: 1=Flat, 2=Percent, 3=Range)
+        private static List<SelectListItem> CommTypeOptions() => new List<SelectListItem>
+        {
+            new SelectListItem { Value = "2", Text = "Percentage" },
+            new SelectListItem { Value = "1", Text = "Flat"       },
+            new SelectListItem { Value = "3", Text = "Range"      }
+        };
+
         private static List<ApiUrl> BuildApiUrls(int apiSourceId, string[] urlType,
             string[] url, string[] method, string[] responseType, string[] postParameter)
         {

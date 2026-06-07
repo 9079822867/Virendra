@@ -208,6 +208,7 @@
     <Compile Include="Models\User.cs" />
     <Compile Include="Models\CommonRouting.cs" />
     <Compile Include="Models\RechargeApiModels.cs" />
+    <Compile Include="Models\VendorMarginModels.cs" />
     <Compile Include="Models\WalletTransaction.cs" />
     <Compile Include="Models\Vendor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -348,6 +349,7 @@
     <Content Include="Views\BankAccount\Edit.cshtml" />
     <Content Include="Views\BankAccount\Index.cshtml" />
     <Content Include="Views\BankAccount\_BankAccountForm.cshtml" />
+    <Content Include="Views\Vendor\ApiOpcode.cshtml" />
     <Content Include="Views\Vendor\Create.cshtml" />
     <Content Include="Views\Vendor\Edit.cshtml" />
     <Content Include="Views\Vendor\Index.cshtml" />

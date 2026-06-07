@@ -149,5 +149,161 @@ namespace VIRENDRA.Data
                 }
             }
         }
+
+        // ── Operator-code margin (vendor op-codes + commission) ──────────────
+
+        public VendorMarginViewModel GetVendorMargins(int apiId)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                var vendor = conn.QueryFirstOrDefault(
+                    "SELECT ApiName, ApiPackid FROM ApiSource WHERE Id = @Id",
+                    new { Id = apiId });
+
+                if (vendor == null) return null;
+
+                int packId = vendor.ApiPackid == null ? 0 : (int)vendor.ApiPackid;
+
+                var vm = new VendorMarginViewModel
+                {
+                    ApiId   = apiId,
+                    ApiName = (string)vendor.ApiName,
+                    PackId  = packId
+                };
+
+                // Every active operator, left-joined with its op-code + the vendor
+                // package's commission row.
+                const string sql = @"
+                    SELECT
+                        o.Id              AS OpId,
+                        o.Name            AS OperatorName,
+                        @ApiId            AS ApiId,
+                        oc.OpCode         AS OpCode,
+                        oc.ExtraUrl       AS ExtraUrl,
+                        oc.ExtraUrlData   AS ExtraData,
+                        ISNULL(pc.CommAmt, 0)    AS CommAmt,
+                        ISNULL(pc.AmtTypeId, 5)  AS AmtTypeId,
+                        ISNULL(pc.CommTypeId, 2) AS CommTypeId
+                    FROM [Operator] o
+                    LEFT JOIN OperatorCode oc ON oc.OpId = o.Id AND oc.ApiId = @ApiId
+                    LEFT JOIN PackageComm  pc ON pc.OpId = o.Id AND pc.PackId = @PackId
+                    WHERE o.IsActive = 1
+                    ORDER BY o.Id";
+
+                vm.Rows = conn.Query<OperatorMarginDto>(sql,
+                    new { ApiId = apiId, PackId = packId }).ToList();
+
+                return vm;
+            }
+        }
+
+        public void SaveVendorMargins(int apiId, int userId, List<OperatorMarginDto> rows)
+        {
+            if (rows == null) return;
+
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+                using (var tx = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. Ensure the vendor has a dedicated package (name = "{ApiName}-{ApiId}")
+                        var vendor = conn.QueryFirstOrDefault(
+                            "SELECT ApiName, ApiPackid FROM ApiSource WHERE Id = @Id",
+                            new { Id = apiId }, tx);
+
+                        string packName = ((string)vendor?.ApiName ?? "Vendor") + "-" + apiId;
+                        int packId = (vendor?.ApiPackid == null) ? 0 : (int)vendor.ApiPackid;
+
+                        if (packId > 0)
+                        {
+                            conn.Execute(@"
+                                UPDATE [Package]
+                                SET PackageName = @Name, UpdatedById = @Uid, UpdatedDate = GETDATE()
+                                WHERE Id = @Id",
+                                new { Name = packName, Uid = userId, Id = packId }, tx);
+                        }
+                        else
+                        {
+                            packId = conn.ExecuteScalar<int>(@"
+                                INSERT INTO [Package]
+                                    (PackageName, DefaultComm, LockAmount, PTypeId, AddedById, AddedDate)
+                                VALUES
+                                    (@Name, 0, 0, 1, @Uid, GETDATE());
+                                SELECT CAST(SCOPE_IDENTITY() AS INT);",
+                                new { Name = packName, Uid = userId }, tx);
+
+                            conn.Execute(
+                                "UPDATE ApiSource SET ApiPackid = @PackId WHERE Id = @ApiId",
+                                new { PackId = packId, ApiId = apiId }, tx);
+                        }
+
+                        // 2. Upsert each row
+                        const string upsertComm = @"
+                            IF EXISTS (SELECT 1 FROM PackageComm WHERE PackId=@PackId AND OpId=@OpId)
+                                UPDATE PackageComm
+                                SET CommAmt=@CommAmt, AmtTypeId=@AmtTypeId, CommTypeId=@CommTypeId,
+                                    UpdatedById=@Uid, UpdatedDate=GETDATE()
+                                WHERE PackId=@PackId AND OpId=@OpId
+                            ELSE
+                                INSERT INTO PackageComm
+                                    (PackId, OpId, CommAmt, AmtTypeId, CommTypeId, AddedById, AddedDate)
+                                VALUES
+                                    (@PackId, @OpId, @CommAmt, @AmtTypeId, @CommTypeId, @Uid, GETDATE())";
+
+                        const string upsertOpCode = @"
+                            IF EXISTS (SELECT 1 FROM OperatorCode WHERE ApiId=@ApiId AND OpId=@OpId)
+                                UPDATE OperatorCode
+                                SET OpCode=@OpCode, ExtraUrl=@ExtraUrl, ExtraUrlData=@ExtraData,
+                                    UpdatedById=@Uid, UpdatedDate=GETDATE()
+                                WHERE ApiId=@ApiId AND OpId=@OpId
+                            ELSE
+                                INSERT INTO OperatorCode
+                                    (OpId, ApiId, OpCode, ExtraUrl, ExtraUrlData, AddedById, AddedDate)
+                                VALUES
+                                    (@OpId, @ApiId, @OpCode, @ExtraUrl, @ExtraData, @Uid, GETDATE())";
+
+                        foreach (var r in rows)
+                        {
+                            // Commission: save only when a positive amount is set
+                            if (r.CommAmt > 0)
+                            {
+                                conn.Execute(upsertComm, new
+                                {
+                                    PackId     = packId,
+                                    r.OpId,
+                                    r.CommAmt,
+                                    AmtTypeId  = r.AmtTypeId  > 0 ? r.AmtTypeId  : 5,
+                                    CommTypeId = r.CommTypeId > 0 ? r.CommTypeId : 2,
+                                    Uid        = userId
+                                }, tx);
+                            }
+
+                            // Operator code: save only when a code is provided
+                            if (!string.IsNullOrWhiteSpace(r.OpCode))
+                            {
+                                conn.Execute(upsertOpCode, new
+                                {
+                                    ApiId     = apiId,
+                                    r.OpId,
+                                    OpCode    = r.OpCode.Trim(),
+                                    ExtraUrl  = string.IsNullOrWhiteSpace(r.ExtraUrl)  ? null : r.ExtraUrl.Trim(),
+                                    ExtraData = string.IsNullOrWhiteSpace(r.ExtraData) ? null : r.ExtraData.Trim(),
+                                    Uid       = userId
+                                }, tx);
+                            }
+                        }
+
+                        tx.Commit();
+                    }
+                    catch
+                    {
+                        tx.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
     }
 }

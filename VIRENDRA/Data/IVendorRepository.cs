@@ -13,5 +13,20 @@ namespace VIRENDRA.Data
         void ToggleActive(int id, bool isActive);
         List<ApiUrl> GetVendorUrls(int apiSourceId);
         void SaveVendorUrls(int apiSourceId, List<ApiUrl> urls);
+
+        // ── Operator-code margin (vendor op-codes + commission) ──────────────
+        /// <summary>
+        /// Build the operator-code + commission grid for a vendor (ApiSource).
+        /// Lists every active operator, left-joined with its OperatorCode row
+        /// and the vendor package's PackageComm row.
+        /// </summary>
+        VendorMarginViewModel GetVendorMargins(int apiId);
+
+        /// <summary>
+        /// Persist the grid: ensure a vendor package exists (named "{ApiName}-{ApiId}"),
+        /// link it via ApiSource.ApiPackid, then upsert OperatorCode (when OpCode set)
+        /// and PackageComm (when CommAmt &gt; 0) for each row.
+        /// </summary>
+        void SaveVendorMargins(int apiId, int userId, List<OperatorMarginDto> rows);
     }
 }

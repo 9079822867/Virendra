@@ -1,0 +1,199 @@
+@model VIRENDRA.Models.VendorMarginViewModel
+@{
+    ViewBag.Title = "Edit Operatorcode Margin";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+    var amtTypes  = (List<SelectListItem>)ViewBag.AmtTypes;
+    var commTypes = (List<SelectListItem>)ViewBag.CommTypes;
+}
+
+<div class="container-fluid">
+
+    <!-- Page Title -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+        <div>
+            <h4 class="mb-1 fw-bold text-dark">
+                <i class="fas fa-percent text-warning me-2"></i>Edit Operatorcode Margin
+            </h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0" style="font-size:.82rem;">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard","Home")">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index","Vendor")">API Sources</a></li>
+                    <li class="breadcrumb-item active">@Model.ApiName Margin</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="@Url.Action("Index","Vendor")" class="btn btn-light px-3">
+            <i class="fas fa-arrow-left me-1"></i>Back
+        </a>
+    </div>
+
+    <div id="saveAlert"></div>
+
+    <div class="card border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">
+        <div class="card-header border-0 py-3 px-4"
+             style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                         style="width:34px;height:34px;background:rgba(255,255,255,.2);">
+                        <i class="fas fa-sitemap text-white" style="font-size:.85rem;"></i>
+                    </div>
+                    <h6 class="mb-0 text-white fw-bold">
+                        Vendor Package With Operator Code
+                        <span class="badge bg-light text-dark ms-2">@Model.ApiName</span>
+                    </h6>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size:.85rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3" style="width:60px;">ID</th>
+                            <th>Operator Name</th>
+                            <th>Vendor Op-Code (OOO)</th>
+                            <th>Extra Url (EEE)</th>
+                            <th>Extra Parameters (DDD)</th>
+                            <th style="width:110px;">Comm</th>
+                            <th style="width:150px;">Amount Type</th>
+                            <th style="width:160px;">Commission Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.Rows.Count; i++)
+                        {
+                            var r = Model.Rows[i];
+                            <tr>
+                                <td class="ps-3 text-muted">@r.OpId</td>
+                                <td class="fw-semibold">@r.OperatorName</td>
+                                <td>
+                                    <input type="hidden" class="m-apiid" value="@r.ApiId" />
+                                    <input type="hidden" class="m-opid"  value="@r.OpId" />
+                                    <input type="text" class="form-control form-control-sm m-opcode"
+                                           value="@r.OpCode" placeholder="op-code" />
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm m-extraurl"
+                                           value="@r.ExtraUrl" />
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm m-extradata"
+                                           value="@r.ExtraData" />
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0"
+                                           class="form-control form-control-sm m-comm"
+                                           value="@r.CommAmt.ToString("0.00")" />
+                                </td>
+                                <td>
+                                    <select class="form-select form-select-sm m-amttype">
+                                        @foreach (var opt in amtTypes)
+                                        {
+                                            if (opt.Value == r.AmtTypeId.ToString())
+                                            {
+                                                <option value="@opt.Value" selected>@opt.Text</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@opt.Value">@opt.Text</option>
+                                            }
+                                        }
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-select form-select-sm m-commtype">
+                                        @foreach (var opt in commTypes)
+                                        {
+                                            if (opt.Value == r.CommTypeId.ToString())
+                                            {
+                                                <option value="@opt.Value" selected>@opt.Text</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@opt.Value">@opt.Text</option>
+                                            }
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-footer border-0 py-3 px-4" style="background:#f8f9fa;">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Commission rows save only when Comm &gt; 0. Op-codes save only when a code is entered.
+                </small>
+                <div class="d-flex gap-2">
+                    <a href="@Url.Action("Index","Vendor")" class="btn btn-light px-4">
+                        <i class="fas fa-times-circle me-1"></i>Cancel
+                    </a>
+                    <button type="button" id="btnSave" class="btn btn-primary px-4">
+                        <i class="fas fa-save me-1"></i>Save All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#btnSave').on('click', function () {
+                var $btn = $(this);
+                var data = [];
+
+                $('table tbody tr').each(function () {
+                    var $r = $(this);
+                    data.push({
+                        ApiId:      parseInt($r.find('.m-apiid').val()) || 0,
+                        OpId:       parseInt($r.find('.m-opid').val()) || 0,
+                        OpCode:     $r.find('.m-opcode').val(),
+                        ExtraUrl:   $r.find('.m-extraurl').val(),
+                        ExtraData:  $r.find('.m-extradata').val(),
+                        CommAmt:    parseFloat($r.find('.m-comm').val()) || 0,
+                        AmtTypeId:  parseInt($r.find('.m-amttype').val()) || 0,
+                        CommTypeId: parseInt($r.find('.m-commtype').val()) || 0
+                    });
+                });
+
+                $btn.prop('disabled', true)
+                    .html('<i class="fas fa-spinner fa-spin me-1"></i>Saving...');
+
+                $.ajax({
+                    url: '@Url.Action("ApiOpcode", "Vendor")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function (res) {
+                        showAlert(res.success, res.message);
+                    },
+                    error: function () {
+                        showAlert(false, 'Request failed. Please try again.');
+                    },
+                    complete: function () {
+                        $btn.prop('disabled', false)
+                            .html('<i class="fas fa-save me-1"></i>Save All');
+                    }
+                });
+            });
+
+            function showAlert(ok, msg) {
+                var cls  = ok ? 'alert-success' : 'alert-danger';
+                var icon = ok ? 'fa-check-circle' : 'fa-exclamation-circle';
+                $('#saveAlert').html(
+                    '<div class="alert ' + cls + ' alert-dismissible mb-3" style="border-radius:10px;">' +
+                    '<i class="fas ' + icon + ' me-2"></i>' + msg +
+                    '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+                $('html, body').animate({ scrollTop: 0 }, 200);
+            }
+        });
+    </script>
+}
