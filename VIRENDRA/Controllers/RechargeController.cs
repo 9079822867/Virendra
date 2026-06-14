@@ -199,7 +199,27 @@ namespace VIRENDRA.Controllers
                     JsonRequestBehavior.AllowGet);
             }
 
-            return Json(new { success = true, categories }, JsonRequestBehavior.AllowGet);
+            // Project to camelCase keys so the client JS (cat.plans, p.amount …) binds.
+            var result = categories.Select(c => new
+            {
+                name     = c.Name,
+                fullName = c.FullName,
+                plans    = c.Plans.Select(p => new
+                {
+                    id            = p.Id,
+                    amount        = p.Amount,
+                    validity      = p.Validity,
+                    validityDays  = p.ValidityDays,
+                    talktime      = p.Talktime,
+                    benefit       = p.Benefit,
+                    calls         = p.Calls,
+                    sms           = p.Sms,
+                    data          = p.Data,
+                    subscriptions = p.Subscriptions
+                }).ToList()
+            }).ToList();
+
+            return Json(new { success = true, categories = result }, JsonRequestBehavior.AllowGet);
         }
 
         // Maps an operator (numeric code passthrough, else by name) to the
