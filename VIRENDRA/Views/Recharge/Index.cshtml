@@ -177,7 +177,7 @@
                                             {
                                                 var c = brandColor(op.Name);
                                                 var initial = string.IsNullOrEmpty(op.Name) ? "?" : op.Name.Substring(0, 1).ToUpper();
-                                                <div class="op-chip" data-opid="@op.Id" data-opname="@op.Name">
+                                                <div class="op-chip" data-opid="@op.Id" data-opname="@op.Name" data-opcode="@op.OperatorCode">
                                                     <div class="op-avatar" style="background:@c;">@initial</div>
                                                     <div class="op-name">@op.Name</div>
                                                 </div>
@@ -205,7 +205,12 @@
                             </div>
 
                             <div class="col-md-6">
-                                <div class="field-label">Amount <span class="text-danger">*</span></div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="field-label">Amount <span class="text-danger">*</span></div>
+                                    <a href="javascript:void(0);" id="btnBrowsePlans" class="small fw-semibold text-decoration-none" style="color:#00569c;">
+                                        <i class="fas fa-th-list me-1"></i>Browse Plans
+                                    </a>
+                                </div>
                                 <div class="input-group input-group-lg">
                                     <span class="input-group-text"><i class="fa fa-rupee-sign"></i></span>
                                     @Html.TextBox("Amount", Model.Request.Amount > 0 ? Model.Request.Amount.ToString("0") : "", new {
@@ -273,13 +278,49 @@
     </div>
 </div>
 
+<!-- ── Browse Plans Modal ─────────────────────────────────────── -->
+<div class="modal fade" id="plansModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;">
+            <div class="modal-header text-white" style="background:linear-gradient(135deg,#002970 0%,#00baf2 130%);">
+                <h5 class="modal-title"><i class="fas fa-th-list me-2"></i>Browse Plans <span id="plansOpName" class="badge bg-light text-dark ms-1"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- category tabs -->
+                <ul class="nav nav-pills flex-nowrap overflow-auto p-3 pb-2 mb-0" id="planTabs" style="gap:.4rem;"></ul>
+                <!-- plan list -->
+                <div id="planList" class="px-3 pb-3"></div>
+                <div id="plansLoading" class="text-center text-muted py-5 d-none">
+                    <i class="fas fa-spinner fa-spin fa-2x mb-2 d-block"></i>Loading plans...
+                </div>
+                <div id="plansEmpty" class="text-center text-muted py-5 d-none">
+                    <i class="fas fa-inbox fa-2x mb-2 d-block"></i><span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #planTabs .nav-link { font-size:.82rem; font-weight:600; padding:.35rem .9rem; border-radius:20px; color:#3a3f55; background:#f1f3f9; white-space:nowrap; }
+    #planTabs .nav-link.active { background:#00baf2; color:#fff; }
+    .plan-card { border:1px solid #eceef5; border-radius:12px; padding:.85rem 1rem; margin-bottom:.6rem; transition:all .15s; }
+    .plan-card:hover { border-color:#bcdcff; box-shadow:0 3px 12px rgba(0,186,242,.12); }
+    .plan-amt { font-size:1.3rem; font-weight:800; color:#002970; }
+    .plan-chip { display:inline-block; font-size:.72rem; font-weight:600; color:#00569c; background:#eef6ff; border-radius:14px; padding:.12rem .55rem; margin:.1rem .25rem .1rem 0; }
+    .plan-ott { display:inline-block; font-size:.7rem; font-weight:600; color:#7b1fa2; background:#f5edfb; border-radius:14px; padding:.12rem .55rem; margin:.1rem .25rem 0 0; }
+    .plan-benefit { font-size:.78rem; color:#5a6072; margin-top:.35rem; line-height:1.35; }
+    .btn-plan-select { font-size:.78rem; font-weight:700; border-radius:8px; padding:.3rem .9rem; }
+</style>
+
 @section Scripts {
     <script>
         $(function () {
             var svcMeta = {
-                '1': { title: 'Prepaid Recharge',  sub: 'Select operator and enter mobile number', numLabel: 'Mobile Number', showCircle: true  },
-                '2': { title: 'Postpaid Bill Pay', sub: 'Select operator and enter mobile number', numLabel: 'Mobile Number', showCircle: false  },
-                '3': { title: 'DTH Recharge',      sub: 'Select operator and enter subscriber ID', numLabel: 'Subscriber / VC Number', showCircle: false }
+                '1': { title: 'Prepaid Recharge',  sub: 'Select operator and enter mobile number', numLabel: 'Mobile Number', showCircle: true,  showPlans: true  },
+                '2': { title: 'Postpaid Bill Pay', sub: 'Select operator and enter mobile number', numLabel: 'Mobile Number', showCircle: false, showPlans: false },
+                '3': { title: 'DTH Recharge',      sub: 'Select operator and enter subscriber ID', numLabel: 'Subscriber / VC Number', showCircle: false, showPlans: false }
             };
 
             // ── Tab switching ──────────────────────────────
@@ -300,6 +341,7 @@
                 $('#svcSub').text(m.sub);
                 $('#numLabel').html(m.numLabel + ' <span class="text-danger">*</span>');
                 $('#circleWrap').toggle(m.showCircle);
+                $('#btnBrowsePlans').toggle(m.showPlans);
 
                 // Reset detection so re-entering the number re-detects for this service
                 $('#opDetect').html('');
@@ -384,6 +426,97 @@
                         $('#opDetect').html('<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Lookup failed.</span>');
                     });
             });
+
+            // ── Browse Plans ───────────────────────────────
+            function escapeHtml(s) {
+                return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+
+            $('#btnBrowsePlans').on('click', function () {
+                var $op = $('.op-pane:visible .op-chip.active');
+                if (!$op.length) { alert('Please select an operator first.'); return; }
+
+                var opName  = $op.data('opname');
+                var opCode  = $op.data('opcode');
+                var circleId = parseInt($('#CircleId').val()) || 0;
+
+                $('#plansOpName').text(opName);
+                $('#planTabs').empty();
+                $('#planList').empty();
+                $('#plansEmpty').addClass('d-none');
+                $('#plansLoading').removeClass('d-none');
+
+                var modal = new bootstrap.Modal(document.getElementById('plansModal'));
+                modal.show();
+
+                $.getJSON('@Url.Action("BrowsePlans", "Recharge")',
+                    { operatorName: opName, opCode: opCode, circleId: circleId })
+                    .done(function (res) {
+                        $('#plansLoading').addClass('d-none');
+                        if (!res.success || !res.categories || !res.categories.length) {
+                            $('#plansEmpty').removeClass('d-none').find('span').text(res.message || 'No plans found.');
+                            return;
+                        }
+                        renderPlans(res.categories);
+                    })
+                    .fail(function () {
+                        $('#plansLoading').addClass('d-none');
+                        $('#plansEmpty').removeClass('d-none').find('span').text('Failed to load plans.');
+                    });
+            });
+
+            function renderPlans(categories) {
+                var $tabs = $('#planTabs').empty();
+                var $list = $('#planList').empty();
+
+                categories.forEach(function (cat, idx) {
+                    var tabId = 'pcat' + idx;
+                    $tabs.append(
+                        '<li class="nav-item"><a class="nav-link' + (idx === 0 ? ' active' : '') +
+                        '" data-target="' + tabId + '" href="javascript:void(0);">' +
+                        escapeHtml(cat.name) + ' (' + cat.plans.length + ')</a></li>');
+
+                    var html = '<div class="plan-pane" id="' + tabId + '"' + (idx === 0 ? '' : ' style="display:none;"') + '>';
+                    cat.plans.forEach(function (p) {
+                        var chips = '';
+                        if (p.validity) chips += '<span class="plan-chip"><i class="far fa-clock me-1"></i>' + escapeHtml(p.validity) + '</span>';
+                        if (p.data)     chips += '<span class="plan-chip">' + escapeHtml(p.data) + ' Data</span>';
+                        if (p.sms)      chips += '<span class="plan-chip">' + escapeHtml(p.sms) + ' SMS</span>';
+                        if (p.talktime && p.talktime > 0) chips += '<span class="plan-chip">TT ₹' + p.talktime + '</span>';
+
+                        var ott = '';
+                        (p.subscriptions || []).forEach(function (s) { ott += '<span class="plan-ott"><i class="fas fa-play-circle me-1"></i>' + escapeHtml(s) + '</span>'; });
+
+                        html +=
+                            '<div class="plan-card d-flex justify-content-between align-items-start">' +
+                                '<div class="pe-2">' +
+                                    '<div class="plan-amt">₹' + p.amount + '</div>' +
+                                    '<div>' + chips + '</div>' +
+                                    (ott ? '<div>' + ott + '</div>' : '') +
+                                    '<div class="plan-benefit">' + escapeHtml(p.benefit) + '</div>' +
+                                '</div>' +
+                                '<button type="button" class="btn btn-outline-primary btn-plan-select flex-shrink-0" data-amt="' + p.amount + '">Select</button>' +
+                            '</div>';
+                    });
+                    html += '</div>';
+                    $list.append(html);
+                });
+
+                // tab switching
+                $('#planTabs .nav-link').on('click', function () {
+                    $('#planTabs .nav-link').removeClass('active');
+                    $(this).addClass('active');
+                    $('.plan-pane').hide();
+                    $('#' + $(this).data('target')).show();
+                });
+
+                // select a plan -> set amount and close
+                $('#planList').on('click', '.btn-plan-select', function () {
+                    $('#Amount').val($(this).data('amt'));
+                    bootstrap.Modal.getInstance(document.getElementById('plansModal')).hide();
+                    $('#Amount').focus();
+                });
+            }
 
             // ── Validate operator chosen before submit ─────
             $('#rechargeForm').on('submit', function (e) {

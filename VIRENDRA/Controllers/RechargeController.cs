@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
@@ -121,11 +122,106 @@ namespace VIRENDRA.Controllers
             }, JsonRequestBehavior.AllowGet);
         }
 
+        // ────────────────────────────────────────────────────────────────────
+        // BROWSE PLANS — fetch prepaid plans from the external BrowsePlan2 API.
+        // ────────────────────────────────────────────────────────────────────
+        [HttpGet]
+        public JsonResult BrowsePlans(string operatorName, string opCode, int circleId)
+        {
+            // Resolve the provider's numeric OpCode:
+            //  - if a numeric opCode was supplied, use it directly
+            //  - otherwise map from the operator name
+            string providerOp = ResolveProviderOpCode(opCode, operatorName);
+            if (string.IsNullOrEmpty(providerOp))
+                return Json(new { success = false, message = "Plans are not available for this operator." },
+                    JsonRequestBehavior.AllowGet);
+
+            // BrowsePlan2 needs a positive numeric CircleID; the plan list is
+            // largely national, so fall back to a valid default when unknown.
+            int circle = circleId > 0 ? circleId : 21;
+
+            string baseUrl = ConfigurationManager.AppSettings["PlanApiBaseUrl"]
+                             ?? "https://onlinerechargeservice.in";
+
+            var categories = new List<PlanCategory>();
+            try
+            {
+                string url = baseUrl.TrimEnd('/') +
+                    "/App/webservice/BrowsePlan2?OpCode=" + Uri.EscapeDataString(providerOp) +
+                    "&CircleID=" + circle;
+
+                string raw = HttpGet(url);
+                JObject root = JObject.Parse(raw);
+
+                if ((string)root["STATUS"] != "1" || root["RDATA"] == null)
+                    return Json(new { success = false, message = "No plans found for this operator/circle." },
+                        JsonRequestBehavior.AllowGet);
+
+                foreach (var cat in root["RDATA"])
+                {
+                    var pc = new PlanCategory
+                    {
+                        Name     = (string)cat["name"],
+                        FullName = (string)cat["fullName"]
+                    };
+
+                    foreach (var p in cat["plans"] ?? new JArray())
+                    {
+                        var item = new PlanItem
+                        {
+                            Id           = (long?)  p["id"]           ?? 0,
+                            Amount       = (decimal?)p["amount"]      ?? 0,
+                            Validity     = (string) p["validity"],
+                            ValidityDays = (int?)   p["validityDays"] ?? 0,
+                            Talktime     = (decimal?)p["talktime"]    ?? 0,
+                            Benefit      = (string) p["benefit"],
+                            Calls        = (string) p["calls"],
+                            Sms          = (string) p["sms"],
+                            Data         = (string) p["data"]
+                        };
+
+                        if (p["subscriptions"] is JArray subs)
+                            foreach (var s in subs)
+                            {
+                                string nm = (string)s["name"];
+                                if (!string.IsNullOrWhiteSpace(nm)) item.Subscriptions.Add(nm);
+                            }
+
+                        pc.Plans.Add(item);
+                    }
+
+                    if (pc.Plans.Count > 0) categories.Add(pc);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Plan lookup failed: " + ex.Message },
+                    JsonRequestBehavior.AllowGet);
+            }
+
+            return Json(new { success = true, categories }, JsonRequestBehavior.AllowGet);
+        }
+
+        // Maps an operator (numeric code passthrough, else by name) to the
+        // BrowsePlan2 provider's numeric OpCode.
+        private static string ResolveProviderOpCode(string opCode, string operatorName)
+        {
+            if (!string.IsNullOrWhiteSpace(opCode) && opCode.All(char.IsDigit))
+                return opCode;
+
+            string n = (operatorName ?? string.Empty).ToLowerInvariant();
+            if (n.Contains("airtel"))                                  return "1";
+            if (n.Contains("jio"))                                     return "5";
+            if (n.Contains("vi") || n.Contains("voda") || n.Contains("idea")) return "6";
+            if (n.Contains("bsnl"))                                    return "3";
+            return string.Empty;
+        }
+
         private static string HttpGet(string url)
         {
             var req = (HttpWebRequest)WebRequest.Create(url);
             req.Method    = "GET";
-            req.Timeout   = 15000;
+            req.Timeout   = 20000;
             req.UserAgent = "VRecharge/1.0";
             req.Accept    = "application/json";
 

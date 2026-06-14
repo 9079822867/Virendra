@@ -134,6 +134,31 @@ namespace VIRENDRA.Models
         public int    StatusId { get; set; }  // 2=Success  3=Failed  5=Pending/Processing
     }
 
+    // ── Browse Plan (external BrowsePlan2 API) ───────────────────────────────
+
+    /// <summary>A plan category group (e.g. "Unlimited", "Data", "Talktime").</summary>
+    public class PlanCategory
+    {
+        public string         Name     { get; set; }
+        public string         FullName { get; set; }
+        public List<PlanItem> Plans    { get; set; } = new List<PlanItem>();
+    }
+
+    /// <summary>A single recharge plan from the external BrowsePlan2 API.</summary>
+    public class PlanItem
+    {
+        public long         Id            { get; set; }
+        public decimal      Amount        { get; set; }
+        public string       Validity      { get; set; }
+        public int          ValidityDays  { get; set; }
+        public decimal      Talktime      { get; set; }
+        public string       Benefit       { get; set; }
+        public string       Calls         { get; set; }
+        public string       Sms           { get; set; }
+        public string       Data          { get; set; }
+        public List<string> Subscriptions { get; set; } = new List<string>();
+    }
+
     public static class RouteType
     {
         public const int COMMON_ROUTE  = 1;
