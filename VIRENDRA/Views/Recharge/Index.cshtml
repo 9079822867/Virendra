@@ -287,10 +287,21 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-0">
+                <!-- amount-wise search -->
+                <div class="px-3 pt-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                        <input type="number" id="planSearch" class="form-control" placeholder="Search by amount, e.g. 199" autocomplete="off" />
+                        <button type="button" id="planSearchClear" class="btn btn-outline-secondary d-none"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
                 <!-- category tabs -->
                 <ul class="nav nav-pills flex-nowrap overflow-auto p-3 pb-2 mb-0" id="planTabs" style="gap:.4rem;"></ul>
                 <!-- plan list -->
                 <div id="planList" class="px-3 pb-3"></div>
+                <div id="planNoMatch" class="text-center text-muted py-4 d-none">
+                    <i class="fas fa-search fa-lg mb-2 d-block"></i>No plans match that amount.
+                </div>
                 <div id="plansLoading" class="text-center text-muted py-5 d-none">
                     <i class="fas fa-spinner fa-spin fa-2x mb-2 d-block"></i>Loading plans...
                 </div>
@@ -488,7 +499,7 @@
                         (p.subscriptions || []).forEach(function (s) { ott += '<span class="plan-ott"><i class="fas fa-play-circle me-1"></i>' + escapeHtml(s) + '</span>'; });
 
                         html +=
-                            '<div class="plan-card d-flex justify-content-between align-items-start">' +
+                            '<div class="plan-card d-flex justify-content-between align-items-start" data-amount="' + p.amount + '">' +
                                 '<div class="pe-2">' +
                                     '<div class="plan-amt">&#8377;' + p.amount + '</div>' +
                                     '<div>' + chips + '</div>' +
@@ -516,7 +527,60 @@
                     bootstrap.Modal.getInstance(document.getElementById('plansModal')).hide();
                     $('#Amount').focus();
                 });
+
+                // reset search state for the freshly rendered list
+                $('#planSearch').val('');
+                $('#planSearchClear').addClass('d-none');
+                $('#planNoMatch').addClass('d-none');
             }
+
+            // ── Amount-wise search across all categories ───
+            function applyPlanSearch(q) {
+                q = (q || '').trim();
+
+                if (q === '') {
+                    // restore category view
+                    $('#planTabs').show();
+                    $('.plan-card').show();
+                    $('.plan-pane').hide();
+                    $('#planTabs .nav-link.active').each(function () {
+                        $('#' + $(this).data('target')).show();
+                    });
+                    // if none active (edge), show first
+                    if (!$('#planTabs .nav-link.active').length) $('.plan-pane:first').show();
+                    $('#planNoMatch').addClass('d-none');
+                    $('#planSearchClear').addClass('d-none');
+                    return;
+                }
+
+                // searching: hide tabs, scan all cards across all panes
+                $('#planSearchClear').removeClass('d-none');
+                $('#planTabs').hide();
+                $('.plan-pane').show();
+
+                var matches = 0;
+                $('.plan-card').each(function () {
+                    var amt = ($(this).data('amount') || '').toString();
+                    if (amt.indexOf(q) === 0) {   // amount starts with the typed digits
+                        $(this).show(); matches++;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                // hide panes that ended up with no visible cards
+                $('.plan-pane').each(function () {
+                    $(this).toggle($(this).find('.plan-card:visible').length > 0);
+                });
+
+                $('#planNoMatch').toggleClass('d-none', matches > 0);
+            }
+
+            $('#planSearch').on('input', function () { applyPlanSearch($(this).val()); });
+            $('#planSearchClear').on('click', function () {
+                $('#planSearch').val('');
+                applyPlanSearch('');
+            });
 
             // ── Validate operator chosen before submit ─────
             $('#rechargeForm').on('submit', function (e) {
