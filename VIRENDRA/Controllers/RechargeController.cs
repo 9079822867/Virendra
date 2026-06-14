@@ -97,17 +97,9 @@ namespace VIRENDRA.Controllers
                 return Json(new { success = false, message = apiMsg ?? "Operator could not be detected." },
                     JsonRequestBehavior.AllowGet);
 
-            // Map external operator name -> our local Operator id
-            var operators = _rechargeRepo.GetActiveOperators();
-            var op = operators.FirstOrDefault(o =>
-                        string.Equals(o.Name, opName, StringComparison.OrdinalIgnoreCase))
-                  ?? operators.FirstOrDefault(o =>
-                        !string.IsNullOrEmpty(o.Name) &&
-                        (o.Name.IndexOf(opName, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                         opName.IndexOf(o.Name, StringComparison.OrdinalIgnoreCase) >= 0));
-
-            // Map external circle (code first, then name) -> our local Circle id.
-            // Circle display name may live in either Name or CircleName depending on query.
+            // Operator is matched on the client by NAME (contains), not by id.
+            // Map external circle (code first, then name) -> our local Circle id
+            // so the circle dropdown can be pre-selected.
             var circles = _rechargeRepo.GetCircles();
             Func<Circle, string> cname = c => c.Name ?? c.CircleName;
             var circle = (!string.IsNullOrWhiteSpace(circleCode)
@@ -123,9 +115,6 @@ namespace VIRENDRA.Controllers
             {
                 success      = true,
                 operatorName = opName,
-                operatorId   = op?.Id ?? 0,
-                opTypeId     = op?.OpTypeId ?? 0,
-                matched      = op != null,
                 circleName   = circleName,
                 circleCode   = circleCode,
                 circleId     = circle?.Id ?? 0

@@ -352,18 +352,25 @@
                         var label = '<i class="fas fa-check-circle me-1"></i>Detected: <strong>' + res.operatorName + '</strong>';
                         if (res.circleName) { label += ' &middot; ' + res.circleName; }
 
-                        // Auto-select operator chip in the visible pane
-                        if (res.operatorId && res.operatorId !== 0) {
-                            var $chip = $('.op-pane:visible .op-chip[data-opid="' + res.operatorId + '"]');
-                            if ($chip.length) {
-                                $('.op-chip').removeClass('active');
-                                $chip.addClass('active');
-                                $('#OperatorId').val(res.operatorId);
-                            } else {
-                                label += ' <span class="text-muted">(not in this list)</span>';
+                        // Match operator chip by NAME (contains), within the visible pane
+                        var detected = (res.operatorName || '').toLowerCase().trim();
+                        var $match = null;
+                        $('.op-pane:visible .op-chip').each(function () {
+                            var chipName = ($(this).data('opname') || '').toString().toLowerCase().trim();
+                            if (!chipName || !detected) return;
+                            // either name contains the other (e.g. "Jio" <-> "JIO 4G")
+                            if (chipName.indexOf(detected) !== -1 || detected.indexOf(chipName) !== -1) {
+                                $match = $(this);
+                                return false; // break
                             }
+                        });
+
+                        if ($match) {
+                            $('.op-chip').removeClass('active');
+                            $match.addClass('active');
+                            $('#OperatorId').val($match.data('opid'));
                         } else {
-                            label += ' <span class="text-muted">(operator not configured)</span>';
+                            label += ' <span class="text-muted">(not in this list)</span>';
                         }
 
                         // Auto-select circle
