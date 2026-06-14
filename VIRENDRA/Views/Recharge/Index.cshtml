@@ -482,7 +482,7 @@
                         if (p.validity) chips += '<span class="plan-chip"><i class="far fa-clock me-1"></i>' + escapeHtml(p.validity) + '</span>';
                         if (p.data)     chips += '<span class="plan-chip">' + escapeHtml(p.data) + ' Data</span>';
                         if (p.sms)      chips += '<span class="plan-chip">' + escapeHtml(p.sms) + ' SMS</span>';
-                        if (p.talktime && p.talktime > 0) chips += '<span class="plan-chip">TT ₹' + p.talktime + '</span>';
+                        if (p.talktime && p.talktime > 0) chips += '<span class="plan-chip">TT &#8377;' + p.talktime + '</span>';
 
                         var ott = '';
                         (p.subscriptions || []).forEach(function (s) { ott += '<span class="plan-ott"><i class="fas fa-play-circle me-1"></i>' + escapeHtml(s) + '</span>'; });
@@ -490,7 +490,7 @@
                         html +=
                             '<div class="plan-card d-flex justify-content-between align-items-start">' +
                                 '<div class="pe-2">' +
-                                    '<div class="plan-amt">₹' + p.amount + '</div>' +
+                                    '<div class="plan-amt">&#8377;' + p.amount + '</div>' +
                                     '<div>' + chips + '</div>' +
                                     (ott ? '<div>' + ott + '</div>' : '') +
                                     '<div class="plan-benefit">' + escapeHtml(p.benefit) + '</div>' +
