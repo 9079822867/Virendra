@@ -1,90 +1,230 @@
 @model VIRENDRA.Models.RechargeFormViewModel
-
 @{
     ViewBag.Title = "Recharge";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+
+    var prepaid  = Model.Operators.Where(o => o.OpTypeId == VIRENDRA.Models.RechargeFormViewModel.TYPE_PREPAID).ToList();
+    var postpaid = Model.Operators.Where(o => o.OpTypeId == VIRENDRA.Models.RechargeFormViewModel.TYPE_POSTPAID).ToList();
+    var dth      = Model.Operators.Where(o => o.OpTypeId == VIRENDRA.Models.RechargeFormViewModel.TYPE_DTH).ToList();
+
+    // Brand colour helper for operator avatars
+    Func<string, string> brandColor = name =>
+    {
+        if (string.IsNullOrEmpty(name)) return "#5c6bc0";
+        string n = name.ToLowerInvariant();
+        if (n.Contains("airtel")) return "#e40000";
+        if (n.Contains("jio"))    return "#0a2885";
+        if (n.Contains("vi") || n.Contains("voda") || n.Contains("idea")) return "#ee2e24";
+        if (n.Contains("bsnl"))   return "#f47216";
+        if (n.Contains("tata"))   return "#1b5e9b";
+        if (n.Contains("dish"))   return "#e5202e";
+        if (n.Contains("sun"))    return "#f7941e";
+        if (n.Contains("reliance") || n.Contains("big")) return "#7b1fa2";
+        return "#5c6bc0";
+    };
 }
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0 font-size-18">Recharge</h4>
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Home")">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Recharge</li>
-                    </ol>
-                </div>
-            </div>
+<style>
+    .pay-wrap { max-width: 1180px; margin: 0 auto; }
+
+    /* ── Service tabs ───────────────────────────────────────── */
+    .svc-tabs { display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .svc-tab {
+        flex:1; min-width:150px; cursor:pointer; border:2px solid #e8eaf2;
+        border-radius:14px; padding:1rem 1.1rem; background:#fff;
+        display:flex; align-items:center; gap:.8rem; transition:all .18s;
+        box-shadow:0 1px 4px rgba(0,0,0,.03);
+    }
+    .svc-tab:hover { border-color:#bcdcff; transform:translateY(-2px); }
+    .svc-tab.active {
+        border-color:#00baf2;
+        background:linear-gradient(135deg,#eef9ff 0%,#e9f3ff 100%);
+        box-shadow:0 6px 18px rgba(0,186,242,.18);
+    }
+    .svc-tab .ico {
+        width:46px; height:46px; border-radius:12px; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center;
+        color:#fff; font-size:1.25rem;
+    }
+    .svc-tab .t-title { font-weight:700; color:#1a1f36; font-size:.98rem; line-height:1.1; }
+    .svc-tab .t-sub   { font-size:.74rem; color:#8a90a6; }
+
+    /* ── Recharge card ──────────────────────────────────────── */
+    .pay-card { border:none; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.06); overflow:hidden; }
+    .pay-card-head {
+        background:linear-gradient(135deg,#002970 0%,#00baf2 130%);
+        color:#fff; padding:1.1rem 1.4rem;
+    }
+    .pay-card-head h5 { margin:0; font-weight:700; font-size:1.05rem; }
+    .pay-card-head small { opacity:.85; }
+
+    /* ── Operator chips ─────────────────────────────────────── */
+    .op-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(118px,1fr)); gap:.6rem; }
+    .op-chip {
+        cursor:pointer; border:2px solid #eceef5; border-radius:12px;
+        padding:.7rem .5rem; text-align:center; transition:all .15s; background:#fff;
+    }
+    .op-chip:hover { border-color:#bcdcff; background:#f6fbff; }
+    .op-chip.active { border-color:#00baf2; background:#eef9ff; box-shadow:0 3px 10px rgba(0,186,242,.18); }
+    .op-avatar {
+        width:42px; height:42px; border-radius:50%; margin:0 auto .4rem;
+        display:flex; align-items:center; justify-content:center;
+        color:#fff; font-weight:700; font-size:1.05rem;
+    }
+    .op-name { font-size:.78rem; font-weight:600; color:#3a3f55; line-height:1.15; }
+
+    .field-label { font-weight:600; font-size:.84rem; color:#3a3f55; margin-bottom:.3rem; }
+    .amt-input { font-size:1.5rem; font-weight:700; }
+    .amt-input::-webkit-outer-spin-button,
+    .amt-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+    .quick-amt { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.5rem; }
+    .quick-amt span {
+        cursor:pointer; border:1px solid #d7dbea; border-radius:20px;
+        padding:.25rem .85rem; font-size:.82rem; font-weight:600; color:#00569c; background:#f3f9ff;
+    }
+    .quick-amt span:hover { background:#e1f1ff; }
+    .btn-pay {
+        background:linear-gradient(135deg,#002970 0%,#00baf2 130%); border:none;
+        color:#fff; font-weight:700; border-radius:10px; padding:.7rem 1rem; width:100%;
+    }
+    .btn-pay:hover { color:#fff; opacity:.94; }
+    .empty-ops { text-align:center; color:#9aa0b4; padding:2.2rem 1rem; }
+</style>
+
+<div class="container-fluid pay-wrap">
+
+    <!-- Title -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <div>
+            <h4 class="mb-1 fw-bold text-dark"><i class="fas fa-bolt text-info me-2"></i>Recharge &amp; Bill Pay</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0" style="font-size:.82rem;">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard","Home")">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Recharge</li>
+                </ol>
+            </nav>
         </div>
     </div>
 
+    <!-- Result alert -->
     @if (Model.Result != null)
     {
         var alertClass = Model.Result.Success ? "alert-success" : (Model.Result.IsPending ? "alert-warning" : "alert-danger");
-        <div class="alert @alertClass alert-dismissible fade show" role="alert">
+        <div class="alert @alertClass alert-dismissible fade show" role="alert" style="border-radius:12px;">
             <strong>@Model.Result.Status:</strong> @Model.Result.Message
             @if (!string.IsNullOrEmpty(Model.Result.ApiTxnId))
-            {
-                <span> | API Txn: <strong>@Model.Result.ApiTxnId</strong></span>
-            }
+            { <span> | API Txn: <strong>@Model.Result.ApiTxnId</strong></span> }
             @if (!string.IsNullOrEmpty(Model.Result.UserTxnId))
-            {
-                <span> | Ref: <strong>@Model.Result.UserTxnId</strong></span>
-            }
+            { <span> | Ref: <strong>@Model.Result.UserTxnId</strong></span> }
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <div class="row">
+    <!-- Service tabs -->
+    <div class="svc-tabs">
+        <div class="svc-tab active" data-type="1">
+            <div class="ico" style="background:linear-gradient(135deg,#00baf2,#0098d4);"><i class="fas fa-mobile-alt"></i></div>
+            <div><div class="t-title">Prepaid</div><div class="t-sub">Mobile recharge</div></div>
+        </div>
+        <div class="svc-tab" data-type="2">
+            <div class="ico" style="background:linear-gradient(135deg,#7b53e0,#5e35b1);"><i class="fas fa-file-invoice"></i></div>
+            <div><div class="t-title">Postpaid</div><div class="t-sub">Bill payment</div></div>
+        </div>
+        <div class="svc-tab" data-type="3">
+            <div class="ico" style="background:linear-gradient(135deg,#ff8a00,#e35100);"><i class="fas fa-satellite-dish"></i></div>
+            <div><div class="t-title">DTH</div><div class="t-sub">TV recharge</div></div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- Recharge form -->
         <div class="col-lg-7">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">New Recharge</h5>
+            <div class="card pay-card">
+                <div class="pay-card-head">
+                    <h5><i class="fas fa-bolt me-2"></i><span id="svcTitle">Prepaid Recharge</span></h5>
+                    <small id="svcSub">Select operator and enter mobile number</small>
                 </div>
-                <div class="card-body">
-                    @using (Html.BeginForm("Index", "Recharge", FormMethod.Post))
+                <div class="card-body p-4">
+                    @using (Html.BeginForm("Index", "Recharge", FormMethod.Post, new { id = "rechargeForm" }))
                     {
                         @Html.AntiForgeryToken()
                         @Html.ValidationSummary(true, "", new { @class = "text-danger mb-2" })
 
+                        <input type="hidden" name="OperatorId" id="OperatorId" value="@Model.Request.OperatorId" />
+                        <input type="hidden" name="RCTypeId"   id="RCTypeId"   value="1" />
+
+                        <!-- Operator picker -->
+                        <div class="mb-3">
+                            <div class="field-label">Select Operator <span class="text-danger">*</span></div>
+
+                            @foreach (var grp in new[] {
+                                new { Type = 1, Ops = prepaid  },
+                                new { Type = 2, Ops = postpaid },
+                                new { Type = 3, Ops = dth      } })
+                            {
+                                <div class="op-pane" data-pane="@grp.Type" style="@(grp.Type == 1 ? "" : "display:none;")">
+                                    @if (grp.Ops.Count == 0)
+                                    {
+                                        <div class="empty-ops">
+                                            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                            No operators configured for this service yet.
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="op-grid">
+                                            @foreach (var op in grp.Ops)
+                                            {
+                                                var c = brandColor(op.OperatorName);
+                                                var initial = string.IsNullOrEmpty(op.OperatorName) ? "?" : op.OperatorName.Substring(0, 1).ToUpper();
+                                                <div class="op-chip" data-opid="@op.Id" data-opname="@op.OperatorName">
+                                                    <div class="op-avatar" style="background:@c;">@initial</div>
+                                                    <div class="op-name">@op.OperatorName</div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Operator <span class="text-danger">*</span></label>
-                                @Html.DropDownListFor(m => m.Request.OperatorId,
-                                    Model.OperatorList,
-                                    "-- Select Operator --",
-                                    new { @class = "form-select", required = "required" })
-                                @Html.ValidationMessageFor(m => m.Request.OperatorId, "", new { @class = "text-danger small" })
+                                <div class="field-label" id="numLabel">Mobile Number <span class="text-danger">*</span></div>
+                                @Html.TextBox("CustomerNo", Model.Request.CustomerNo, new {
+                                    @class = "form-control form-control-lg", id = "CustomerNo",
+                                    maxlength = "15", placeholder = "Enter number", required = "required",
+                                    autocomplete = "off" })
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Circle</label>
-                                @Html.DropDownListFor(m => m.Request.CircleId,
-                                    Model.CircleList,
-                                    "-- Select Circle --",
-                                    new { @class = "form-select" })
+
+                            <div class="col-md-6" id="circleWrap">
+                                <div class="field-label">Circle</div>
+                                @Html.DropDownList("CircleId", Model.CircleList,
+                                    "-- Select Circle --", new { @class = "form-select form-select-lg", id = "CircleId" })
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Mobile / Customer Number <span class="text-danger">*</span></label>
-                                @Html.TextBoxFor(m => m.Request.CustomerNo,
-                                    new { @class = "form-control", maxlength = "12", placeholder = "Enter number", required = "required" })
-                                @Html.ValidationMessageFor(m => m.Request.CustomerNo, "", new { @class = "text-danger small" })
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Amount <span class="text-danger">*</span></label>
-                                @Html.TextBoxFor(m => m.Request.Amount,
-                                    new { @class = "form-control", type = "number", min = "1", step = "1", placeholder = "Enter amount", required = "required" })
-                                @Html.ValidationMessageFor(m => m.Request.Amount, "", new { @class = "text-danger small" })
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Reference ID <small class="text-muted">(optional &mdash; auto-generated)</small></label>
-                                @Html.TextBoxFor(m => m.Request.UserTxnId,
-                                    new { @class = "form-control", placeholder = "Leave blank for auto" })
-                            </div>
+
                             <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-paper-plane"></i> Submit Recharge
+                                <div class="field-label">Amount <span class="text-danger">*</span></div>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text"><i class="fa fa-rupee-sign"></i></span>
+                                    @Html.TextBox("Amount", Model.Request.Amount > 0 ? Model.Request.Amount.ToString("0") : "", new {
+                                        @class = "form-control amt-input", id = "Amount", type = "number",
+                                        min = "1", step = "1", placeholder = "0", required = "required" })
+                                </div>
+                                <div class="quick-amt">
+                                    <span>10</span><span>20</span><span>50</span><span>100</span>
+                                    <span>199</span><span>239</span><span>299</span><span>499</span>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="field-label">Reference ID <small class="text-muted fw-normal">(optional, auto-generated)</small></div>
+                                @Html.TextBox("UserTxnId", Model.Request.UserTxnId, new { @class = "form-control", placeholder = "Leave blank for auto" })
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-pay btn-lg">
+                                    <i class="fas fa-paper-plane me-1"></i> Proceed to Recharge
                                 </button>
                             </div>
                         </div>
@@ -93,17 +233,19 @@
             </div>
         </div>
 
+        <!-- Recent recharges -->
         <div class="col-lg-5">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Recent Recharges</h5>
+            <div class="card pay-card">
+                <div class="pay-card-head" style="background:linear-gradient(135deg,#3a3f55 0%,#5c6bc0 130%);">
+                    <h5><i class="fas fa-history me-2"></i>Recent Recharges</h5>
+                    <small>Your last transactions</small>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
+                        <table class="table table-hover mb-0 align-middle" style="font-size:.86rem;">
+                            <thead class="table-light">
                                 <tr>
-                                    <th>Number</th>
+                                    <th class="ps-3">Number</th>
                                     <th>Operator</th>
                                     <th>Amount</th>
                                     <th>Status</th>
@@ -115,7 +257,7 @@
                                     foreach (var r in Model.RecentRecharges)
                                     {
                                         <tr>
-                                            <td>@r.Number</td>
+                                            <td class="ps-3 fw-semibold">@r.Number</td>
                                             <td>@r.Operator</td>
                                             <td><i class="fa fa-rupee-sign"></i> @r.Amount.ToString("0.##")</td>
                                             <td>
@@ -128,7 +270,7 @@
                                 }
                                 else
                                 {
-                                    <tr><td colspan="4" class="text-center text-muted py-3">No recent recharges</td></tr>
+                                    <tr><td colspan="4" class="text-center text-muted py-4">No recent recharges</td></tr>
                                 }
                             </tbody>
                         </table>
@@ -138,3 +280,61 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            var svcMeta = {
+                '1': { title: 'Prepaid Recharge',  sub: 'Select operator and enter mobile number', numLabel: 'Mobile Number', showCircle: true  },
+                '2': { title: 'Postpaid Bill Pay', sub: 'Select operator and enter mobile number', numLabel: 'Mobile Number', showCircle: true  },
+                '3': { title: 'DTH Recharge',      sub: 'Select operator and enter subscriber ID', numLabel: 'Subscriber / VC Number', showCircle: false }
+            };
+
+            // ── Tab switching ──────────────────────────────
+            $('.svc-tab').on('click', function () {
+                var type = $(this).data('type').toString();
+                $('.svc-tab').removeClass('active');
+                $(this).addClass('active');
+
+                // Show only the matching operator pane
+                $('.op-pane').hide().filter('[data-pane="' + type + '"]').show();
+
+                // Clear current operator selection
+                $('.op-chip').removeClass('active');
+                $('#OperatorId').val('');
+
+                var m = svcMeta[type];
+                $('#svcTitle').text(m.title);
+                $('#svcSub').text(m.sub);
+                $('#numLabel').html(m.numLabel + ' <span class="text-danger">*</span>');
+                $('#circleWrap').toggle(m.showCircle);
+            });
+
+            // ── Operator selection ─────────────────────────
+            $(document).on('click', '.op-chip', function () {
+                $('.op-chip').removeClass('active');
+                $(this).addClass('active');
+                $('#OperatorId').val($(this).data('opid'));
+            });
+
+            // Pre-select existing operator (e.g. after a failed post-back)
+            var preOp = $('#OperatorId').val();
+            if (preOp && preOp !== '0') {
+                $('.op-chip[data-opid="' + preOp + '"]').addClass('active');
+            }
+
+            // ── Quick amount chips ─────────────────────────
+            $('.quick-amt span').on('click', function () {
+                $('#Amount').val($(this).text()).focus();
+            });
+
+            // ── Validate operator chosen before submit ─────
+            $('#rechargeForm').on('submit', function (e) {
+                if (!$('#OperatorId').val() || $('#OperatorId').val() === '0') {
+                    e.preventDefault();
+                    alert('Please select an operator.');
+                }
+            });
+        });
+    </script>
+}

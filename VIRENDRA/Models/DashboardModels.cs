@@ -178,6 +178,15 @@ namespace VIRENDRA.Models
         public System.Web.Mvc.SelectList CircleList { get; set; }
         public List<RechargeHistoryItem> RecentRecharges { get; set; } = new List<RechargeHistoryItem>();
         public RechargeResult Result { get; set; }
+
+        // Full lists for the Paytm-style tabbed picker (Prepaid / Postpaid / DTH)
+        public List<Operator> Operators { get; set; } = new List<Operator>();
+        public List<Circle>   Circles   { get; set; } = new List<Circle>();
+
+        // OperatorType IDs
+        public const int TYPE_PREPAID  = 1;
+        public const int TYPE_POSTPAID = 2;
+        public const int TYPE_DTH      = 3;
     }
 
     public class RechargeResult
