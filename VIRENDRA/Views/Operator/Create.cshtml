@@ -18,16 +18,24 @@
                 @Html.ValidationSummary(true, "", new { @class = "text-danger mb-3" })
 
                 <div class="row g-3">
-                    <div class="col-md-5">
-                        @Html.LabelFor(m => m.OperatorName, "Operator Name", new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.OperatorName, new { @class = "form-control", required = "required" })
-                        @Html.ValidationMessageFor(m => m.OperatorName, "", new { @class = "text-danger" })
-                    </div>
                     <div class="col-md-4">
+                        @Html.LabelFor(m => m.Name, "Operator Name", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.Name, new { @class = "form-control", required = "required" })
+                        @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="col-md-3">
                         @Html.LabelFor(m => m.OperatorCode, "Operator Code", new { @class = "form-label" })
                         @Html.TextBoxFor(m => m.OperatorCode, new { @class = "form-control" })
                     </div>
                     <div class="col-md-3">
+                        @Html.LabelFor(m => m.OpTypeId, "Operator Type", new { @class = "form-label" })
+                        @Html.DropDownListFor(m => m.OpTypeId,
+                            (SelectList)ViewBag.OperatorTypes,
+                            "-- Select Type --",
+                            new { @class = "form-select", required = "required" })
+                        @Html.ValidationMessageFor(m => m.OpTypeId, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="col-md-2">
                         <div class="form-check mt-4 pt-2">
                             @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input" })
                             @Html.LabelFor(m => m.IsActive, "Active", new { @class = "form-check-label" })

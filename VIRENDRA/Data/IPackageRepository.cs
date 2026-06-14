@@ -19,6 +19,9 @@ namespace VIRENDRA.Data
         void UpdateOperator(Operator op);
         void DeleteOperator(int id);
 
+        // OperatorType lookup (1=Prepaid, 2=Postpaid, 3=DTH)
+        List<OperatorType> GetOperatorTypes();
+
         // PackageComm
         List<PackageComm> GetCommissionsByPackage(int packageId);
         PackageComm GetCommission(int packageId, int operatorId);

@@ -65,7 +65,12 @@ namespace VIRENDRA.Data
         {
             using (IDbConnection db = new SqlConnection(_conn))
                 return db.Query<Operator>(
-                    "SELECT Id, Name, OpCode AS OperatorCode, IsActive, IsSwitch, API1_Id, API2_Id, API3_Id, OpTypeId, AddedDate FROM [Operator] ORDER BY Name"
+                    @"SELECT o.Id, o.Name, o.OpCode AS OperatorCode, o.IsActive, o.IsSwitch,
+                             o.API1_Id, o.API2_Id, o.API3_Id, o.OpTypeId,
+                             t.TypeName AS OperatorType, o.AddedDate
+                      FROM [Operator] o
+                      LEFT JOIN OperatorType t ON t.Id = o.OpTypeId
+                      ORDER BY o.Name"
                 ).ToList();
         }
 
@@ -81,7 +86,7 @@ namespace VIRENDRA.Data
         {
             using (IDbConnection db = new SqlConnection(_conn))
                 db.Execute(
-                    "INSERT INTO [Operator] (Name, OpCode, IsActive, AddedDate) VALUES (@OperatorName, @OperatorCode, @IsActive, GETDATE())",
+                    "INSERT INTO [Operator] (Name, OpCode, OpTypeId, IsActive, AddedDate) VALUES (@Name, @OperatorCode, @OpTypeId, @IsActive, GETDATE())",
                     op);
         }
 
@@ -89,7 +94,7 @@ namespace VIRENDRA.Data
         {
             using (IDbConnection db = new SqlConnection(_conn))
                 db.Execute(
-                    "UPDATE [Operator] SET Name=@OperatorName, OpCode=@OperatorCode, IsActive=@IsActive WHERE Id=@Id",
+                    "UPDATE [Operator] SET Name=@Name, OpCode=@OperatorCode, OpTypeId=@OpTypeId, IsActive=@IsActive, UpdatedDate=GETDATE() WHERE Id=@Id",
                     op);
         }
 
@@ -97,6 +102,14 @@ namespace VIRENDRA.Data
         {
             using (IDbConnection db = new SqlConnection(_conn))
                 db.Execute("UPDATE [Operator] SET IsActive=0 WHERE Id=@Id", new { Id = id });
+        }
+
+        public List<OperatorType> GetOperatorTypes()
+        {
+            using (IDbConnection db = new SqlConnection(_conn))
+                return db.Query<OperatorType>(
+                    "SELECT Id, TypeName, WalletTypeId FROM OperatorType ORDER BY Id"
+                ).ToList();
         }
 
         // ── PackageComm ───────────────────────────────────────────────────────

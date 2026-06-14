@@ -9,4 +9,12 @@ namespace VIRENDRA.Models
     public class AccountType{ public int Id { get; set; } public string TypeName { get; set; } }
     public class TrType     { public int Id { get; set; } public string TypeName { get; set; } }
     public class SwitchType { public int Id { get; set; } public string TypeName { get; set; } }
+
+    // Matches DB table OperatorType (1=Prepaid, 2=Postpaid, 3=DTH)
+    public class OperatorType
+    {
+        public int    Id           { get; set; }
+        public string TypeName     { get; set; }
+        public int?   WalletTypeId { get; set; }
+    }
 }

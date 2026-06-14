@@ -19,6 +19,7 @@ namespace VIRENDRA.Controllers
 
         public ActionResult Create()
         {
+            PopulateOperatorTypes(null);
             return View(new Operator { IsActive = true });
         }
 
@@ -28,7 +29,11 @@ namespace VIRENDRA.Controllers
             if (string.IsNullOrWhiteSpace(model.Name))
                 ModelState.AddModelError("Name", "Operator name is required.");
 
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                PopulateOperatorTypes(model.OpTypeId);
+                return View(model);
+            }
 
             _repo.CreateOperator(model);
             TempData["SuccessMessage"] = "Operator created successfully.";
@@ -39,6 +44,7 @@ namespace VIRENDRA.Controllers
         {
             var op = _repo.GetOperatorById(id);
             if (op == null) return HttpNotFound();
+            PopulateOperatorTypes(op.OpTypeId);
             return View(op);
         }
 
@@ -48,11 +54,22 @@ namespace VIRENDRA.Controllers
             if (string.IsNullOrWhiteSpace(model.Name))
                 ModelState.AddModelError("Name", "Operator name is required.");
 
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                PopulateOperatorTypes(model.OpTypeId);
+                return View(model);
+            }
 
             _repo.UpdateOperator(model);
             TempData["SuccessMessage"] = "Operator updated successfully.";
             return RedirectToAction("Index");
+        }
+
+        // Builds the OperatorType dropdown (1=Prepaid, 2=Postpaid, 3=DTH)
+        private void PopulateOperatorTypes(int? selectedId)
+        {
+            ViewBag.OperatorTypes = new SelectList(
+                _repo.GetOperatorTypes(), "Id", "TypeName", selectedId);
         }
 
         [HttpPost, ValidateAntiForgeryToken]
