@@ -12,6 +12,9 @@
     <add key="webpages:Enabled" value="false" />
     <add key="ClientValidationEnabled" value="true" />
     <add key="UnobtrusiveJavaScriptEnabled" value="true" />
+    <!-- External operator/circle lookup API (auto-detect operator from mobile number) -->
+    <add key="PlanApiBaseUrl" value="https://onlinerechargeservice.in" />
+    <add key="PlanApiTokenId" value="YOUR_PLAN_API_TOKEN" />
   </appSettings>
   <system.web>
     <compilation debug="true" targetFramework="4.8.1" />

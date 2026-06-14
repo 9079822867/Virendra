@@ -175,11 +175,11 @@
                                         <div class="op-grid">
                                             @foreach (var op in grp.Ops)
                                             {
-                                                var c = brandColor(op.OperatorName);
-                                                var initial = string.IsNullOrEmpty(op.OperatorName) ? "?" : op.OperatorName.Substring(0, 1).ToUpper();
-                                                <div class="op-chip" data-opid="@op.Id" data-opname="@op.OperatorName">
+                                                var c = brandColor(op.Name);
+                                                var initial = string.IsNullOrEmpty(op.Name) ? "?" : op.Name.Substring(0, 1).ToUpper();
+                                                <div class="op-chip" data-opid="@op.Id" data-opname="@op.Name">
                                                     <div class="op-avatar" style="background:@c;">@initial</div>
-                                                    <div class="op-name">@op.OperatorName</div>
+                                                    <div class="op-name">@op.Name</div>
                                                 </div>
                                             }
                                         </div>
@@ -195,6 +195,7 @@
                                     @class = "form-control form-control-lg", id = "CustomerNo",
                                     maxlength = "15", placeholder = "Enter number", required = "required",
                                     autocomplete = "off" })
+                                <div id="opDetect" class="small mt-1" style="min-height:18px;"></div>
                             </div>
 
                             <div class="col-md-6" id="circleWrap">
@@ -203,7 +204,7 @@
                                     "-- Select Circle --", new { @class = "form-select form-select-lg", id = "CircleId" })
                             </div>
 
-                            <div class="col-12">
+                            <div class="col-md-6">
                                 <div class="field-label">Amount <span class="text-danger">*</span></div>
                                 <div class="input-group input-group-lg">
                                     <span class="input-group-text"><i class="fa fa-rupee-sign"></i></span>
@@ -211,15 +212,6 @@
                                         @class = "form-control amt-input", id = "Amount", type = "number",
                                         min = "1", step = "1", placeholder = "0", required = "required" })
                                 </div>
-                                <div class="quick-amt">
-                                    <span>10</span><span>20</span><span>50</span><span>100</span>
-                                    <span>199</span><span>239</span><span>299</span><span>499</span>
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <div class="field-label">Reference ID <small class="text-muted fw-normal">(optional, auto-generated)</small></div>
-                                @Html.TextBox("UserTxnId", Model.Request.UserTxnId, new { @class = "form-control", placeholder = "Leave blank for auto" })
                             </div>
 
                             <div class="col-12">
@@ -286,7 +278,7 @@
         $(function () {
             var svcMeta = {
                 '1': { title: 'Prepaid Recharge',  sub: 'Select operator and enter mobile number', numLabel: 'Mobile Number', showCircle: true  },
-                '2': { title: 'Postpaid Bill Pay', sub: 'Select operator and enter mobile number', numLabel: 'Mobile Number', showCircle: true  },
+                '2': { title: 'Postpaid Bill Pay', sub: 'Select operator and enter mobile number', numLabel: 'Mobile Number', showCircle: false  },
                 '3': { title: 'DTH Recharge',      sub: 'Select operator and enter subscriber ID', numLabel: 'Subscriber / VC Number', showCircle: false }
             };
 
@@ -308,6 +300,10 @@
                 $('#svcSub').text(m.sub);
                 $('#numLabel').html(m.numLabel + ' <span class="text-danger">*</span>');
                 $('#circleWrap').toggle(m.showCircle);
+
+                // Reset detection so re-entering the number re-detects for this service
+                $('#opDetect').html('');
+                lastLookup = '';
             });
 
             // ── Operator selection ─────────────────────────
@@ -326,6 +322,60 @@
             // ── Quick amount chips ─────────────────────────
             $('.quick-amt span').on('click', function () {
                 $('#Amount').val($(this).text()).focus();
+            });
+
+            // ── Auto-detect operator/circle from 10-digit number ───
+            var lastLookup = '';
+            function currentType() { return $('.svc-tab.active').data('type').toString(); }
+
+            $('#CustomerNo').on('input', function () {
+                var num = ($(this).val() || '').replace(/\D/g, '');
+                var type = currentType();
+
+                // Only for Prepaid (1) and Postpaid (2), exactly 10 digits
+                if (type === '3' || num.length !== 10) {
+                    if (num.length < 10) { $('#opDetect').html(''); lastLookup = ''; }
+                    return;
+                }
+                if (num === lastLookup) return;     // avoid duplicate calls
+                lastLookup = num;
+
+                $('#opDetect').html('<span class="text-muted"><i class="fas fa-spinner fa-spin me-1"></i>Detecting operator...</span>');
+
+                $.getJSON('@Url.Action("FetchOperator", "Recharge")', { number: num })
+                    .done(function (res) {
+                        if (!res.success) {
+                            $('#opDetect').html('<span class="text-warning"><i class="fas fa-exclamation-circle me-1"></i>' + res.message + '</span>');
+                            return;
+                        }
+
+                        var label = '<i class="fas fa-check-circle me-1"></i>Detected: <strong>' + res.operatorName + '</strong>';
+                        if (res.circleName) { label += ' &middot; ' + res.circleName; }
+
+                        // Auto-select operator chip in the visible pane
+                        if (res.operatorId && res.operatorId !== 0) {
+                            var $chip = $('.op-pane:visible .op-chip[data-opid="' + res.operatorId + '"]');
+                            if ($chip.length) {
+                                $('.op-chip').removeClass('active');
+                                $chip.addClass('active');
+                                $('#OperatorId').val(res.operatorId);
+                            } else {
+                                label += ' <span class="text-muted">(not in this list)</span>';
+                            }
+                        } else {
+                            label += ' <span class="text-muted">(operator not configured)</span>';
+                        }
+
+                        // Auto-select circle
+                        if (res.circleId && res.circleId !== 0) {
+                            $('#CircleId').val(res.circleId);
+                        }
+
+                        $('#opDetect').html('<span class="text-success">' + label + '</span>');
+                    })
+                    .fail(function () {
+                        $('#opDetect').html('<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Lookup failed.</span>');
+                    });
             });
 
             // ── Validate operator chosen before submit ─────
