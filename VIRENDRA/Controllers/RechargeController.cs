@@ -126,7 +126,7 @@ namespace VIRENDRA.Controllers
         // BROWSE PLANS — fetch prepaid plans from the external BrowsePlan2 API.
         // ────────────────────────────────────────────────────────────────────
         [HttpGet]
-        public JsonResult BrowsePlans(string operatorName, string opCode, int circleId)
+        public JsonResult BrowsePlans(string operatorName, string opCode, int circleId, string circleName)
         {
             // Resolve the provider's numeric OpCode:
             //  - if a numeric opCode was supplied, use it directly
@@ -136,9 +136,9 @@ namespace VIRENDRA.Controllers
                 return Json(new { success = false, message = "Plans are not available for this operator." },
                     JsonRequestBehavior.AllowGet);
 
-            // BrowsePlan2 needs a positive numeric CircleID; the plan list is
-            // largely national, so fall back to a valid default when unknown.
-            int circle = circleId > 0 ? circleId : 21;
+            // BrowsePlan2 needs the provider's own numeric CircleID — map it
+            // from the selected circle name (falls back to a valid default).
+            int circle = ResolveProviderCircleId(circleName);
 
             string baseUrl = ConfigurationManager.AppSettings["PlanApiBaseUrl"]
                              ?? "https://onlinerechargeservice.in";
@@ -235,6 +235,53 @@ namespace VIRENDRA.Controllers
             if (n.Contains("vi") || n.Contains("voda") || n.Contains("idea")) return "6";
             if (n.Contains("bsnl"))                                    return "3";
             return string.Empty;
+        }
+
+        // Provider BrowsePlan2 CircleID map, keyed by normalised circle name.
+        private static readonly Dictionary<string, int> _circleMap =
+            new Dictionary<string, int>(StringComparer.Ordinal)
+        {
+            { "delhi",            10 }, { "delhincr",         10 },
+            { "upwest",           97 }, { "upeast",           54 },
+            { "punjab",            2 }, { "himachalpradesh",   3 }, { "himanchalpradesh", 3 }, { "himachal", 3 },
+            { "haryana",          96 }, { "jammukashmir",     55 },
+            { "mumbai",           92 }, { "gujarat",          98 },
+            { "madhyapradesh",    93 }, { "kolkata",          31 },
+            { "westbengal",       70 }, { "odisha",           53 }, { "orissa", 53 },
+            { "assam",            56 }, { "northeast",        15 },
+            { "karnataka",         6 }, { "chennai",          40 },
+            { "tamilnadu",        94 }, { "kerala",           95 },
+            { "andhrapradesh",    49 }, { "bihar",            52 },
+            { "maharashtra",      90 }
+        };
+
+        // Maps a circle display name to the provider's numeric CircleID.
+        private static int ResolveProviderCircleId(string circleName)
+        {
+            string key = NormalizeCircle(circleName);
+            if (key.Length > 0)
+            {
+                if (_circleMap.TryGetValue(key, out int id)) return id;
+                foreach (var kv in _circleMap)
+                    if (key.Contains(kv.Key) || kv.Key.Contains(key)) return kv.Value;
+            }
+            return 10; // valid default (Delhi-NCR) when circle is unknown
+        }
+
+        // lowercase, drop standalone "and"/"&", strip non-alphanumerics
+        private static string NormalizeCircle(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return string.Empty;
+            var sb = new StringBuilder();
+            foreach (var token in name.ToLowerInvariant()
+                         .Split(new[] { ' ', '-', '_', '.', '&', ',', '/', '(', ')' },
+                                StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (token == "and") continue;
+                foreach (char c in token)
+                    if (char.IsLetterOrDigit(c)) sb.Append(c);
+            }
+            return sb.ToString();
         }
 
         private static string HttpGet(string url)

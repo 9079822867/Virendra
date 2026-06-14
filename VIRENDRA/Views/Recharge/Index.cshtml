@@ -450,6 +450,7 @@
                 var opName  = $op.data('opname');
                 var opCode  = $op.data('opcode');
                 var circleId = parseInt($('#CircleId').val()) || 0;
+                var circleName = circleId > 0 ? $('#CircleId option:selected').text() : '';
 
                 $('#plansOpName').text(opName);
                 $('#planTabs').empty();
@@ -461,7 +462,7 @@
                 modal.show();
 
                 $.getJSON('@Url.Action("BrowsePlans", "Recharge")',
-                    { operatorName: opName, opCode: opCode, circleId: circleId })
+                    { operatorName: opName, opCode: opCode, circleId: circleId, circleName: circleName })
                     .done(function (res) {
                         $('#plansLoading').addClass('d-none');
                         if (!res.success || !res.categories || !res.categories.length) {
