@@ -161,6 +161,7 @@
     <Compile Include="Controllers\AuthController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\MobileController.cs" />
+    <Compile Include="Controllers\MobileAppController.cs" />
     <Compile Include="Controllers\CommonRoutingController.cs" />
     <Compile Include="Controllers\RechargeController.cs" />
     <Compile Include="Controllers\ReportsController.cs" />
@@ -193,8 +194,10 @@
     <Compile Include="Infrastructure\RoleAuthorizeAttribute.cs" />
     <Compile Include="Infrastructure\RefreshUserBalanceAttribute.cs" />
     <Compile Include="Data\IRechargeRepository.cs" />
+    <Compile Include="Data\MobileAppRepository.cs" />
     <Compile Include="Data\RechargeRepository.cs" />
     <Compile Include="Models\Circle.cs" />
+    <Compile Include="Models\MobileAppModels.cs" />
     <Compile Include="Models\DashboardModels.cs" />
     <Compile Include="Models\LoginModel.cs" />
     <Compile Include="Models\LookupModels.cs" />
