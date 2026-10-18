@@ -88,6 +88,15 @@ namespace VIRENDRA.Data
 
         /// <summary>Retrieve tag-value filter rules used to classify an API response.</summary>
         List<FilterTag> GetFilterTags(int apiId);
+
+        /// <summary>
+        /// Call usp_UpdateRechargeStatus. The SP updates the Recharge row and handles
+        /// refund / downline commission; it reports what it did via isRefund / isDownline.
+        /// </summary>
+        void UpdateRechargeStatus(long recId, int userId, int statusId,
+            string apiTxnId, string optTxnId, string statusMsg, string remark,
+            out bool isDownline, out bool isRefund, out string spLog,
+            int opId = 0, decimal apiBal = 0, string updateType = "StatusWithCheck");
     }
 
     // ── Supporting DTO ───────────────────────────────────────────────────────

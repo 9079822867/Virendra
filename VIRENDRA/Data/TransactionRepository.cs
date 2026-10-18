@@ -51,7 +51,7 @@ namespace VIRENDRA.Data
 
                     -- Failed amount today
                     ISNULL((SELECT SUM(Amount) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId = 2
+                            WHERE UserId = @UserId AND StatusId in (2,4)
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS FailedAmount,
 
@@ -82,12 +82,12 @@ namespace VIRENDRA.Data
                         AS SuccessCount,
 
                     ISNULL((SELECT COUNT(*) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId = 2
+                            WHERE UserId = @UserId AND StatusId in (2,4)
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS FailedCount,
 
                     ISNULL((SELECT COUNT(*) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId = 3
+                            WHERE UserId = @UserId AND StatusId in (3,5)
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS PendingCount";
 
@@ -110,7 +110,8 @@ namespace VIRENDRA.Data
                     CASE r.StatusId
                         WHEN 1 THEN 'Success'
                         WHEN 2 THEN 'Failed'
-                        ELSE 'Pending'
+                        WHEN 3 THEN 'Pending'
+                        ELSE 'Hold'
                     END AS Status,
                     r.StatusMsg,
                     r.RequestTime AS Date
@@ -135,7 +136,7 @@ namespace VIRENDRA.Data
                     ISNULL(o.Name, '-') AS Operator,
                     r.Amount,
                     ISNULL(r.Recharge_Commision, 0) AS Commission,
-                    CASE r.StatusId WHEN 1 THEN 'Success' WHEN 2 THEN 'Failed' ELSE 'Pending' END AS Status,
+                    CASE r.StatusId WHEN 1 THEN 'Success' WHEN 2 THEN 'Failed' WHEN 3 THEN 'Pending' ELSE 'Hold' END AS Status,
                     r.StatusMsg,
                     r.RequestTime AS Date
                 FROM Recharge r
@@ -144,7 +145,7 @@ namespace VIRENDRA.Data
                   AND r.RequestTime <  DATEADD(DAY, 1, @ToDate)
                   AND (@UserId IS NULL OR r.UserId = @UserId)
                   AND (@Status IS NULL OR
-                       CASE r.StatusId WHEN 1 THEN 'Success' WHEN 2 THEN 'Failed' ELSE 'Pending' END = @Status)
+                       CASE r.StatusId WHEN 1 THEN 'Success' WHEN 2 THEN 'Failed' WHEN 3 THEN 'Pending' ELSE 'Hold' END = @Status)
                   AND (@Search IS NULL OR
                        r.UserTxnId  LIKE '%' + @Search + '%' OR
                        r.CustomerNo LIKE '%' + @Search + '%' OR

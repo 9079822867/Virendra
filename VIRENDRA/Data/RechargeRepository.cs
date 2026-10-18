@@ -31,7 +31,7 @@ namespace VIRENDRA.Data
         {
             using (var c = new SqlConnection(_conn))
                 return c.Query<Operator>(
-                    @"SELECT Id, Name AS OperatorName, OpCode AS OperatorCode,
+                    @"SELECT Id, Name , OpCode AS OperatorCode,
                              API1_Id, OpTypeId, IsActive
                       FROM [Operator] WHERE IsActive = 1 ORDER BY Name"
                 ).ToList();
@@ -101,62 +101,33 @@ namespace VIRENDRA.Data
             int userId, int opId, int circleId, string customerNo,
             decimal amount, byte rcTypeId, string userTxnId, int apiId, int addedById)
         {
+            // usp_InsertPendingRecharge (Database\usp_InsertPendingRecharge.sql):
+            // Recharge row + TxnLedger debit + UserBal deduction in one transaction.
+            var p = new DynamicParameters();
+            p.Add("@UserId",     userId);
+            p.Add("@OpId",       opId);
+            p.Add("@CircleId",   circleId);
+            p.Add("@CustomerNo", customerNo);
+            p.Add("@Amount",     amount);
+            p.Add("@RCTypeId",   rcTypeId);
+            p.Add("@UserTxnId",  userTxnId);
+            p.Add("@ApiId",      apiId);
+            p.Add("@AddedById",  addedById);
+            p.Add("@StatusId",   RC_PROCESS);
+            p.Add("@RecId",      null, DbType.Int64,   ParameterDirection.Output);
+            p.Add("@TxnId",      null, DbType.Int64,   ParameterDirection.Output);
+            p.Add("@OpBal",      null, DbType.Decimal, ParameterDirection.Output, precision: 18, scale: 4);
+            p.Add("@ErrorCode",  null, DbType.Int32,   ParameterDirection.Output);
+            p.Add("@ErrorDesc",  null, DbType.String,  ParameterDirection.Output, 250);
+
             using (var c = new SqlConnection(_conn))
-            {
-                c.Open();
-                using (var txn = c.BeginTransaction())
-                {
-                    try
-                    {
-                        decimal opBal = c.ExecuteScalar<decimal>(
-                            "SELECT ISNULL(UserBal, 0) FROM [User] WITH (UPDLOCK) WHERE Id = @Id",
-                            new { Id = userId }, txn);
+                c.Execute("usp_InsertPendingRecharge", p, commandType: CommandType.StoredProcedure);
 
-                        if (opBal < amount)
-                            throw new InvalidOperationException("Insufficient balance. Available: " + opBal.ToString("0.##"));
+            int errorCode = p.Get<int?>("@ErrorCode") ?? -1;
+            if (errorCode != 0)
+                throw new InvalidOperationException(p.Get<string>("@ErrorDesc") ?? "Unable to create recharge.");
 
-                        long recId = c.ExecuteScalar<long>(@"
-                            INSERT INTO Recharge
-                                (UserId, ApiId, CustomerNo, OpId, CircleId, Amount, RCTypeId,
-                                 StatusId, RequestTime, MediumId, UserTxnId, OurRefTxnId, cashback)
-                            VALUES
-                                (@UserId, @ApiId, @CustomerNo, @OpId, @CircleId, @Amount, @RCTypeId,
-                                 @StatusId, GETDATE(), 1, @UserTxnId, @UserTxnId, 0);
-                            SELECT CAST(SCOPE_IDENTITY() AS BIGINT);",
-                            new { UserId=userId, ApiId=apiId, CustomerNo=customerNo,
-                                  OpId=opId, CircleId=circleId, Amount=amount,
-                                  RCTypeId=rcTypeId, UserTxnId=userTxnId,
-                                  StatusId=RC_PROCESS }, txn);
-
-                        long txnId = c.ExecuteScalar<long>(@"
-                            INSERT INTO TxnLedger
-                                (RecId, UserId, RefTxnId, TxnDate, OP_Bal, CR_Amt, DB_Amt,
-                                 TxnTypeId, AmtTypeId, Remark, AddedById)
-                            VALUES
-                                (@RecId, @UserId, @RefTxnId, GETDATE(), @OpBal, 0, @DbAmt,
-                                 1, 1, @Remark, @AddedById);
-                            SELECT CAST(SCOPE_IDENTITY() AS BIGINT);",
-                            new { RecId=recId, UserId=userId, RefTxnId=userTxnId,
-                                  OpBal=opBal, DbAmt=amount,
-                                  Remark="Recharge Debit - " + customerNo,
-                                  AddedById=addedById }, txn);
-
-                        c.Execute("UPDATE Recharge SET TxnId = @TxnId WHERE Id = @RecId",
-                            new { TxnId=txnId, RecId=recId }, txn);
-
-                        c.Execute("UPDATE [User] SET UserBal = UserBal - @Amount WHERE Id = @UserId",
-                            new { Amount=amount, UserId=userId }, txn);
-
-                        txn.Commit();
-                        return (recId, txnId, opBal);
-                    }
-                    catch
-                    {
-                        txn.Rollback();
-                        throw;
-                    }
-                }
-            }
+            return (p.Get<long>("@RecId"), p.Get<long>("@TxnId"), p.Get<decimal>("@OpBal"));
         }
 
         public void UpdateRechargeSuccess(long recId, string apiTxnId, string statusMsg,
@@ -296,7 +267,7 @@ namespace VIRENDRA.Data
                     ISNULL(o.Name, '-') AS Operator,
                     r.Amount,
                     ISNULL(r.Recharge_Commision, 0) AS Commission,
-                    CASE r.StatusId WHEN 1 THEN 'Success' WHEN 3 THEN 'Failed' ELSE 'Pending' END AS Status,
+                    CASE r.StatusId WHEN 1 THEN 'Success' WHEN 2 THEN 'Failed' WHEN 3 THEN 'Pending' ELSE 'Hold' END AS Status,
                     r.RequestTime AS Date
                 FROM Recharge r
                 LEFT JOIN [Operator] o ON o.Id = r.OpId
@@ -374,7 +345,7 @@ namespace VIRENDRA.Data
             p.Add("@OpTypeId",         null, DbType.Int32,   ParameterDirection.Output);
             p.Add("@SerialCircleId",   null, DbType.Int32,   ParameterDirection.Output);
             p.Add("@SerialCircleCode", null, DbType.String,  ParameterDirection.Output, 10);
-            p.Add("@DebitAmount",      null, DbType.Decimal, ParameterDirection.Output);
+            p.Add("@DebitAmount",      null, DbType.Decimal, ParameterDirection.Output,10);
             p.Add("@CommAmount",       null, DbType.Decimal, ParameterDirection.Output);
 
             using (var c = new SqlConnection(_conn))
@@ -609,6 +580,37 @@ namespace VIRENDRA.Data
                       WHERE ApiId = @ApiId AND IsActive = 1
                       ORDER BY Id",
                     new { ApiId = apiId }).ToList();
+        }
+
+        public void UpdateRechargeStatus(long recId, int userId, int statusId,
+            string apiTxnId, string optTxnId, string statusMsg, string remark,
+            out bool isDownline, out bool isRefund, out string spLog,
+            int opId = 0, decimal apiBal = 0, string updateType = "StatusWithCheck")
+        {
+            var p = new DynamicParameters();
+            p.Add("@UpdateType", updateType);
+            p.Add("@RecId",      recId);
+            p.Add("@StatusId",   statusId);
+            p.Add("@Remark",     string.IsNullOrEmpty(remark) ? "StatusWithCheck" : remark);
+
+            // Optional params are only sent when set, so the SP keeps its own defaults
+            if (userId > 0)                            p.Add("@UserId",    userId);
+            if (!string.IsNullOrWhiteSpace(apiTxnId))  p.Add("@ApiTxnId",  apiTxnId);
+            if (!string.IsNullOrWhiteSpace(optTxnId))  p.Add("@OptTxnId",  optTxnId);
+            if (!string.IsNullOrWhiteSpace(statusMsg)) p.Add("@StatusMsg", statusMsg);
+            if (opId > 0)                              p.Add("@OpId",      opId);
+            if (apiBal > 0)                            p.Add("@ApiBal",    apiBal);
+
+            p.Add("@Log",        null, DbType.String,  ParameterDirection.Output, 250);
+            p.Add("@IsRefund",   null, DbType.Boolean, ParameterDirection.Output);
+            p.Add("@IsDownline", null, DbType.Boolean, ParameterDirection.Output);
+
+            using (var c = new SqlConnection(_conn))
+                c.Execute("usp_UpdateRechargeStatus", p, commandType: CommandType.StoredProcedure);
+
+            isRefund   = p.Get<bool?>("@IsRefund")   ?? false;
+            isDownline = p.Get<bool?>("@IsDownline") ?? false;
+            spLog      = p.Get<string>("@Log")       ?? string.Empty;
         }
 
         // ── Private helpers ──────────────────────────────────────────────────

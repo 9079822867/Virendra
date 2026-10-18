@@ -125,7 +125,7 @@ namespace VIRENDRA.Data
                     @PackageId AS PackageId,
                     ISNULL(pc.Id, 0)       AS Id,
                     ISNULL(pc.CommAmt, 0)  AS CommValue,
-                    CASE ISNULL(pc.CommTypeId, 1) WHEN 1 THEN 'P' ELSE 'F' END AS CommType,
+                    CASE ISNULL(pc.CommTypeId, 2) WHEN 2 THEN 'P' ELSE 'F' END AS CommType,
                     1 AS IsActive
                 FROM [Operator] o
                 LEFT JOIN [PackageComm] pc ON pc.OpId = o.Id AND pc.PackId = @PackageId
@@ -150,12 +150,12 @@ namespace VIRENDRA.Data
                 IF EXISTS (SELECT 1 FROM [PackageComm] WHERE PackId=@PackageId AND OpId=@OperatorId)
                     UPDATE [PackageComm]
                     SET CommAmt=@CommValue,
-                        CommTypeId=CASE WHEN @CommType='P' THEN 1 ELSE 2 END,
+                        CommTypeId=CASE WHEN @CommType='P' THEN 2 ELSE 1 END,
                         UpdatedDate=GETDATE()
                     WHERE PackId=@PackageId AND OpId=@OperatorId
                 ELSE
-                    INSERT INTO [PackageComm] (PackId, OpId, CommAmt, CommTypeId, AddedDate)
-                    VALUES (@PackageId, @OperatorId, @CommValue, CASE WHEN @CommType='P' THEN 1 ELSE 2 END, GETDATE())";
+                    INSERT INTO [PackageComm] (PackId, OpId, CommAmt,AmtTypeId, CommTypeId, AddedDate)
+                    VALUES (@PackageId, @OperatorId, @CommValue,5, CASE WHEN @CommType='P' THEN 1 ELSE 2 END, GETDATE())";
 
             using (IDbConnection db = new SqlConnection(_conn))
                 db.Execute(sql, comm);
@@ -171,7 +171,7 @@ namespace VIRENDRA.Data
                     u.PackageId,
                     ISNULL(pc.Id, 0)       AS Id,
                     ISNULL(pc.CommAmt, 0)  AS CommValue,
-                    CASE ISNULL(pc.CommTypeId,'1') WHEN 1 THEN 'P' ELSE 'F' END AS CommType,
+                    CASE ISNULL(pc.CommTypeId,'2') WHEN 2 THEN 'P' ELSE 'F' END AS CommType,
                     1 AS IsActive,
                     p.PackageName
                 FROM [User] u
