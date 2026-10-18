@@ -582,6 +582,13 @@ namespace VIRENDRA.Data
                     new { ApiId = apiId }).ToList();
         }
 
+        public int? GetRechargeStatusId(long recId)
+        {
+            using (var c = new SqlConnection(_conn))
+                return c.ExecuteScalar<int?>(
+                    "SELECT StatusId FROM Recharge WHERE Id = @Id", new { Id = recId });
+        }
+
         public void UpdateRechargeStatus(long recId, int userId, int statusId,
             string apiTxnId, string optTxnId, string statusMsg, string remark,
             out bool isDownline, out bool isRefund, out string spLog,

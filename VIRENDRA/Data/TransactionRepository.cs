@@ -129,6 +129,8 @@ namespace VIRENDRA.Data
             const string sql = @"
                 SELECT
                     ROW_NUMBER() OVER (ORDER BY r.RequestTime DESC) AS SrNo,
+                    r.Id     AS RecId,
+                    r.StatusId,
                     r.TxnId  AS TxnId,
                     r.OurRefTxnId,
                     r.ApiTxnId,

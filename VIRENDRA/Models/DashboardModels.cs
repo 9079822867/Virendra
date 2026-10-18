@@ -116,6 +116,8 @@ namespace VIRENDRA.Models
     public class RechargeHistoryItem
     {
         public int SrNo { get; set; }
+        public long RecId { get; set; }            // Recharge.Id
+        public int StatusId { get; set; }          // Recharge.StatusId
         public string TxnId { get; set; }         // UserTxnId
         public string OurRefTxnId { get; set; }   // Internal reference ID
         public string ApiTxnId { get; set; }       // API-side transaction ID

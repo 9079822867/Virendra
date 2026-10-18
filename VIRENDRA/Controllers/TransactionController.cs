@@ -11,10 +11,12 @@ namespace VIRENDRA.Controllers
     public class TransactionController : Controller
     {
         private readonly ITransactionRepository _txnRepo;
+        private readonly IRechargeRepository    _rechargeRepo;
 
-        public TransactionController(ITransactionRepository txnRepo)
+        public TransactionController(ITransactionRepository txnRepo, IRechargeRepository rechargeRepo)
         {
-            _txnRepo = txnRepo;
+            _txnRepo      = txnRepo;
+            _rechargeRepo = rechargeRepo;
         }
 
         [HttpGet]
@@ -33,6 +35,8 @@ namespace VIRENDRA.Controllers
             int? userId = GetScopedUserId();
 
             var rows = _txnRepo.GetRechargeHistory(userId, from, to, status, searchText);
+
+            ViewBag.CanChangeStatus = IsAdmin();
 
             var model = new RechargeHistoryViewModel
             {
@@ -72,6 +76,76 @@ namespace VIRENDRA.Controllers
             };
 
             return View(model);
+        }
+
+        // Manual status change from Recharge History — SuperAdmin / Admin only.
+        // usp_UpdateRechargeStatus applies the ledger side (refund on Failed, commission on Success).
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
+        public ActionResult ChangeStatus(long recId, int statusId, string apiTxnId, string statusMsg, string returnUrl)
+        {
+            ActionResult back = Url.IsLocalUrl(returnUrl)
+                ? (ActionResult)Redirect(returnUrl)
+                : RedirectToAction("RechargeHistory");
+
+            if (statusId != RechargeStatusCodes.SUCCESS &&
+                statusId != RechargeStatusCodes.PROCESS &&
+                statusId != RechargeStatusCodes.FAILED)
+            {
+                TempData["ErrorMessage"] = "Invalid status selected.";
+                return back;
+            }
+
+            int? current = _rechargeRepo.GetRechargeStatusId(recId);
+            if (current == null)
+            {
+                TempData["ErrorMessage"] = "Recharge not found.";
+                return back;
+            }
+            if (current == statusId)
+            {
+                TempData["ErrorMessage"] = "Recharge already has this status.";
+                return back;
+            }
+            if (current == RechargeStatusCodes.FAILED)
+            {
+                // Failed recharges are already refunded; changing them would need a fresh debit
+                TempData["ErrorMessage"] = "Failed recharge is final and cannot be changed.";
+                return back;
+            }
+
+            try
+            {
+                string by = (Session["Username"] ?? "admin").ToString();
+                string msg = string.IsNullOrWhiteSpace(statusMsg)
+                    ? "Manual status change by " + by
+                    : statusMsg.Trim() + " (by " + by + ")";
+
+                _rechargeRepo.UpdateRechargeStatus(recId, 0, statusId,
+                    apiTxnId?.Trim(), string.Empty, msg, "Manual-" + by,
+                    out bool isDownline, out bool isRefund, out string spLog);
+
+                TempData["SuccessMessage"] = "Recharge #" + recId + " updated to " + StatusName(statusId) +
+                    (statusId == RechargeStatusCodes.FAILED ? (isRefund ? ". Amount refunded." : ". Refund not reported by SP.") : ".");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Status update failed: " + ex.GetBaseException().Message;
+            }
+
+            return back;
+        }
+
+        private static string StatusName(int statusId)
+            => statusId == RechargeStatusCodes.SUCCESS ? "Success"
+             : statusId == RechargeStatusCodes.FAILED  ? "Failed"
+             : "Pending";
+
+        private bool IsAdmin()
+        {
+            byte roleId = (byte)(Session["RoleId"] ?? (byte)0);
+            return roleId == RoleConstants.SuperAdmin || roleId == RoleConstants.Admin;
         }
 
         [HttpGet]

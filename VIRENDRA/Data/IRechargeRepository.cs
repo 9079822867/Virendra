@@ -93,6 +93,9 @@ namespace VIRENDRA.Data
         /// Call usp_UpdateRechargeStatus. The SP updates the Recharge row and handles
         /// refund / downline commission; it reports what it did via isRefund / isDownline.
         /// </summary>
+        /// <summary>Current Recharge.StatusId, or null when the record does not exist.</summary>
+        int? GetRechargeStatusId(long recId);
+
         void UpdateRechargeStatus(long recId, int userId, int statusId,
             string apiTxnId, string optTxnId, string statusMsg, string remark,
             out bool isDownline, out bool isRefund, out string spLog,

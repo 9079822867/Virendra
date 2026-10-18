@@ -96,7 +96,7 @@ namespace VIRENDRA.App_Start
                 return new VendorController(_vendorRepo);
 
             if (controllerType == typeof(TransactionController))
-                return new TransactionController(_txnRepo);
+                return new TransactionController(_txnRepo, _rechargeRepo);
 
             if (controllerType == typeof(RechargeController))
                 return new RechargeController(_rechargeSvc, _rechargeRepo);
