@@ -131,7 +131,7 @@ namespace VIRENDRA.Models
         public int    ApiId    { get; set; }
         public string TagName  { get; set; }
         public string TagValue { get; set; }
-        public int    StatusId { get; set; }  // 2=Success  3=Failed  5=Pending/Processing
+        public int    StatusId { get; set; }  // 1=Success  3=Process  2=Failed
     }
 
     // ── Browse Plan (external BrowsePlan2 API) ───────────────────────────────

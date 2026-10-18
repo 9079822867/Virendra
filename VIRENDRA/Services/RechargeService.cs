@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -119,7 +121,11 @@ namespace VIRENDRA.Services
                 return Fail("API connection failed. Amount refunded to wallet.", recId, req.UserTxnId);
             }
 
-            var parsed = ParseApiResponse(responseText);
+            List<FilterTag> tags = null;
+            try { tags = _repo.GetFilterTags(apiUrl.ApiId); }
+            catch { /* keyword fallback */ }
+
+            var parsed = ParseApiResponse(responseText, tags);
 
             // 10. Update Recharge based on parsed result
             if (parsed.Status == "Success")
@@ -143,7 +149,7 @@ namespace VIRENDRA.Services
             }
             else if (parsed.Status == "Pending")
             {
-                _repo.UpdateRechargeSuccess(recId, parsed.ApiTxnId, parsed.Message, 0, 0);
+                _repo.UpdateRechargeProcess(recId, parsed.ApiTxnId, parsed.Message);
                 // Keep debit; status remains processing
                 return new RechargeResult
                 {
@@ -228,25 +234,43 @@ namespace VIRENDRA.Services
         }
 
         // ── Response parser ──────────────────────────────────────────────────
-        // Simple keyword-based parser. TagValue table rules can replace this later.
+        // Vendor FilterRespTag rules first (StatusId 1=Success 2=Process 3=Failed),
+        // then a keyword fallback.
 
-        private static ParsedResponse ParseApiResponse(string raw)
+        private static ParsedResponse ParseApiResponse(string raw, List<FilterTag> tags)
         {
             if (string.IsNullOrWhiteSpace(raw))
                 return new ParsedResponse { Status = "Failed", Message = "Empty response from API" };
 
-            string lower = raw.ToLower();
-
-            // Extract API txn ID (look for common JSON/text patterns)
+            string msg      = raw.Length > 200 ? raw.Substring(0, 200) : raw;
             string apiTxnId = ExtractApiTxnId(raw);
 
-            if (lower.Contains("success") || lower.Contains("successful") || lower.Contains("\"status\":1"))
-                return new ParsedResponse { Status = "Success", Message = raw.Length > 200 ? raw.Substring(0, 200) : raw, ApiTxnId = apiTxnId };
+            if (tags != null)
+            {
+                foreach (var t in tags.OrderBy(x => x.Id))
+                {
+                    if (string.IsNullOrEmpty(t.TagValue) ||
+                        raw.IndexOf(t.TagValue, StringComparison.OrdinalIgnoreCase) < 0) continue;
+
+                    if (t.StatusId == 1) return new ParsedResponse { Status = "Success", Message = msg, ApiTxnId = apiTxnId };
+                    if (t.StatusId == 2) return new ParsedResponse { Status = "Pending", Message = msg, ApiTxnId = apiTxnId };
+                    if (t.StatusId == 3) return new ParsedResponse { Status = "Failed",  Message = msg };
+                }
+            }
+
+            string lower = raw.ToLower();
+
+            // Check failure words first so "unsuccessful" / "not success" are not read as success
+            if (lower.Contains("fail") || lower.Contains("unsuccess") || lower.Contains("reject"))
+                return new ParsedResponse { Status = "Failed", Message = msg };
+
+            if (lower.Contains("success") || lower.Contains("\"status\":1"))
+                return new ParsedResponse { Status = "Success", Message = msg, ApiTxnId = apiTxnId };
 
             if (lower.Contains("pending") || lower.Contains("process") || lower.Contains("queue"))
-                return new ParsedResponse { Status = "Pending", Message = raw.Length > 200 ? raw.Substring(0, 200) : raw, ApiTxnId = apiTxnId };
+                return new ParsedResponse { Status = "Pending", Message = msg, ApiTxnId = apiTxnId };
 
-            return new ParsedResponse { Status = "Failed", Message = raw.Length > 200 ? raw.Substring(0, 200) : raw };
+            return new ParsedResponse { Status = "Failed", Message = msg };
         }
 
         private static string ExtractApiTxnId(string raw)

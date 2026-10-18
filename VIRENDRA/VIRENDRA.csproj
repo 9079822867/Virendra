@@ -191,6 +191,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\RoleAuthorizeAttribute.cs" />
+    <Compile Include="Infrastructure\RefreshUserBalanceAttribute.cs" />
     <Compile Include="Data\IRechargeRepository.cs" />
     <Compile Include="Data\RechargeRepository.cs" />
     <Compile Include="Models\Circle.cs" />

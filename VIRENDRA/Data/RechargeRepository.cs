@@ -14,6 +14,11 @@ namespace VIRENDRA.Data
     {
         private readonly string _conn;
 
+        // Recharge.StatusId values (VRECHARGEDB)
+        private const int RC_SUCCESS = 1;
+        private const int RC_PROCESS = 3;
+        private const int RC_FAILED  = 2;
+
         public RechargeRepository()
         {
             _conn = ConfigurationManager.ConnectionStrings["sqlconn"]?.ConnectionString
@@ -36,7 +41,7 @@ namespace VIRENDRA.Data
         {
             using (var c = new SqlConnection(_conn))
                 return c.Query<Circle>(
-                    "SELECT Id, CircleName, CircleCode FROM Circle ORDER BY CircleName"
+                    "SELECT Id, CircleName as Name, CircleCode FROM Circle ORDER BY CircleName"
                 ).ToList();
         }
 
@@ -116,11 +121,12 @@ namespace VIRENDRA.Data
                                  StatusId, RequestTime, MediumId, UserTxnId, OurRefTxnId, cashback)
                             VALUES
                                 (@UserId, @ApiId, @CustomerNo, @OpId, @CircleId, @Amount, @RCTypeId,
-                                 1, GETDATE(), 1, @UserTxnId, @UserTxnId, 0);
+                                 @StatusId, GETDATE(), 1, @UserTxnId, @UserTxnId, 0);
                             SELECT CAST(SCOPE_IDENTITY() AS BIGINT);",
                             new { UserId=userId, ApiId=apiId, CustomerNo=customerNo,
                                   OpId=opId, CircleId=circleId, Amount=amount,
-                                  RCTypeId=rcTypeId, UserTxnId=userTxnId }, txn);
+                                  RCTypeId=rcTypeId, UserTxnId=userTxnId,
+                                  StatusId=RC_PROCESS }, txn);
 
                         long txnId = c.ExecuteScalar<long>(@"
                             INSERT INTO TxnLedger
@@ -159,20 +165,31 @@ namespace VIRENDRA.Data
             using (var c = new SqlConnection(_conn))
                 c.Execute(@"
                     UPDATE Recharge SET
-                        StatusId = 2, ApiTxnId = @ApiTxnId, StatusMsg = @StatusMsg,
+                        StatusId = @StatusId, ApiTxnId = @ApiTxnId, StatusMsg = @StatusMsg,
                         ResponseTime = GETDATE(), Recharge_Commision = @ApiComm, ApiBal = @ApiBal
                     WHERE Id = @RecId",
                     new { RecId=recId, ApiTxnId=apiTxnId, StatusMsg=statusMsg,
-                          ApiComm=apiComm, ApiBal=apiBal });
+                          ApiComm=apiComm, ApiBal=apiBal, StatusId=RC_SUCCESS });
+        }
+
+        public void UpdateRechargeProcess(long recId, string apiTxnId, string statusMsg)
+        {
+            using (var c = new SqlConnection(_conn))
+                c.Execute(@"
+                    UPDATE Recharge SET
+                        StatusId = @StatusId, ApiTxnId = @ApiTxnId, StatusMsg = @StatusMsg,
+                        ResponseTime = GETDATE()
+                    WHERE Id = @RecId",
+                    new { RecId=recId, ApiTxnId=apiTxnId, StatusMsg=statusMsg, StatusId=RC_PROCESS });
         }
 
         public void UpdateRechargeFailed(long recId, string statusMsg)
         {
             using (var c = new SqlConnection(_conn))
                 c.Execute(@"
-                    UPDATE Recharge SET StatusId = 3, StatusMsg = @StatusMsg, ResponseTime = GETDATE()
+                    UPDATE Recharge SET StatusId = @StatusId, StatusMsg = @StatusMsg, ResponseTime = GETDATE()
                     WHERE Id = @RecId",
-                    new { RecId=recId, StatusMsg=statusMsg });
+                    new { RecId=recId, StatusMsg=statusMsg, StatusId=RC_FAILED });
         }
 
         public void InsertRefundLedger(long recId, int userId, string refTxnId,
@@ -279,7 +296,7 @@ namespace VIRENDRA.Data
                     ISNULL(o.Name, '-') AS Operator,
                     r.Amount,
                     ISNULL(r.Recharge_Commision, 0) AS Commission,
-                    CASE r.StatusId WHEN 2 THEN 'Success' WHEN 3 THEN 'Failed' ELSE 'Pending' END AS Status,
+                    CASE r.StatusId WHEN 1 THEN 'Success' WHEN 3 THEN 'Failed' ELSE 'Pending' END AS Status,
                     r.RequestTime AS Date
                 FROM Recharge r
                 LEFT JOIN [Operator] o ON o.Id = r.OpId

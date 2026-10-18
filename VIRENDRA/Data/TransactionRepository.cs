@@ -45,13 +45,13 @@ namespace VIRENDRA.Data
 
                     -- Success amount today
                     ISNULL((SELECT SUM(Amount) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId = 2
+                            WHERE UserId = @UserId AND StatusId = 1
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS SuccessAmount,
 
                     -- Failed amount today
                     ISNULL((SELECT SUM(Amount) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId = 3
+                            WHERE UserId = @UserId AND StatusId = 2
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS FailedAmount,
 
@@ -66,7 +66,7 @@ namespace VIRENDRA.Data
 
                     -- Today's earning: commission on success recharges
                     ISNULL((SELECT SUM(Recharge_Commision) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId = 2
+                            WHERE UserId = @UserId AND StatusId = 1
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS TodayEarning,
 
@@ -77,17 +77,17 @@ namespace VIRENDRA.Data
                         AS TotalTxnCount,
 
                     ISNULL((SELECT COUNT(*) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId = 2
+                            WHERE UserId = @UserId AND StatusId = 1
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS SuccessCount,
 
                     ISNULL((SELECT COUNT(*) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId = 3
+                            WHERE UserId = @UserId AND StatusId = 2
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS FailedCount,
 
                     ISNULL((SELECT COUNT(*) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId = 1
+                            WHERE UserId = @UserId AND StatusId = 3
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS PendingCount";
 
@@ -108,8 +108,8 @@ namespace VIRENDRA.Data
                     r.Amount,
                     ISNULL(r.Recharge_Commision, 0) AS Commission,
                     CASE r.StatusId
-                        WHEN 2 THEN 'Success'
-                        WHEN 3 THEN 'Failed'
+                        WHEN 1 THEN 'Success'
+                        WHEN 2 THEN 'Failed'
                         ELSE 'Pending'
                     END AS Status,
                     r.StatusMsg,

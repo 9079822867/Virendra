@@ -18,6 +18,7 @@ namespace VIRENDRA.Data
 
         void UpdateRechargeSuccess(long recId, string apiTxnId, string statusMsg,
             decimal apiComm, decimal apiBal);
+        void UpdateRechargeProcess(long recId, string apiTxnId, string statusMsg);
         void UpdateRechargeFailed(long recId, string statusMsg);
 
         void InsertRefundLedger(long recId, int userId, string refTxnId,
