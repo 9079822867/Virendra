@@ -36,7 +36,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label" for="Password">Password</label>
-                        <input type="password" name="Password" id="Password" class="form-control" placeholder="Leave blank to keep current password">
+                        <input type="password" name="Password" id="Password" class="form-control" value="@Model.Password" placeholder="Leave blank to keep current password">
                     </div>
                     <div class="col-md-4">
                         @Html.LabelFor(model => model.RoleId, "Role", new { @class = "form-label" })

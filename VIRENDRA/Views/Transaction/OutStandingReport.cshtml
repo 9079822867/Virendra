@@ -1,0 +1,131 @@
+@model VIRENDRA.Models.OutStandingReportViewModel
+@{
+    ViewBag.Title = "Outstanding Report";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+    var userList    = ViewBag.UserList as List<SelectListItem>;
+    var txnTypeList = ViewBag.TxnTypeList as List<SelectListItem> ?? new List<SelectListItem>();
+    var amtTypeList = ViewBag.AmtTypeList as List<SelectListItem> ?? new List<SelectListItem>();
+}
+
+<div class="history-page">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+        <h4 class="mb-sm-0 font-size-18">Outstanding Report</h4>
+        <div class="page-title-right">
+            <ol class="breadcrumb m-0">
+                <li class="breadcrumb-item"><a href="javascript:void(0);">Transaction</a></li>
+                <li class="breadcrumb-item active">Outstanding Report</li>
+            </ol>
+        </div>
+    </div>
+
+    @if (Model.CurrentOutstanding.HasValue)
+    {
+        <div class="mb-3">
+            <span class="type-badge">Current outstanding: &#8377; @Model.CurrentOutstanding.Value.ToString("0.00")</span>
+        </div>
+    }
+
+    <form class="history-filter" method="get" action="@Url.Action("OutStandingReport", "Transaction")">
+        <div class="row g-3 align-items-center">
+            <div class="col-lg-2 col-md-4">
+                <input type="date" name="fromDate" class="form-control" value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <input type="date" name="toDate" class="form-control" value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+            </div>
+            @if (Model.IsAdmin && userList != null)
+            {
+                <div class="col-lg-2 col-md-4">
+                    <select name="userId" class="form-select">
+                        <option value="">All Users</option>
+                        @foreach (var u in userList)
+                        {
+                            <option value="@u.Value" @(u.Selected ? "selected" : "")>@u.Text</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="col-lg-2 col-md-4">
+                <select name="txnTypeId" class="form-select">
+                    <option value="">All Txn Types</option>
+                    @foreach (var t in txnTypeList)
+                    {
+                        <option value="@t.Value" @(t.Selected ? "selected" : "")>@t.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <select name="amtTypeId" class="form-select">
+                    <option value="">All Amount Types</option>
+                    @foreach (var a in amtTypeList)
+                    {
+                        <option value="@a.Value" @(a.Selected ? "selected" : "")>@a.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <input type="text" name="searchText" class="form-control" value="@Model.SearchText" placeholder="Ref ID, remark" />
+            </div>
+            <div class="col-lg-1 col-md-3">
+                <button type="submit" class="btn btn-history-search w-100">Search</button>
+            </div>
+            <div class="col-lg-1 col-md-3">
+                <a href="@Url.Action("OutStandingReport", "Transaction")" class="btn btn-history-reset w-100">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <hr class="history-divider" />
+
+    <div class="table-responsive history-table-wrap">
+        <table class="table history-table mb-0">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>User</th>
+                    <th>Ref ID</th>
+                    <th class="text-end">Opening</th>
+                    <th class="text-end">Credit</th>
+                    <th class="text-end">Debit</th>
+                    <th class="text-end">Closing</th>
+                    <th>Amount Type</th>
+                    <th>Txn Type</th>
+                    <th>Date</th>
+                    <th>Remark</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr><td colspan="11" class="text-center text-muted py-4">No outstanding entries for this filter.</td></tr>
+                }
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.UserName</td>
+                        <td>@item.RefTxnId</td>
+                        <td class="text-end">@item.OpeningBal.ToString("0.00")</td>
+                        <td class="text-end text-success">@item.Credit.ToString("0.00")</td>
+                        <td class="text-end text-danger">@item.Debit.ToString("0.00")</td>
+                        <td class="text-end">@item.ClosingBal.ToString("0.00")</td>
+                        <td>@item.AmtType</td>
+                        <td>@item.TxnType</td>
+                        <td>@item.TxnDate.ToString("dd MMM yyyy hh:mm tt")</td>
+                        <td>@item.Remark</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="text-success fw-semibold">Row Count @Model.TotalCount</td>
+                    <td class="text-end text-success">&#8377; @Model.TotalCredit.ToString("0.00")</td>
+                    <td class="text-end text-danger">&#8377; @Model.TotalDebit.ToString("0.00")</td>
+                    <td colspan="5"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+@Html.Partial("_HistoryStyles")

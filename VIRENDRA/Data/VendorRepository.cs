@@ -27,7 +27,7 @@ namespace VIRENDRA.Data
         {
             using (var conn = new SqlConnection(_connectionString))
                 return conn.Query<ApiSource>(
-                    "SELECT Id, ApiName, ApiUserId, ApiPassword, Remark, IsActive, ApiBal, ActualBal, IsAutoStatusCheck, StatusCheckTime, ApiTypeId, AddedDate FROM ApiSource ORDER BY Id DESC"
+                    "SELECT Id, ApiName, ApiUserId, ApiPassword, Remark, IsActive, ApiBal, ActualBal, IsAutoStatusCheck, StatusCheckTime, ApiTypeId, CallbackId, AddedDate FROM ApiSource ORDER BY Id DESC"
                 ).ToList();
         }
 
@@ -36,7 +36,7 @@ namespace VIRENDRA.Data
             using (var conn = new SqlConnection(_connectionString))
             {
                 var src = conn.QueryFirstOrDefault<ApiSource>(
-                    "SELECT Id, ApiName, ApiUserId, ApiPassword, Remark, IsActive, ApiBal, ActualBal, IsAutoStatusCheck, StatusCheckTime, ApiTypeId, AddedDate FROM ApiSource WHERE Id = @Id",
+                    "SELECT Id, ApiName, ApiUserId, ApiPassword, Remark, IsActive, ApiBal, ActualBal, IsAutoStatusCheck, StatusCheckTime, ApiTypeId, CallbackId, AddedDate FROM ApiSource WHERE Id = @Id",
                     new { Id = id });
 
                 if (src != null)
@@ -148,6 +148,87 @@ namespace VIRENDRA.Data
                     });
                 }
             }
+        }
+
+        // ── Response tag settings (TagValue) per vendor URL ─────────────────
+
+        public ResponseSettingViewModel GetResponseSetting(int urlId)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                var vm = conn.QueryFirstOrDefault<ResponseSettingViewModel>(@"
+                    SELECT u.Id AS UrlId, u.ApiId, s.ApiName, t.TypeName AS UrlType, u.URL, u.ResType
+                    FROM ApiUrl u
+                    JOIN ApiSource s ON s.Id = u.ApiId
+                    LEFT JOIN ApiUrlType t ON t.Id = u.UrlTypeId
+                    WHERE u.Id = @UrlId", new { UrlId = urlId });
+                if (vm == null) return null;
+
+                vm.Tags = conn.Query<ApiTag>("SELECT Id, Name FROM Tag ORDER BY Name").ToList();
+                vm.Rows = conn.Query<TagValueRow>(@"
+                    SELECT v.Id, ISNULL(v.TagId, 0) AS TagId, g.Name AS TagName, v.CompareTxt,
+                           v.PreTxt, v.PostText, v.PreMargin, v.PostMargin, v.TagMsg, v.ResSeparator, v.TagIndex
+                    FROM TagValue v
+                    LEFT JOIN Tag g ON g.Id = v.TagId
+                    WHERE v.UrlId = @UrlId
+                    ORDER BY v.Id", new { UrlId = urlId }).ToList();
+                return vm;
+            }
+        }
+
+        /// <summary>Replaces all TagValue rows of one URL (Save All).</summary>
+        public void SaveTagValues(int urlId, int apiId, List<TagValueRow> rows, int userId)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+                using (var tx = conn.BeginTransaction())
+                {
+                    conn.Execute("DELETE FROM TagValue WHERE UrlId = @UrlId", new { UrlId = urlId }, tx);
+
+                    foreach (var r in rows ?? new List<TagValueRow>())
+                    {
+                        conn.Execute(@"
+                            INSERT INTO TagValue
+                                (ApiId, UrlId, TagId, CompareTxt, PreTxt, PostText, PreMargin, PostMargin,
+                                 TagMsg, ResSeparator, TagIndex, AddedById, AddedDate)
+                            VALUES
+                                (@ApiId, @UrlId, @TagId, @CompareTxt, @PreTxt, @PostText, @PreMargin, @PostMargin,
+                                 @TagMsg, @ResSeparator, @TagIndex, @AddedById, GETDATE())",
+                            new
+                            {
+                                ApiId = apiId, UrlId = urlId, r.TagId,
+                                CompareTxt   = Clean(r.CompareTxt, 500),
+                                PreTxt       = Clean(r.PreTxt, 100),
+                                PostText     = Clean(r.PostText, 100),
+                                r.PreMargin, r.PostMargin,
+                                TagMsg       = Clean(r.TagMsg, 100),
+                                ResSeparator = Clean(r.ResSeparator, 50),
+                                r.TagIndex,
+                                AddedById    = userId > 0 ? userId : (int?)null
+                            }, tx);
+                    }
+                    tx.Commit();
+                }
+            }
+        }
+
+        // Keeps spaces inside the value (a separator can be " "), only blanks → NULL
+        private static string Clean(string s, int max)
+            => string.IsNullOrEmpty(s) ? null : (s.Length <= max ? s : s.Substring(0, max));
+
+        public string GetCallbackId(int apiSourceId)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+                return conn.ExecuteScalar<string>(
+                    "SELECT CallbackId FROM ApiSource WHERE Id = @Id", new { Id = apiSourceId });
+        }
+
+        public void SetCallbackId(int apiSourceId, string callbackId)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+                conn.Execute("UPDATE ApiSource SET CallbackId = @CallbackId WHERE Id = @Id",
+                    new { Id = apiSourceId, CallbackId = callbackId });
         }
 
         // ── Operator-code margin (vendor op-codes + commission) ──────────────

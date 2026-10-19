@@ -190,6 +190,11 @@ namespace VIRENDRA.Controllers
 
         private object RechargeRequest(RechargeModel rm)
         {
+            // ── 0. Operator input rules (Switch > Operator Switch > Validation) ──
+            string inputError = Services.RechargeService.ValidateOperatorInput(rm.OpId ?? 0, rm.MobileNo, rm.Amount);
+            if (inputError != null)
+                return new { status = "2", txn_id = rm.RefTxnId, message = inputError };
+
             // ── 1. Validate via SP (with fallback to balance-check only) ────
             RechargeValidationResult val = null;
             try
@@ -445,6 +450,10 @@ namespace VIRENDRA.Controllers
                         0, null, rm.OpId ?? 0, 0, 0);
                 }
                 catch { /* non-fatal */ }
+
+                // Switch > Stop Route Message: don't retry this failure on another vendor
+                if (Services.RechargeService.IsStopRouteMessage(response, route.ApiId, rm.OpId ?? 0))
+                    break;
             }
 
             // ── All routes exhausted ────────────────────────────────────────

@@ -159,6 +159,8 @@
     <Compile Include="Controllers\ApiDocumentController.cs" />
     <Compile Include="Controllers\ApiSettingsController.cs" />
     <Compile Include="Controllers\AuthController.cs" />
+    <Compile Include="Controllers\CallbackController.cs" />
+    <Compile Include="Controllers\SwitchController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\MobileController.cs" />
     <Compile Include="Controllers\MobileAppController.cs" />
@@ -194,12 +196,14 @@
     <Compile Include="Data\WalletRepository.cs" />
     <Compile Include="Data\IVendorRepository.cs" />
     <Compile Include="Data\VendorRepository.cs" />
+    <Compile Include="Data\SwitchRepository.cs" />
     <Compile Include="Data\ITransactionRepository.cs" />
     <Compile Include="Data\TransactionRepository.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\RoleAuthorizeAttribute.cs" />
+    <Compile Include="Infrastructure\IdFilter.cs" />
     <Compile Include="Infrastructure\RefreshUserBalanceAttribute.cs" />
     <Compile Include="Data\IRechargeRepository.cs" />
     <Compile Include="Data\MobileAppRepository.cs" />
@@ -225,6 +229,7 @@
     <Compile Include="Models\VendorMarginModels.cs" />
     <Compile Include="Models\WalletTransaction.cs" />
     <Compile Include="Models\Vendor.cs" />
+    <Compile Include="Models\SwitchModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\RechargeService.cs" />
     <Compile Include="Services\ComplaintService.cs" />

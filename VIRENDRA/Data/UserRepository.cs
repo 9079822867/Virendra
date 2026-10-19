@@ -124,7 +124,7 @@ namespace VIRENDRA.Data
                     OUTER APPLY (SELECT TOP 1 p.FullName FROM UserProfile p WHERE p.UserId = u.Id) up
                     WHERE u.IsDeleted = 0 AND u.IsActive = 1 AND u.RoleId IN @RoleIds
                     ORDER BY u.RoleId, u.Username";
-                return db.Query<ParentUserOption>(query, new { RoleIds = parentRoleIds }).ToList();
+                return db.Query<ParentUserOption>(query, new { RoleIds = (parentRoleIds ?? new byte[0]).Select(r => (int)r).ToArray() }).ToList();
             }
         }
 

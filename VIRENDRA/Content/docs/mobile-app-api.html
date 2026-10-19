@@ -114,6 +114,14 @@ ol.flow li { margin: 4px 0; }
     <a href="#login">Login</a>
     <a href="#changepass">ChangePass</a>
     <a href="#forgot">ResendOTP / ForgetPass</a>
+    <h4>KYC</h4>
+    <a href="#kyc">KYC flow</a>
+    <a href="#kycstatus">KycStatus</a>
+    <a href="#kycupload">KycUpload</a>
+    <a href="#kycdocument">KycDocument</a>
+    <a href="#kycaadhaar">KycAadhaar</a>
+    <a href="#kycdigilocker">Aadhaar via DigiLocker</a>
+    <a href="#kycpan">KycPan</a>
     <h4>Wallet</h4>
     <a href="#balance">BalanceCheck</a>
     <a href="#dashboard">DashboardHome</a>
@@ -134,7 +142,7 @@ ol.flow li { margin: 4px 0; }
 
   <main>
     <h1>VIRENDRA Mobile App API</h1>
-    <p class="lead">13 JSON endpoints for the retailer mobile app: login, wallet, recharge, commission, reports and complaints.</p>
+    <p class="lead">20 JSON endpoints for the retailer mobile app: login, KYC, wallet, recharge, commission, reports and complaints.</p>
 
     <!-- ── Overview ─────────────────────────────────────────── -->
     <section id="overview">
@@ -145,25 +153,33 @@ ol.flow li { margin: 4px 0; }
         <li>Call <a href="#login"><code>Login</code></a> with username and password. The reply carries <code>TOKENID</code>.</li>
         <li>Send it as <code>Tokenid</code> (<code>TokenID</code> for <code>RechargeCall</code>) on every other call.</li>
         <li>A new login replaces the token, so only the latest device stays signed in. On <code>ERROR = 9</code>, send the user back to Login.</li>
+        <li>If Login returns <code>KYCAPPROVED = "False"</code>, open the <a href="#kyc">KYC</a> screens. Until KYC is approved, every other endpoint answers <code>ERROR = 13</code>.</li>
       </ol>
       <p>Response keys come back exactly as written (<code>ERROR</code>, <code>STATUSCODE</code>, <code>MESSAGE</code>), not camelCase. Response dates use <code>yyyy-MM-dd HH:mm:ss</code>. Request dates accept <code>yyyy-MM-dd</code>, <code>dd-MM-yyyy</code> or <code>dd/MM/yyyy</code>.</p>
 
       <div class="table-wrap"><table>
-        <thead><tr><th>Endpoint</th><th>Also answers at</th><th>Token</th><th>Purpose</th></tr></thead>
+        <thead><tr><th>Endpoint</th><th>Also answers at</th><th>Token</th><th>Needs KYC</th><th>Purpose</th></tr></thead>
         <tbody>
-          <tr><td><a href="#login">Login</a></td><td>&mdash;</td><td>No</td><td>Sign in, get <code>TOKENID</code></td></tr>
-          <tr><td><a href="#changepass">ChangePass</a></td><td>&mdash;</td><td>Yes</td><td>Change password</td></tr>
-          <tr><td><a href="#forgot">ResendOTP</a></td><td>&mdash;</td><td>No</td><td>Create forgot-password OTP</td></tr>
-          <tr><td><a href="#forgot">ForgetPass</a></td><td>ForgotPass</td><td>No</td><td>Reset password with OTP</td></tr>
-          <tr><td><a href="#balance">BalanceCheck</a></td><td>Balance</td><td>Yes</td><td>Wallet balance</td></tr>
-          <tr><td><a href="#dashboard">DashboardHome</a></td><td>Dashboard</td><td>Yes</td><td>Today's figures + last recharges</td></tr>
-          <tr><td><a href="#operator">Operator</a></td><td>OperatorList</td><td>Yes</td><td>Active operators</td></tr>
-          <tr><td><a href="#recharge">RechargeCall</a></td><td>Recharge</td><td>Yes</td><td>Do a recharge</td></tr>
-          <tr><td><a href="#commission">Commission</a></td><td>CommissionList</td><td>Yes</td><td>Commission, all operators</td></tr>
-          <tr><td><a href="#slab">OperatorSlabCommission</a></td><td>&mdash;</td><td>Yes</td><td>Commission, one operator</td></tr>
-          <tr><td><a href="#rechargereport">RechargeReport</a></td><td>&mdash;</td><td>Yes</td><td>Recharge history</td></tr>
-          <tr><td><a href="#txnreport">TransactionReport</a></td><td>TxnReport</td><td>Yes</td><td>Wallet ledger, paged</td></tr>
-          <tr><td><a href="#complain">BookComplain</a></td><td>&mdash;</td><td>Yes</td><td>Complaint on a recharge</td></tr>
+          <tr><td><a href="#login">Login</a></td><td>&mdash;</td><td>No</td><td>No</td><td>Sign in, get <code>TOKENID</code></td></tr>
+          <tr><td><a href="#changepass">ChangePass</a></td><td>&mdash;</td><td>Yes</td><td>No</td><td>Change password</td></tr>
+          <tr><td><a href="#forgot">ResendOTP</a></td><td>&mdash;</td><td>No</td><td>No</td><td>Create forgot-password OTP</td></tr>
+          <tr><td><a href="#forgot">ForgetPass</a></td><td>ForgotPass</td><td>No</td><td>No</td><td>Reset password with OTP</td></tr>
+          <tr><td><a href="#kycstatus">KycStatus</a></td><td>&mdash;</td><td>Yes</td><td>No</td><td>KYC progress</td></tr>
+          <tr><td><a href="#kycupload">KycUpload</a></td><td>&mdash;</td><td>Yes</td><td>No</td><td>Upload a KYC document</td></tr>
+          <tr><td><a href="#kycdocument">KycDocument</a></td><td>&mdash;</td><td>Yes</td><td>No</td><td>Download own uploaded document</td></tr>
+          <tr><td><a href="#kycaadhaar">KycAadhaar</a></td><td>&mdash;</td><td>Yes</td><td>No</td><td>Submit Aadhaar number</td></tr>
+          <tr><td><a href="#kycdigilocker">KycAadhaarDigilocker</a></td><td>&mdash;</td><td>Yes</td><td>No</td><td>Start Aadhaar check on DigiLocker</td></tr>
+          <tr><td><a href="#kycdigilocker">KycAadhaarDigilockerStatus</a></td><td>&mdash;</td><td>Yes</td><td>No</td><td>Finish Aadhaar check on DigiLocker</td></tr>
+          <tr><td><a href="#kycpan">KycPan</a></td><td>&mdash;</td><td>Yes</td><td>No</td><td>Submit / verify PAN</td></tr>
+          <tr><td><a href="#balance">BalanceCheck</a></td><td>Balance</td><td>Yes</td><td>Yes</td><td>Wallet balance</td></tr>
+          <tr><td><a href="#dashboard">DashboardHome</a></td><td>Dashboard</td><td>Yes</td><td>Yes</td><td>Today's figures + last recharges</td></tr>
+          <tr><td><a href="#operator">Operator</a></td><td>OperatorList</td><td>Yes</td><td>Yes</td><td>Active operators</td></tr>
+          <tr><td><a href="#recharge">RechargeCall</a></td><td>Recharge</td><td>Yes</td><td>Yes</td><td>Do a recharge</td></tr>
+          <tr><td><a href="#commission">Commission</a></td><td>CommissionList</td><td>Yes</td><td>Yes</td><td>Commission, all operators</td></tr>
+          <tr><td><a href="#slab">OperatorSlabCommission</a></td><td>&mdash;</td><td>Yes</td><td>Yes</td><td>Commission, one operator</td></tr>
+          <tr><td><a href="#rechargereport">RechargeReport</a></td><td>&mdash;</td><td>Yes</td><td>Yes</td><td>Recharge history</td></tr>
+          <tr><td><a href="#txnreport">TransactionReport</a></td><td>TxnReport</td><td>Yes</td><td>Yes</td><td>Wallet ledger, paged</td></tr>
+          <tr><td><a href="#complain">BookComplain</a></td><td>&mdash;</td><td>Yes</td><td>Yes</td><td>Complaint on a recharge</td></tr>
         </tbody>
       </table></div>
     </section>
@@ -184,6 +200,8 @@ ol.flow li { margin: 4px 0; }
           <tr><td>10</td><td>Invalid amount</td><td>Fix the amount</td></tr>
           <tr><td>11</td><td>Missing or invalid parameters</td><td>Fix the request</td></tr>
           <tr><td>12</td><td>Wrong transaction PIN</td><td>Ask for the PIN again</td></tr>
+          <tr><td>13</td><td>KYC not approved yet (non-admin users)</td><td>Open the <a href="#kyc">KYC</a> screens</td></tr>
+          <tr><td>14</td><td>DigiLocker consent not finished yet (<code>KycAadhaarDigilockerStatus</code> only)</td><td>Wait a few seconds and call it again</td></tr>
         </tbody>
       </table></div>
       <p><code>STATUSCODE</code>: <code>1</code> = success, <code>2</code> = failed or processing. <code>RechargeCall</code> also uses <code>3</code> = failed.</p>
@@ -215,10 +233,13 @@ ol.flow li { margin: 4px 0; }
   "ROLEID": "4",
   "USERTYPE": "Retailer",
   "BALANCE": "1250.00",
-  "OTPCheck": "True"
+  "OTPCheck": "True",
+  "KYCAPPROVED": "False",
+  "KYCSTATUS": "Incomplete"
 }</code></pre></div>
         </div>
         <p><code>ROLEID</code>: 1 Super Admin, 2 Admin, 3 API User, 4 Retailer. <code>FireToken</code> is saved to <code>User.Firebasetoken</code> when sent.</p>
+        <p>Login succeeds without KYC, so the token can be used for the KYC calls. <code>KYCSTATUS</code> is <code>Approved</code>, <code>Under Review</code>, <code>Rejected</code> or <code>Incomplete</code>. Admins always get <code>KYCAPPROVED = "True"</code>.</p>
       </div>
 
       <div class="card endpoint" id="changepass">
@@ -260,6 +281,134 @@ ol.flow li { margin: 4px 0; }
                 successfully changed" }</code></pre></div>
         </div>
         <p>Step 1 always replies "OTP has been sent", so usernames can't be probed. <code>ForgetPass</code> without <code>OTP</code> does step 1. Wrong OTP = <code>Error 3</code>, expired = <code>Error 2</code>. A successful reset also unlocks a locked account.</p>
+      </div>
+    </section>
+
+    <!-- ── KYC ──────────────────────────────────────────────── -->
+    <section id="kyc">
+      <h2>KYC</h2>
+      <p>Retailers and API users must finish KYC before they can recharge or see wallet, reports or commission. Admins are never blocked. KYC is approved only when all <strong>6 steps</strong> are verified:</p>
+      <ol class="flow">
+        <li>4 documents uploaded with <a href="#kycupload">KycUpload</a> and approved by an admin: <code>AadhaarFront</code>, <code>AadhaarBack</code>, <code>PanCard</code>, <code>Selfie</code>.</li>
+        <li>Aadhaar number: <a href="#kycaadhaar">KycAadhaar</a> (admin verifies), or <a href="#kycdigilocker">DigiLocker</a> (verified instantly) when <code>AADHAARAPI = "True"</code>.</li>
+        <li>PAN: <a href="#kycpan">KycPan</a>. Verified instantly when <code>PANAPI = "True"</code>, otherwise by an admin.</li>
+      </ol>
+      <p>Every KYC call except <code>KycDocument</code> replies with the full status below, so the app can redraw the KYC screen from any reply. On a rejected submit, <code>ERROR</code> is <code>11</code> and <code>MESSAGE</code> says why.</p>
+
+      <div class="card endpoint" id="kycstatus">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/KycStatus</span><span class="tag auth">Tokenid</span></div>
+        <div class="two">
+          <div class="code"><div class="label">Request</div><pre><code>{ "Tokenid": "3f9c0b…" }</code></pre></div>
+          <div class="code"><div class="label">Response</div><pre><code>{
+  "ERROR": "0", "STATUSCODE": "1",
+  "MESSAGE": "KYC status",
+  "KYCAPPROVED": "False",
+  "KYCSTATUS": "Under Review",
+  "PANAPI": "True",
+  "AADHAARAPI": "True",
+  "AADHAAR": {
+    "NUMBER": "XXXX XXXX 1234",
+    "NAME": "", "DOB": "",
+    "STATUSID": "1", "STATUS": "Pending",
+    "MODE": "", "REMARK": "",
+    "CANSUBMIT": "True" },
+  "PAN": {
+    "NUMBER": "ABCDE1234F",
+    "NAME": "RAHUL KUMAR",
+    "DOB": "15/08/1990",
+    "STATUSID": "2", "STATUS": "Verified",
+    "MODE": "API", "REMARK": "",
+    "CANSUBMIT": "False" },
+  "DOCUMENTS": [
+    { "CATEGORY": "AadhaarFront",
+      "TITLE": "Aadhaar Card (Front)",
+      "STATUSID": "3", "STATUS": "Rejected",
+      "REMARK": "Image is blurred",
+      "UPLOADEDON": "2026-10-18 11:02:45",
+      "CANUPLOAD": "True" }
+  ]
+}</code></pre></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>STATUSID</th><th>Document <code>STATUS</code></th><th>Aadhaar / PAN <code>STATUS</code></th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>Not Uploaded</td><td>Not Submitted</td></tr>
+            <tr><td><span class="badge b-warn">1</span></td><td>Pending</td><td>Pending</td></tr>
+            <tr><td><span class="badge b-ok">2</span></td><td>Approved</td><td>Verified</td></tr>
+            <tr><td><span class="badge b-bad">3</span></td><td>Rejected (reason in <code>REMARK</code>)</td><td>Rejected (reason in <code>REMARK</code>)</td></tr>
+          </tbody>
+        </table></div>
+        <p><code>DOCUMENTS</code> always has 4 rows, one per category. Aadhaar comes back masked; PAN comes back in full. <code>MODE</code> is <code>API</code> or <code>Manual</code> once verified. An approved document or verified number can't be changed (<code>CANUPLOAD</code> / <code>CANSUBMIT</code> = <code>"False"</code>).</p>
+      </div>
+
+      <div class="card endpoint" id="kycupload">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/KycUpload</span><span class="tag auth">Tokenid</span></div>
+        <p>One document per call: JPG, JPEG, PNG or PDF, up to 2 MB. Send it as multipart form data or as JSON with base64.</p>
+        <div class="two">
+          <div class="code"><div class="label">multipart/form-data</div><pre><code>Tokenid  = 3f9c0b…
+Category = AadhaarFront
+file     = (front.jpg)</code></pre></div>
+          <div class="code"><div class="label">application/json</div><pre><code>{
+  "Tokenid": "3f9c0b…",
+  "Category": "AadhaarFront",
+  "FileName": "front.jpg",
+  "FileBase64": "/9j/4AAQSkZJRg…"
+}</code></pre></div>
+        </div>
+        <p>The file extension sets the type, and the file content must match it, so a renamed file is refused. A <code>data:image/jpeg;base64,</code> prefix is allowed. Re-uploading replaces the old file and sets the document back to Pending. On success the reply is <a href="#kycstatus">KycStatus</a> with <code>MESSAGE</code> "Aadhaar Card (Front) uploaded. It will be reviewed by the admin."</p>
+      </div>
+
+      <div class="card endpoint" id="kycdocument">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/KycDocument</span><span class="tag auth">Tokenid</span></div>
+        <div class="code"><div class="label">Request</div><pre><code>{ "Tokenid": "3f9c0b…", "Category": "PanCard" }</code></pre></div>
+        <p>Returns the user's own file as raw bytes (<code>image/jpeg</code>, <code>image/png</code> or <code>application/pdf</code>), not JSON, with <code>Cache-Control: no-store</code>. Errors come back as JSON <code>Error</code> / <code>Status</code> / <code>Message</code>; <code>Error 2</code> = "Document not found".</p>
+      </div>
+
+      <div class="card endpoint" id="kycaadhaar">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/KycAadhaar</span><span class="tag auth">Tokenid</span></div>
+        <div class="code"><div class="label">Request</div><pre><code>{ "Tokenid": "3f9c0b…", "AadhaarNumber": "2345 6789 0124" }</code></pre></div>
+        <p>12 digits, spaces allowed; the checksum digit is checked. Saved as Pending until an admin verifies it. The same number can't be used on two accounts.</p>
+      </div>
+
+      <div class="card endpoint" id="kycdigilocker">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/KycAadhaarDigilocker</span><span class="tag auth">Tokenid</span></div>
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/KycAadhaarDigilockerStatus</span><span class="tag auth">Tokenid</span></div>
+        <p>Instant Aadhaar check, only when <code>AADHAARAPI = "True"</code>.</p>
+        <ol class="flow">
+          <li>Call <code>KycAadhaarDigilocker</code> with <code>{ "Tokenid", "AadhaarNumber" }</code>. The number can be left out if one is already submitted. It is saved as Pending first.</li>
+          <li>Open <code>DIGILOCKERURL</code> from the reply in a webview.</li>
+          <li>When the webview navigates to a URL starting with <code>RETURNURL</code>, close it.</li>
+          <li>Call <code>KycAadhaarDigilockerStatus</code> with <code>{ "Tokenid" }</code>. <code>ERROR 0</code> = verified. <code>ERROR 14</code> = consent not finished, so call again after a few seconds. <code>ERROR 11</code> = not verified; the number stays Pending for the admin.</li>
+        </ol>
+        <div class="code"><div class="label">Step 1 reply (plus the KycStatus fields)</div><pre><code>{
+  "ERROR": "0", "STATUSCODE": "1",
+  "MESSAGE": "Continue on DigiLocker to share your Aadhaar.",
+  "DIGILOCKERURL": "https://…digilocker…",
+  "RETURNURL": "https://&lt;your-domain&gt;/Kyc/DigiLockerDone",
+  …
+}</code></pre></div>
+        <p>The DigiLocker Aadhaar must end in the same 4 digits as the entered number. A started session expires after 60 minutes.</p>
+      </div>
+
+      <div class="card endpoint" id="kycpan">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/KycPan</span><span class="tag auth">Tokenid</span></div>
+        <div class="code"><div class="label">Request</div><pre><code>{
+  "Tokenid": "3f9c0b…",
+  "PanNumber": "ABCDE1234F",
+  "NameAsPerPan": "Rahul Kumar",
+  "Dob": "15/08/1990",
+  "Consent": "Y"
+}</code></pre></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Field</th><th>Rule</th></tr></thead>
+          <tbody>
+            <tr><td><code>PanNumber</code></td><td>Format <code>ABCDE1234F</code>; not used on another account</td></tr>
+            <tr><td><code>NameAsPerPan</code></td><td>As printed on the card, 2&ndash;100 characters</td></tr>
+            <tr><td><code>Dob</code></td><td><code>dd/MM/yyyy</code>, <code>dd-MM-yyyy</code> or <code>yyyy-MM-dd</code>; 18 or older</td></tr>
+            <tr><td><code>Consent</code></td><td><code>Y</code> (or <code>true</code>) is required</td></tr>
+          </tbody>
+        </table></div>
+        <p>When <code>PANAPI = "True"</code>, the PAN is checked instantly: a match is Verified, a mismatch is Rejected with the reason in <code>MESSAGE</code>. If the check service can't be reached, or <code>PANAPI = "False"</code>, the PAN is saved as Pending for the admin.</p>
       </div>
     </section>
 
@@ -361,7 +510,7 @@ ol.flow li { margin: 4px 0; }
           <thead><tr><th>STATUSCODE</th><th>STATUS</th><th>Wallet</th></tr></thead>
           <tbody>
             <tr><td><span class="badge b-ok">1</span></td><td>Recharge SUCCESS</td><td>Debited</td></tr>
-            <tr><td><span class="badge b-warn">2</span></td><td>Recharge Under Processing</td><td>Debited; final status comes later</td></tr>
+            <tr><td><span class="badge b-warn">2</span></td><td>Recharge Under Processing</td><td>Debited; the vendor's callback sets the final status later (failed = refunded)</td></tr>
             <tr><td><span class="badge b-bad">3</span></td><td>Recharge FAILED</td><td>Refunded (or never debited if validation failed)</td></tr>
           </tbody>
         </table></div>
@@ -374,6 +523,7 @@ ol.flow li { margin: 4px 0; }
           <li>No vendor left &rarr; marked failed and the debit is refunded.</li>
         </ol>
         <div class="note">When <code>ERROR</code> is <code>5</code>, the wallet may already be debited. Show the <a href="#rechargereport">RechargeReport</a> instead of retrying.</div>
+        <p>A processing recharge is not pushed to the app. Refresh <a href="#rechargereport">RechargeReport</a> or <a href="#dashboard">DashboardHome</a> to see its final status. A vendor can also reverse a success to failed later; the wallet is then refunded automatically.</p>
       </div>
     </section>
 
@@ -516,6 +666,8 @@ ol.flow li { margin: 4px 0; }
         <li><strong>PIN</strong> is compared as plain text with <code>User.UserPin</code>; users without a PIN can recharge without one.</li>
         <li><strong>Status ids</strong>: 1 = Success, 2 = Failed, 3 = Pending (<code>RechargeStatusCodes</code>). They must match <code>usp_UpdateRechargeStatus</code>.</li>
         <li><strong>MediumId</strong>: app recharges are saved with <code>MediumId = 1</code>, the same as the web panel.</li>
+        <li><strong>Instant KYC checks</strong> (<code>PANAPI</code> / <code>AADHAARAPI</code>) are on only when Web.config has <code>KycApi:Provider = Sandbox</code> plus <code>KycApi:ApiKey</code> and <code>KycApi:ApiSecret</code>. Set <code>KycApi:ReturnBaseUrl</code> to the public site address so DigiLocker can send users back.</li>
+        <li><strong>KYC files</strong> are stored in <code>App_Data/Kyc/{userId}/</code>, which IIS never serves. They can only be read through <code>KycDocument</code> or the admin review page.</li>
         <li><strong>Not built yet</strong>: ComplainList, Profile, wallet requests and member endpoints from the STC app.</li>
       </ul>
     </section>

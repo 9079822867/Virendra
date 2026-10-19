@@ -400,10 +400,16 @@ namespace VIRENDRA.Data
             }
         }
 
+        /// <summary>Circle wise: CircleRouting API1→3 for this operator + circle; if none set, Common Routing for the circle.</summary>
         public List<ApiPriorityDto> GetCircleRouting(int opId, int circleId, decimal amount)
         {
             using (var c = new SqlConnection(_conn))
             {
+                var fixedRoutes = ApiSlots(c.QueryFirstOrDefault(
+                    "SELECT API1_Id, API2_Id, API3_Id FROM CircleRouting WHERE OpId = @OpId AND CircleId = @CircleId",
+                    new { OpId = opId, CircleId = circleId }));
+                if (fixedRoutes.Count > 0) return fixedRoutes;
+
                 string circleCode = c.ExecuteScalar<string>(
                     "SELECT ISNULL(CircleCode,'') FROM Circle WHERE Id = @Id",
                     new { Id = circleId }) ?? string.Empty;
@@ -427,15 +433,41 @@ namespace VIRENDRA.Data
             }
         }
 
+        /// <summary>Operator wise: Operator.API1→3 (Switch > Operator Switch); if none set, Common Routing.</summary>
         public List<ApiPriorityDto> GetOperatorRoutes(int opId, decimal amount)
         {
             using (var c = new SqlConnection(_conn))
             {
+                var fixedRoutes = ApiSlots(c.QueryFirstOrDefault(
+                    "SELECT API1_Id, API2_Id, API3_Id FROM [Operator] WHERE Id = @OpId", new { OpId = opId }));
+                if (fixedRoutes.Count > 0) return fixedRoutes;
+
                 var rows = c.Query<ApiPriorityDto>(_routeSelectSql, new { OpId = opId }).ToList();
                 return rows.Where(r =>
                     AmountMatchesFilter(amount, r.AmountFilter, r.FTypeId ?? 1)
                 ).ToList();
             }
+        }
+
+        /// <summary>API1_Id..API3_Id of an Operator / CircleRouting row → routes in that order (no filters).</summary>
+        private static List<ApiPriorityDto> ApiSlots(dynamic row)
+        {
+            var list = new List<ApiPriorityDto>();
+            if (row == null) return list;
+
+            int?[] ids = { (int?)row.API1_Id, (int?)row.API2_Id, (int?)row.API3_Id };
+            int priority = 1;
+            foreach (var id in ids)
+            {
+                if ((id ?? 0) <= 0 || list.Any(r => r.ApiId == id.Value)) continue;
+                list.Add(new ApiPriorityDto
+                {
+                    ApiId = id.Value, PriorityId = priority, RoutePriorityId = priority,
+                    CircleFilter = "All", UserFilter = "All", FTypeId = 1
+                });
+                priority++;
+            }
+            return list;
         }
 
         public CreateRechargeResult CreateRecharge(
@@ -620,7 +652,79 @@ namespace VIRENDRA.Data
             spLog      = p.Get<string>("@Log")       ?? string.Empty;
         }
 
+        // ── Vendor callback ──────────────────────────────────────────────────
+
+        public CallbackApiInfo GetCallbackApi(string callbackId)
+        {
+            if (string.IsNullOrWhiteSpace(callbackId)) return null;
+
+            using (var c = new SqlConnection(_conn))
+                return c.QueryFirstOrDefault<CallbackApiInfo>(@"
+                    SELECT TOP 1 s.Id AS ApiId, s.ApiName, u.Id AS UrlId, u.ResType
+                    FROM ApiSource s
+                    LEFT JOIN ApiUrl u ON u.ApiId = s.Id AND u.UrlTypeId = 4
+                    WHERE s.CallbackId = @CallbackId",
+                    new { CallbackId = callbackId.Trim() });
+        }
+
+        public CallbackRecharge FindCallbackRecharge(int apiId, string ourRef, string apiTxnId)
+        {
+            bool hasRef = !string.IsNullOrWhiteSpace(ourRef);
+            bool hasApi = !string.IsNullOrWhiteSpace(apiTxnId);
+            if (!hasRef && !hasApi) return null;
+
+            // Only recharges routed to this vendor; our own ref beats the vendor's txn id,
+            // newest first since UserTxnId is only unique per user.
+            using (var c = new SqlConnection(_conn))
+                return c.QueryFirstOrDefault<CallbackRecharge>(@"
+                    SELECT TOP 1
+                        r.Id AS RecId, r.UserId, r.ApiId, r.OpId, r.StatusId, r.Amount,
+                        r.CustomerNo, r.UserTxnId, r.OurRefTxnId, r.ApiTxnId, r.OptTxnId,
+                        o.Name AS OperatorName, u.CallbackURL AS UserCallbackUrl
+                    FROM Recharge r
+                    LEFT JOIN [Operator] o ON o.Id = r.OpId
+                    LEFT JOIN [User]     u ON u.Id = r.UserId
+                    WHERE r.ApiId = @ApiId
+                      AND (   (@Ref    IS NOT NULL AND (r.OurRefTxnId = @Ref OR r.UserTxnId = @Ref))
+                           OR (@ApiTxn IS NOT NULL AND r.ApiTxnId = @ApiTxn))
+                    ORDER BY CASE WHEN r.OurRefTxnId = @Ref THEN 0
+                                  WHEN r.UserTxnId   = @Ref THEN 1 ELSE 2 END,
+                             r.RequestTime DESC",
+                    new
+                    {
+                        ApiId  = apiId,
+                        Ref    = hasRef ? ourRef.Trim()   : null,
+                        ApiTxn = hasApi ? apiTxnId.Trim() : null
+                    });
+        }
+
+        public void InsertReqRes(int userId, int urlId, long recId, string refId, string remark,
+            string reqTxt, string respTxt, string customerNo, string userTxnId)
+        {
+            using (var c = new SqlConnection(_conn))
+                c.Execute(@"
+                    INSERT INTO RequestResponse
+                        (UserId, UrlId, RecId, RefId, Remark, RequestTxt, ResponseText,
+                         AddedDate, CustomerNo, UserTxnId)
+                    VALUES
+                        (@UserId, @UrlId, @RecId, @RefId, @Remark, @Req, @Resp,
+                         GETDATE(), @CustomerNo, @UserTxnId)",
+                    new
+                    {
+                        // FKs to User / ApiUrl / Recharge → NULL when unknown
+                        UserId = userId > 0 ? userId : (int?)null,
+                        UrlId  = urlId  > 0 ? urlId  : (int?)null,
+                        RecId  = recId  > 0 ? recId  : (long?)null,
+                        RefId  = Cut(refId, 50), Remark = Cut(remark, 100),
+                        Req = reqTxt, Resp = respTxt,
+                        CustomerNo = Cut(customerNo, 50), UserTxnId = Cut(userTxnId, 50)
+                    });
+        }
+
         // ── Private helpers ──────────────────────────────────────────────────
+
+        private static string Cut(string s, int max)
+            => string.IsNullOrEmpty(s) ? s : (s.Length <= max ? s : s.Substring(0, max));
 
         private static bool CircleMatchesFilter(string circleCode, string filter)
         {

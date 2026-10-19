@@ -1,0 +1,37 @@
+@{
+    string current = ViewContext.RouteData.Values["action"] as string ?? "";
+    var tabs = new[]
+    {
+        new { Action = "OperatorSwitch", Text = "Operator Switch", Icon = "fa-random",    Ctrl = "Switch" },
+        new { Action = "Index",          Text = "Common Routing",  Icon = "fa-route",     Ctrl = "CommonRouting" },
+        new { Action = "BlockRoute",     Text = "Block Route",     Icon = "fa-ban",       Ctrl = "Switch" },
+        new { Action = "StopRouteMsg",   Text = "Stop Route Msg",  Icon = "fa-hand-paper", Ctrl = "Switch" },
+        new { Action = "ReplaceSwitch",  Text = "Replace Switch",  Icon = "fa-exchange-alt", Ctrl = "Switch" },
+    };
+}
+<ul class="nav nav-pills flex-wrap gap-1 mb-3">
+    @foreach (var t in tabs)
+    {
+        bool active = t.Ctrl == "Switch" && (current == t.Action || (t.Action == "OperatorSwitch" && (current == "CircleSwitch" || current == "Validation")));
+        <li class="nav-item">
+            <a class="nav-link py-1 px-3 @(active ? "active" : "")" href="@Url.Action(t.Action, t.Ctrl)">
+                <i class="fas @t.Icon me-1"></i>@t.Text
+            </a>
+        </li>
+    }
+</ul>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible">
+        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}

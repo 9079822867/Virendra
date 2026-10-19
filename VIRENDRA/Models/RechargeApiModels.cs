@@ -161,10 +161,11 @@ namespace VIRENDRA.Models
 
     public static class RouteType
     {
+        // Must match SwitchType table / Operator.SwitchTypeId (see SwitchTypes)
         public const int COMMON_ROUTE  = 1;
-        public const int CIRCLE_WISE   = 2;
-        public const int AMOUNT_WISE   = 3;
-        public const int OPERATOR_WISE = 4;
+        public const int OPERATOR_WISE = 2;
+        public const int CIRCLE_WISE   = 3;
+        public const int AMOUNT_WISE   = 4;
     }
 
     public static class RechargeStatusCodes

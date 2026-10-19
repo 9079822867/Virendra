@@ -1,0 +1,86 @@
+@model List<VIRENDRA.Models.OperatorSwitchRow>
+@{
+    ViewBag.Title = "Operator Switch";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+    var switchTypes = ViewBag.SwitchTypes as List<VIRENDRA.Models.LookupItem> ?? new List<VIRENDRA.Models.LookupItem>();
+    var apis        = ViewBag.Apis as List<VIRENDRA.Models.LookupItem> ?? new List<VIRENDRA.Models.LookupItem>();
+}
+
+<div class="container-fluid">
+    <div class="page-title-box mb-3">
+        <h4 class="mb-1">Operator Switch</h4>
+        <p class="text-muted mb-0" style="font-size:.85rem;">
+            How each operator picks its vendors.
+            <b>Common</b> / <b>Amount Wise</b> use Common Routing,
+            <b>Operator Wise</b> uses API 1 &rarr; 2 &rarr; 3 below,
+            <b>Circle Wise</b> uses the operator's Circle Switch (falls back to Common Routing for circles not set).
+        </p>
+    </div>
+
+    @Html.Partial("_SwitchNav")
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle mb-0" style="font-size:.88rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Operator</th>
+                            <th style="min-width:160px;">Switch Type</th>
+                            <th style="min-width:150px;">API 1</th>
+                            <th style="min-width:150px;">API 2</th>
+                            <th style="min-width:150px;">API 3</th>
+                            <th class="text-end" style="min-width:250px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var o in Model)
+                        {
+                            string f = "op_" + o.OpId;
+                            <tr class="@(o.IsActive ? "" : "text-muted")">
+                                <td>@o.OpId</td>
+                                <td>
+                                    <strong>@o.OperatorName</strong>
+                                    @if (!string.IsNullOrEmpty(o.OperatorType)) { <span class="badge bg-info text-dark ms-1">@o.OperatorType</span> }
+                                    @if (!o.IsActive) { <span class="badge bg-secondary ms-1">Inactive</span> }
+                                </td>
+                                <td>
+                                    <select name="switchTypeId" form="@f" class="form-select form-select-sm">
+                                        @foreach (var s in switchTypes)
+                                        {
+                                            <option value="@s.Id" @(s.Id == o.SwitchTypeId ? "selected" : "")>@s.Name</option>
+                                        }
+                                    </select>
+                                </td>
+                                @foreach (var pair in new[] { new { N = "api1", V = o.Api1 }, new { N = "api2", V = o.Api2 }, new { N = "api3", V = o.Api3 } })
+                                {
+                                    <td>
+                                        <select name="@pair.N" form="@f" class="form-select form-select-sm">
+                                            <option value="0">-- None --</option>
+                                            @foreach (var a in apis)
+                                            {
+                                                <option value="@a.Id" @(a.Id == pair.V ? "selected" : "")>@a.Name</option>
+                                            }
+                                        </select>
+                                    </td>
+                                }
+                                <td class="text-end text-nowrap">
+                                    <form id="@f" method="post" action="@Url.Action("OperatorSwitch")" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="opId" value="@o.OpId" />
+                                        <button type="submit" class="btn btn-sm btn-success">Save</button>
+                                    </form>
+                                    <a href="@Url.Action("CircleSwitch", new { id = o.OpId })" class="btn btn-sm btn-outline-primary">
+                                        Circles @(o.CircleRoutes > 0 ? "(" + o.CircleRoutes + ")" : "")
+                                    </a>
+                                    <a href="@Url.Action("Validation", new { id = o.OpId })" class="btn btn-sm btn-outline-secondary">Validation</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

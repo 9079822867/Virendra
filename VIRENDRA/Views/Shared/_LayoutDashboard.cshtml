@@ -288,7 +288,7 @@
                     @*<%-- Administration \u2014 SuperAdmin + Admin --%>*@
                     @if (isSuperAdmin || isAdmin)
                     {
-                        bool adminActive = anyActive(new[] { "User", "Package", "Operator", "Vendor", "BankAccount", "Services", "CommonRouting", "KycAdmin" });
+                        bool adminActive = anyActive(new[] { "User", "Package", "Operator", "Vendor", "BankAccount", "Services", "CommonRouting", "Switch", "KycAdmin" });
                         <li class="nav-item dropdown @(adminActive ? "active" : "")">
                             <a class="nav-link dropdown-toggle @(adminActive ? "active" : "")"
                                href="#" id="ddAdmin" role="button"
@@ -349,6 +349,12 @@
                                         <i class="fas fa-route"></i> Route Settings
                                     </a>
                                 </li>
+                                <li>
+                                    <a class="dropdown-item @(currentController=="Switch" ? "active" : "")"
+                                       href="@Url.Action("OperatorSwitch","Switch")">
+                                        <i class="fas fa-random"></i> Switch Settings
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                     }
@@ -391,6 +397,12 @@
                                 <a class="dropdown-item @(txnActive && currentAction=="TransactionHistory" ? "active" : "")"
                                    href="@Url.Action("TransactionHistory","Transaction")">
                                     <i class="fas fa-list-alt"></i> Transaction History
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(txnActive && currentAction=="OutStandingReport" ? "active" : "")"
+                                   href="@Url.Action("OutStandingReport","Transaction")">
+                                    <i class="fas fa-hand-holding-usd"></i> Outstanding Report
                                 </a>
                             </li>
                             <li>
@@ -584,6 +596,31 @@
             document.querySelectorAll('[data-dismiss="alert"]').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     this.closest('.alert').style.display = 'none';
+                });
+            });
+
+            // Show / hide toggle for every password field (skips fields already in an input-group)
+            document.querySelectorAll('input[type="password"]').forEach(function (input) {
+                if (input.closest('.input-group') || input.hasAttribute('data-no-toggle')) return;
+
+                var group = document.createElement('div');
+                group.className = 'input-group';
+                input.parentNode.insertBefore(group, input);
+                group.appendChild(input);
+
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-outline-secondary';
+                btn.title = 'Show / hide password';
+                btn.setAttribute('aria-label', 'Show password');
+                btn.innerHTML = '<i class="bi bi-eye"></i>';
+                group.appendChild(btn);
+
+                btn.addEventListener('click', function () {
+                    var show = input.type === 'password';
+                    input.type = show ? 'text' : 'password';
+                    btn.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+                    btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
                 });
             });
         </script>

@@ -6,6 +6,12 @@
       "runtimeExecutable": "dotnet-serve",
       "runtimeArgs": ["--directory", "D:\\Development\\YMS\\frontend", "--port", "3456"],
       "port": 3456
+    },
+    {
+      "name": "virendra",
+      "runtimeExecutable": "C:\\Program Files\\IIS Express\\iisexpress.exe",
+      "runtimeArgs": ["/path:D:\\Development\\VIRENDRA\\VIRENDRA", "/port:60211", "/clr:v4.0"],
+      "port": 60211
     }
   ]
 }

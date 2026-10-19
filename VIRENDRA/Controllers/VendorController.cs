@@ -1,6 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Web.Mvc;
+using Newtonsoft.Json;
 using VIRENDRA.Data;
 using VIRENDRA.Infrastructure;
 using VIRENDRA.Models;
@@ -75,6 +80,44 @@ namespace VIRENDRA.Controllers
             return RedirectToAction("Index");
         }
 
+        // ── Response setting: how to read status / txn ids out of one URL's response ──
+
+        [HttpGet]
+        public ActionResult ResponseSetting(int id)
+        {
+            var vm = _vendorRepo.GetResponseSetting(id);
+            if (vm == null) return HttpNotFound();
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ResponseSetting(int urlId, string rowsJson)
+        {
+            var vm = _vendorRepo.GetResponseSetting(urlId);
+            if (vm == null) return HttpNotFound();
+
+            List<TagValueRow> rows;
+            try { rows = JsonConvert.DeserializeObject<List<TagValueRow>>(rowsJson ?? "[]") ?? new List<TagValueRow>(); }
+            catch (JsonException)
+            {
+                TempData["ErrorMessage"] = "Could not read the rows. Please try again.";
+                return RedirectToAction("ResponseSetting", new { id = urlId });
+            }
+
+            var validTags = new HashSet<int>(vm.Tags.Select(t => t.Id));
+            if (rows.Any(r => !validTags.Contains(r.TagId)))
+            {
+                TempData["ErrorMessage"] = "Every row needs a TagName.";
+                return RedirectToAction("ResponseSetting", new { id = urlId });
+            }
+
+            _vendorRepo.SaveTagValues(urlId, vm.ApiId, rows, Session["UserId"] as int? ?? 0);
+
+            TempData["SuccessMessage"] = "Response setting saved (" + rows.Count + " rows).";
+            return RedirectToAction("ResponseSetting", new { id = urlId });
+        }
+
         [HttpPost]
         public ActionResult Delete(int id)
         {
@@ -146,7 +189,7 @@ namespace VIRENDRA.Controllers
             new SelectListItem { Value = "3", Text = "Range"      }
         };
 
-        private static List<ApiUrl> BuildApiUrls(int apiSourceId, string[] urlType,
+        private List<ApiUrl> BuildApiUrls(int apiSourceId, string[] urlType,
             string[] url, string[] method, string[] responseType, string[] postParameter)
         {
             var list = new List<ApiUrl>();
@@ -154,7 +197,7 @@ namespace VIRENDRA.Controllers
 
             for (int i = 0; i < urlType.Length; i++)
             {
-                list.Add(new ApiUrl
+                var apiUrl = new ApiUrl
                 {
                     ApiId    = apiSourceId,
                     UrlType  = urlType[i],
@@ -162,9 +205,45 @@ namespace VIRENDRA.Controllers
                     Method   = method  != null && i < method.Length   ? method[i]       : "GET",
                     ResType  = responseType != null && i < responseType.Length ? responseType[i] : "JSON (application/json)",
                     PostData = postParameter != null && i < postParameter.Length ? postParameter[i] : null,
-                });
+                };
+
+                // CallBack URL (ApiUrlType 4) left blank → auto-generate our own callback endpoint
+                if (urlType[i] == "CallBack" && string.IsNullOrWhiteSpace(apiUrl.URL))
+                {
+                    string callbackId = _vendorRepo.GetCallbackId(apiSourceId);
+                    if (string.IsNullOrWhiteSpace(callbackId))
+                    {
+                        callbackId = GetUniqueAlphaNumeric(12);
+                        _vendorRepo.SetCallbackId(apiSourceId, callbackId);
+                    }
+                    apiUrl.URL = GetApiDomainName() + "service/reccallback/" + callbackId;
+                }
+
+                list.Add(apiUrl);
             }
             return list;
+        }
+
+        /// <summary>Site root ending in "/" — appSetting "ApiDomainName" if set, else the current request host.</summary>
+        private string GetApiDomainName()
+        {
+            string domain = ConfigurationManager.AppSettings["ApiDomainName"];
+            if (string.IsNullOrWhiteSpace(domain))
+                domain = Request.Url.GetLeftPart(UriPartial.Authority) + Url.Content("~/");
+            return domain.EndsWith("/") ? domain : domain + "/";
+        }
+
+        private static string GetUniqueAlphaNumeric(int length)
+        {
+            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var bytes = new byte[length];
+            using (var rng = RandomNumberGenerator.Create())
+                rng.GetBytes(bytes);
+
+            var sb = new StringBuilder(length);
+            foreach (byte b in bytes)
+                sb.Append(chars[b % chars.Length]);
+            return sb.ToString();
         }
     }
 }

@@ -1,0 +1,76 @@
+@model VIRENDRA.Models.CircleSwitchViewModel
+@{
+    ViewBag.Title = "Circle Switch";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+    var apis = ViewBag.Apis as List<VIRENDRA.Models.LookupItem> ?? new List<VIRENDRA.Models.LookupItem>();
+}
+
+<div class="container-fluid">
+    <div class="page-title-box d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
+        <div>
+            <h4 class="mb-1">Circle Switch &mdash; @Model.OperatorName</h4>
+            <p class="text-muted mb-0" style="font-size:.85rem;">Vendors tried in order API 1 &rarr; 2 &rarr; 3 for each circle. A circle with no vendor uses Common Routing.</p>
+        </div>
+        <a href="@Url.Action("OperatorSwitch")" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Operator Switch</a>
+    </div>
+
+    @Html.Partial("_SwitchNav")
+
+    @if (Model.SwitchTypeId != VIRENDRA.Models.SwitchTypes.Circle)
+    {
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle me-2"></i>This operator's switch type is not <b>Circle Wise</b>, so these settings are saved but not used until you change it on Operator Switch.
+        </div>
+    }
+
+    <form method="post" action="@Url.Action("CircleSwitch")">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="opId" value="@Model.OpId" />
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle mb-0" style="font-size:.88rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Circle</th>
+                                <th style="min-width:160px;">API 1</th>
+                                <th style="min-width:160px;">API 2</th>
+                                <th style="min-width:160px;">API 3</th>
+                                <th class="text-center" title="Stored for R-Offer routing">R-Offer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model.Rows)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="hidden" name="circleId" value="@r.CircleId" />
+                                        @r.CircleName
+                                    </td>
+                                    @foreach (var pair in new[] { new { N = "api1", V = r.Api1 }, new { N = "api2", V = r.Api2 }, new { N = "api3", V = r.Api3 } })
+                                    {
+                                        <td>
+                                            <select name="@pair.N" class="form-select form-select-sm">
+                                                <option value="0">-- None --</option>
+                                                @foreach (var a in apis)
+                                                {
+                                                    <option value="@a.Id" @(a.Id == pair.V ? "selected" : "")>@a.Name</option>
+                                                }
+                                            </select>
+                                        </td>
+                                    }
+                                    <td class="text-center">
+                                        <input type="checkbox" class="form-check-input" name="roffer" value="@r.CircleId" @(r.IsROffer ? "checked" : "") />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                <button type="submit" class="btn btn-success px-4"><i class="fas fa-save me-1"></i>Save All</button>
+            </div>
+        </div>
+    </form>
+</div>

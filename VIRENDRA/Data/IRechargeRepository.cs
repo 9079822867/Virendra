@@ -100,6 +100,43 @@ namespace VIRENDRA.Data
             string apiTxnId, string optTxnId, string statusMsg, string remark,
             out bool isDownline, out bool isRefund, out string spLog,
             int opId = 0, decimal apiBal = 0, string updateType = "StatusWithCheck");
+
+        // ── Vendor callback ─────────────────────────────────────────────────
+
+        /// <summary>Vendor whose ApiSource.CallbackId matches, with its CallBack ApiUrl row (if any).</summary>
+        CallbackApiInfo GetCallbackApi(string callbackId);
+
+        /// <summary>Recharge sent to <paramref name="apiId"/> matching our ref / user txn id or the vendor txn id.</summary>
+        CallbackRecharge FindCallbackRecharge(int apiId, string ourRef, string apiTxnId);
+
+        /// <summary>Append a RequestResponse row (does not overwrite the original request log).</summary>
+        void InsertReqRes(int userId, int urlId, long recId, string refId, string remark,
+            string reqTxt, string respTxt, string customerNo, string userTxnId);
+    }
+
+    public class CallbackApiInfo
+    {
+        public int    ApiId   { get; set; }
+        public string ApiName { get; set; }
+        public int?   UrlId   { get; set; }
+        public string ResType { get; set; }
+    }
+
+    public class CallbackRecharge
+    {
+        public long    RecId           { get; set; }
+        public int     UserId          { get; set; }
+        public int     ApiId           { get; set; }
+        public int?    OpId            { get; set; }
+        public int     StatusId        { get; set; }
+        public decimal Amount          { get; set; }
+        public string  CustomerNo      { get; set; }
+        public string  UserTxnId       { get; set; }
+        public string  OurRefTxnId     { get; set; }
+        public string  ApiTxnId        { get; set; }
+        public string  OptTxnId        { get; set; }
+        public string  OperatorName    { get; set; }
+        public string  UserCallbackUrl { get; set; }
     }
 
     // ── Supporting DTO ───────────────────────────────────────────────────────

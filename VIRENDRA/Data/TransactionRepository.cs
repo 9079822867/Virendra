@@ -201,5 +201,67 @@ namespace VIRENDRA.Data
                     Search   = string.IsNullOrWhiteSpace(searchText) ? (string)null : searchText.Trim()
                 }).ToList();
         }
+
+        public List<OutStandingItem> GetOutStandingReport(
+            int? userId, DateTime fromDate, DateTime toDate, int? txnTypeId, int? amtTypeId, string searchText)
+        {
+            const string sql = @"
+                SELECT
+                    t.Id,
+                    ISNULL(up.FullName + ' - ', '') + u.Username AS UserName,
+                    t.RefTxnId,
+                    ISNULL(t.OP_Bal, 0) AS OpeningBal,
+                    ISNULL(t.CR_Amt, 0) AS Credit,
+                    ISNULL(t.DB_Amt, 0) AS Debit,
+                    ISNULL(t.CL_Bal, 0) AS ClosingBal,
+                    at.AmtTypeName AS AmtType,
+                    tt.TypeName    AS TxnType,
+                    t.TxnDate,
+                    t.Remark
+                FROM TxnLedgerCredit t
+                LEFT JOIN [User]  u  ON u.Id  = t.UserId
+                OUTER APPLY (SELECT TOP 1 p.FullName FROM UserProfile p WHERE p.UserId = t.UserId) up
+                LEFT JOIN AmtType at ON at.Id = t.AmtTypeId
+                LEFT JOIN TxnType tt ON tt.Id = t.TxnTypeId
+                WHERE t.TxnDate >= @FromDate
+                  AND t.TxnDate <  DATEADD(DAY, 1, @ToDate)
+                  AND (@UserId    IS NULL OR t.UserId    = @UserId)
+                  AND (@TxnTypeId IS NULL OR t.TxnTypeId = @TxnTypeId)
+                  AND (@AmtTypeId IS NULL OR t.AmtTypeId = @AmtTypeId)
+                  AND (@Search IS NULL OR
+                       t.RefTxnId LIKE '%' + @Search + '%' OR
+                       t.Remark   LIKE '%' + @Search + '%')
+                ORDER BY t.TxnDate DESC, t.Id DESC";
+
+            using (var conn = new SqlConnection(_connectionString))
+                return conn.Query<OutStandingItem>(sql, new
+                {
+                    FromDate  = fromDate.Date,
+                    ToDate    = toDate.Date,
+                    UserId    = userId,
+                    TxnTypeId = txnTypeId,
+                    AmtTypeId = amtTypeId,
+                    Search    = string.IsNullOrWhiteSpace(searchText) ? (string)null : searchText.Trim()
+                }).ToList();
+        }
+
+        public decimal? GetOutStandingBalance(int userId)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+                return conn.ExecuteScalar<decimal?>(
+                    "SELECT UserOutStandingBal FROM [User] WHERE Id = @Id", new { Id = userId });
+        }
+
+        public List<LookupItem> GetTxnTypes()
+        {
+            using (var conn = new SqlConnection(_connectionString))
+                return conn.Query<LookupItem>("SELECT Id, TypeName AS Name FROM TxnType ORDER BY Id").ToList();
+        }
+
+        public List<LookupItem> GetAmtTypes()
+        {
+            using (var conn = new SqlConnection(_connectionString))
+                return conn.Query<LookupItem>("SELECT Id, AmtTypeName AS Name FROM AmtType ORDER BY Id").ToList();
+        }
     }
 }

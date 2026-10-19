@@ -1,0 +1,60 @@
+@{
+    ViewBag.Title = "Replace Switch";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+    var ops         = ViewBag.Operators   as List<VIRENDRA.Models.LookupItem> ?? new List<VIRENDRA.Models.LookupItem>();
+    var apis        = ViewBag.Apis        as List<VIRENDRA.Models.LookupItem> ?? new List<VIRENDRA.Models.LookupItem>();
+    var switchTypes = ViewBag.SwitchTypes as List<VIRENDRA.Models.LookupItem> ?? new List<VIRENDRA.Models.LookupItem>();
+}
+
+<div class="container-fluid">
+    <div class="page-title-box mb-3">
+        <h4 class="mb-1">Replace Switch</h4>
+        <p class="text-muted mb-0" style="font-size:.85rem;">
+            Move every route that uses one vendor over to another vendor &mdash; e.g. when a vendor is down.
+            Common / Amount Wise change Common Routing, Operator Wise changes API 1/2/3 on Operator Switch,
+            Circle Wise changes Circle Switch.
+        </p>
+    </div>
+
+    @Html.Partial("_SwitchNav")
+
+    <div class="card" style="max-width:720px;">
+        <div class="card-body">
+            <form method="post" action="@Url.Action("ReplaceSwitch")"
+                  onsubmit="return confirm('Replace the vendor in all matching routes?');">
+                @Html.AntiForgeryToken()
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Operator</label>
+                        <select name="opId" class="form-select">
+                            <option value="0">All operators</option>
+                            @foreach (var o in ops) { <option value="@o.Id">@o.Name</option> }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Switch type</label>
+                        <select name="switchTypeId" class="form-select">
+                            <option value="0">All switch types</option>
+                            @foreach (var s in switchTypes) { <option value="@s.Id">@s.Name</option> }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Current vendor</label>
+                        <select name="currentApiId" class="form-select" required>
+                            <option value="">-- Select --</option>
+                            @foreach (var a in apis) { <option value="@a.Id">@a.Name</option> }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">New vendor</label>
+                        <select name="newApiId" class="form-select" required>
+                            <option value="">-- Select --</option>
+                            @foreach (var a in apis) { <option value="@a.Id">@a.Name</option> }
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success mt-3 px-4"><i class="fas fa-exchange-alt me-1"></i>Replace</button>
+            </form>
+        </div>
+    </div>
+</div>

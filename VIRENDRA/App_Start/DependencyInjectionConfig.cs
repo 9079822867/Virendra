@@ -98,7 +98,7 @@ namespace VIRENDRA.App_Start
 
             if (controllerType == typeof(TransactionController))
                 return new TransactionController(_txnRepo, _rechargeRepo, _complaintRepo,
-                    new ComplaintService(_complaintRepo, _rechargeRepo));
+                    new ComplaintService(_complaintRepo, _rechargeRepo), _userRepo);
 
             if (controllerType == typeof(RechargeController))
                 return new RechargeController(_rechargeSvc, _rechargeRepo);

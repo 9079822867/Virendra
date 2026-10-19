@@ -54,6 +54,11 @@ namespace VIRENDRA.Services
             var circle = _repo.GetCircles().Find(c => c.Id == req.CircleId);
             model.CircleCode = circle?.CircleCode ?? string.Empty;
 
+            // ── 0. Operator input rules (Switch > Operator Switch > Validation) ──
+            string inputError = ValidateOperatorInput(model.OpId ?? 0, model.MobileNo, model.Amount);
+            if (inputError != null)
+                return Fail(inputError, 0, model.RefTxnId);
+
             // ── 1. Request validation SP ────────────────────────────────────
             RechargeValidationResult val;
             try
@@ -268,6 +273,11 @@ namespace VIRENDRA.Services
                     lastMsg = fResp.Message;
                     UpdateStatus(helper, model, RechargeStatusCodes.FAILED, fResp.ApiTxnId,
                         statusMsg, "Response", ref anyRefund);
+
+                    // Switch > Stop Route Message: this failure must not be retried on another vendor
+                    if (IsStopRouteMessage(apiRes, route.ApiId, model.OpId ?? 0))
+                        break;
+
                     continue; // switch to next API
                 }
 
@@ -310,6 +320,19 @@ namespace VIRENDRA.Services
             }
 
             return Fail("Recharge failed. " + lastMsg, 0, model.RefTxnId);
+        }
+
+        // Shared with MobileController (API recharges)
+        internal static string ValidateOperatorInput(int opId, string number, decimal amount)
+        {
+            try { return new SwitchRepository().ValidateRechargeInput(opId, number, amount); }
+            catch { return null; }   // never block a recharge because the rule lookup failed
+        }
+
+        internal static bool IsStopRouteMessage(string response, int apiId, int opId)
+        {
+            try { return new SwitchRepository().IsStopRouteMessage(response, apiId, opId); }
+            catch { return false; }
         }
 
         private void MarkRouteFailed(RechargeHelperDto helper, RechargeModel model, string msg, ref bool anyRefund)

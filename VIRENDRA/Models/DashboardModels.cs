@@ -155,6 +155,47 @@ namespace VIRENDRA.Models
         public DateTime Date { get; set; }
     }
 
+    // Outstanding (credit) ledger: TxnLedgerCredit, written by sp_AddUserWallet
+    public class OutStandingReportViewModel
+    {
+        public DateTime FromDate   { get; set; }
+        public DateTime ToDate     { get; set; }
+        public int?     UserId     { get; set; }
+        public int?     TxnTypeId  { get; set; }
+        public int?     AmtTypeId  { get; set; }
+        public string   SearchText { get; set; }
+        public bool     IsAdmin    { get; set; }
+
+        /// <summary>Current User.UserOutStandingBal — only when one user is selected / scoped.</summary>
+        public decimal? CurrentOutstanding { get; set; }
+
+        public List<OutStandingItem> Items { get; set; } = new List<OutStandingItem>();
+        public int     TotalCount  { get; set; }
+        public decimal TotalCredit { get; set; }
+        public decimal TotalDebit  { get; set; }
+    }
+
+    public class OutStandingItem
+    {
+        public long     Id          { get; set; }
+        public string   UserName    { get; set; }
+        public string   RefTxnId    { get; set; }
+        public decimal  OpeningBal  { get; set; }
+        public decimal  Credit      { get; set; }
+        public decimal  Debit       { get; set; }
+        public decimal  ClosingBal  { get; set; }
+        public string   AmtType     { get; set; }
+        public string   TxnType     { get; set; }
+        public DateTime TxnDate     { get; set; }
+        public string   Remark      { get; set; }
+    }
+
+    public class LookupItem
+    {
+        public int    Id   { get; set; }
+        public string Name { get; set; }
+    }
+
     public class RechargeRequestModel
     {
         [System.ComponentModel.DataAnnotations.Required]

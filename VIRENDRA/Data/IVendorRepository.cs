@@ -13,6 +13,10 @@ namespace VIRENDRA.Data
         void ToggleActive(int id, bool isActive);
         List<ApiUrl> GetVendorUrls(int apiSourceId);
         void SaveVendorUrls(int apiSourceId, List<ApiUrl> urls);
+        ResponseSettingViewModel GetResponseSetting(int urlId);
+        void SaveTagValues(int urlId, int apiId, List<TagValueRow> rows, int userId);
+        string GetCallbackId(int apiSourceId);
+        void SetCallbackId(int apiSourceId, string callbackId);
 
         // ── Operator-code margin (vendor op-codes + commission) ──────────────
         /// <summary>

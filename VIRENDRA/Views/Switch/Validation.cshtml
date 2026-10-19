@@ -1,0 +1,79 @@
+@model VIRENDRA.Models.OperatorValidationViewModel
+@{
+    ViewBag.Title = "Operator Validation";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+
+    Func<int?, int?, string> range = (a, b) =>
+        a == null && b == null ? "" : a == b ? a.ToString() : (a + "-" + b);
+
+    var sections = new[]
+    {
+        new { Rule = Model.Number,  Title = "Mobile / Customer Number", Hint = "e.g. length 10, starts with 6,7,8,9, numeric" },
+        new { Rule = Model.Account, Title = "Account Number",           Hint = "bill payments; leave blank if not used" },
+        new { Rule = Model.Amount,  Title = "Amount",                   Hint = "e.g. range 10-5000" },
+    };
+}
+
+<div class="container-fluid">
+    <div class="page-title-box d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
+        <div>
+            <h4 class="mb-1">Validation &mdash; @Model.OperatorName</h4>
+            <p class="text-muted mb-0" style="font-size:.85rem;">Checked before a recharge is created (web, app and API). Leave a section empty for no rule.</p>
+        </div>
+        <a href="@Url.Action("OperatorSwitch")" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Operator Switch</a>
+    </div>
+
+    @Html.Partial("_SwitchNav")
+
+    <form method="post" action="@Url.Action("Validation")">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="opId" value="@Model.OpId" />
+        <div class="row g-3">
+            @foreach (var s in sections)
+            {
+                string p = s.Rule.ColumnName + ".";
+                <div class="col-xl-4 col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <div class="fw-semibold">@s.Title</div>
+                            <small class="text-muted">@s.Hint</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label small">Length</label>
+                                    <input name="@(p)Length" class="form-control form-control-sm" value="@range(s.Rule.MinLenth, s.Rule.MaxLenth)" placeholder="10 or 10-12" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small">Value range</label>
+                                    <input name="@(p)Range" class="form-control form-control-sm" value="@range(s.Rule.MinVal, s.Rule.MaxVal)" placeholder="10-5000" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small">Starts with</label>
+                                    <input name="@(p)StartWith" class="form-control form-control-sm" value="@s.Rule.StartWith" placeholder="6,7,8,9" maxlength="100" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small">Error message</label>
+                                    <input name="@(p)ErrorMsg" class="form-control form-control-sm" value="@s.Rule.ErrorMsg" placeholder="Shown instead of the default message" maxlength="250" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small">Placeholder text</label>
+                                    <input name="@(p)PlaceHolderText" class="form-control form-control-sm" value="@s.Rule.PlaceHolderText" maxlength="100" />
+                                </div>
+                                <div class="col-12 d-flex gap-3 mt-1">
+                                    <label class="form-check-label small">
+                                        @Html.CheckBox(p + "IsNum", s.Rule.IsNum, new { @class = "form-check-input me-1" })Numeric only
+                                    </label>
+                                    <label class="form-check-label small">
+                                        @Html.CheckBox(p + "IsMandatory", s.Rule.IsMandatory, new { @class = "form-check-input me-1" })Required
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <button type="submit" class="btn btn-success mt-3 px-4"><i class="fas fa-save me-1"></i>Save</button>
+    </form>
+</div>

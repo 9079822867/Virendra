@@ -263,6 +263,20 @@
                                             <textarea name="postParameter" class="form-control form-control-sm font-monospace" rows="2"
                                                       placeholder="uid=[UUU]&pwd=[PPP]&mobile=[MMM]&amount=[AAA]">@u.PostData</textarea>
                                         </div>
+                                        <!-- Response parsing rules (TagValue) for this URL -->
+                                        <div class="col-12 d-flex align-items-center gap-2">
+                                            @if (u.Id > 0)
+                                            {
+                                                <a href="@Url.Action("ResponseSetting", "Vendor", new { id = u.Id })" class="btn btn-sm btn-primary px-3">
+                                                    <i class="fas fa-sliders-h me-1"></i>Setting
+                                                </a>
+                                                <small class="text-muted">How to read status and txn ids from this URL's response. Save changes above first.</small>
+                                            }
+                                            else
+                                            {
+                                                <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Save the API source first to set up its response.</small>
+                                            }
+                                        </div>
                                     </div>
                                 </div>
                             </div>

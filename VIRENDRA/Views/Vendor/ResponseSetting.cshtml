@@ -1,0 +1,255 @@
+@model VIRENDRA.Models.ResponseSettingViewModel
+@{
+    ViewBag.Title = "Response Setting";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+}
+
+<div class="container-fluid">
+
+    <!-- Page Title -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                    <h4 class="mb-1 fw-bold text-dark">
+                        <i class="fas fa-sliders-h text-info me-2"></i>Response Setting
+                        <span class="text-muted fw-normal ms-1">&mdash; @Model.ApiName / @Model.UrlType</span>
+                    </h4>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0" style="font-size:.82rem;">
+                            <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="@Url.Action("Index")">API Sources</a></li>
+                            <li class="breadcrumb-item"><a href="@Url.Action("Edit", new { id = Model.ApiId })">Edit</a></li>
+                            <li class="breadcrumb-item active">Response Setting</li>
+                        </ol>
+                    </nav>
+                </div>
+                <a href="@Url.Action("Edit", new { id = Model.ApiId })" class="btn btn-outline-secondary btn-sm px-3">
+                    <i class="fas fa-arrow-left me-1"></i>Back to API Source
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-3" style="border-radius:10px;">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible mb-3" style="border-radius:10px;">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- URL being configured -->
+    <div class="card border-0 shadow-sm mb-3" style="border-radius:12px;">
+        <div class="card-body py-3">
+            <div class="text-muted" style="font-size:.75rem;">@Model.UrlType &middot; @(Model.ResType ?? "Response")</div>
+            <div class="font-monospace text-break" style="font-size:.8rem;">@(string.IsNullOrEmpty(Model.URL) ? "URL not set" : Model.URL)</div>
+        </div>
+    </div>
+
+    @if (!Model.Tags.Any())
+    {
+        <div class="alert alert-warning" style="border-radius:10px;">
+            <i class="fas fa-exclamation-triangle me-2"></i>No tag names exist yet (the <code>Tag</code> table is empty).
+            Add them first, e.g. with <code>Scripts\SeedResponseTags.sql</code>.
+        </div>
+    }
+
+    <!-- Tag rows -->
+    <div class="card border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+            <h6 class="mb-0 fw-bold">General Info</h6>
+            <small class="text-muted">Value = text between <b>Pre Text</b> (+ PreMargin chars) and <b>Post Text</b> (+ PostMargin chars). <b>Check Value</b> is what that text must equal for this tag.</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0" id="tagTable" style="font-size:.85rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="min-width:150px;">TagName</th>
+                            <th>Check Value</th>
+                            <th>Pre Text</th>
+                            <th>Post Text</th>
+                            <th style="width:90px;">PreMargin</th>
+                            <th style="width:90px;">PostMargin</th>
+                            <th>Message</th>
+                            <th style="width:90px;">Separator</th>
+                            <th style="width:80px;">Sr. No.</th>
+                            <th style="width:90px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tagRows"></tbody>
+                    <tfoot>
+                        <tr id="newRow" class="table-light">
+                            <td>
+                                <select class="form-select form-select-sm" data-f="TagId">
+                                    <option value="">--Select--</option>
+                                    @foreach (var t in Model.Tags)
+                                    {
+                                        <option value="@t.Id">@t.Name</option>
+                                    }
+                                </select>
+                            </td>
+                            <td><input class="form-control form-control-sm" data-f="CompareTxt" maxlength="500" /></td>
+                            <td><input class="form-control form-control-sm" data-f="PreTxt" maxlength="100" /></td>
+                            <td><input class="form-control form-control-sm" data-f="PostText" maxlength="100" /></td>
+                            <td><input class="form-control form-control-sm" data-f="PreMargin" type="number" /></td>
+                            <td><input class="form-control form-control-sm" data-f="PostMargin" type="number" /></td>
+                            <td><input class="form-control form-control-sm" data-f="TagMsg" maxlength="100" /></td>
+                            <td><input class="form-control form-control-sm" data-f="ResSeparator" maxlength="50" /></td>
+                            <td><input class="form-control form-control-sm" data-f="TagIndex" type="number" min="0" /></td>
+                            <td><button type="button" class="btn btn-primary btn-sm w-100" id="addRow">Add</button></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white border-top py-3 px-4 d-flex align-items-center gap-3 flex-wrap">
+            <form method="post" action="@Url.Action("ResponseSetting")" id="saveForm" class="m-0">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="urlId" value="@Model.UrlId" />
+                <input type="hidden" name="rowsJson" id="rowsJson" />
+                <button type="submit" class="btn btn-success px-4"><i class="fas fa-save me-1"></i>Save All</button>
+            </form>
+            <small class="text-muted" id="dirtyNote" style="display:none;">Unsaved changes &mdash; click Save All.</small>
+        </div>
+    </div>
+
+    <!-- Try a sample response against the rows above -->
+    <div class="card border-0 shadow-sm mt-3" style="border-radius:12px;">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+            <h6 class="mb-0 fw-bold">Test with a sample response</h6>
+            <small class="text-muted">Paste a real response from this vendor to check what each row reads. Nothing is saved.</small>
+        </div>
+        <div class="card-body">
+            <textarea id="sampleResp" class="form-control form-control-sm font-monospace mb-2" rows="3"
+                      placeholder='{"STATUS":1,"ORDERID":"123","OPTRANSID":"BR0001","MEMBERREQID":"APP1001"}'></textarea>
+            <div id="testOut" class="small"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var rows  = @Html.Raw(Json.Encode(Model.Rows.Select(r => new {
+                            r.TagId, r.TagName, r.CompareTxt, r.PreTxt, r.PostText,
+                            r.PreMargin, r.PostMargin, r.TagMsg, r.ResSeparator, r.TagIndex })));
+            var tagNames = {};
+            document.querySelectorAll('#newRow [data-f="TagId"] option').forEach(function (o) { if (o.value) tagNames[o.value] = o.text; });
+
+            var body  = document.getElementById('tagRows');
+            var dirty = document.getElementById('dirtyNote');
+            var cols  = ['CompareTxt', 'PreTxt', 'PostText', 'PreMargin', 'PostMargin', 'TagMsg', 'ResSeparator', 'TagIndex'];
+
+            function text(v) { var s = document.createElement('span'); s.textContent = v == null ? '' : v; return s; }
+
+            function render() {
+                body.innerHTML = '';
+                if (!rows.length) {
+                    var tr = body.insertRow(); var td = tr.insertCell();
+                    td.colSpan = 10; td.className = 'text-center text-muted py-3';
+                    td.textContent = 'No rows yet. Add one below.';
+                }
+                rows.forEach(function (r, i) {
+                    var tr = body.insertRow();
+                    tr.insertCell().appendChild(text(r.TagName || tagNames[r.TagId] || ('#' + r.TagId)));
+                    cols.forEach(function (c) {
+                        var td = tr.insertCell();
+                        // show a lone space separator visibly
+                        td.appendChild(text(c === 'ResSeparator' && r[c] === ' ' ? '(space)' : r[c]));
+                    });
+                    var btn = document.createElement('button');
+                    btn.type = 'button'; btn.className = 'btn btn-danger btn-sm w-100'; btn.textContent = 'Remove';
+                    btn.addEventListener('click', function () { rows.splice(i, 1); changed(); });
+                    tr.insertCell().appendChild(btn);
+                });
+                runTest();
+            }
+
+            function changed() { dirty.style.display = ''; render(); }
+
+            function num(v) { return v === '' || v == null ? null : parseInt(v, 10); }
+
+            document.getElementById('addRow').addEventListener('click', function () {
+                var get = function (f) { return document.querySelector('#newRow [data-f="' + f + '"]'); };
+                var tagId = get('TagId').value;
+                if (!tagId) { get('TagId').focus(); return; }
+                rows.push({
+                    TagId: parseInt(tagId, 10), TagName: tagNames[tagId],
+                    CompareTxt: get('CompareTxt').value, PreTxt: get('PreTxt').value, PostText: get('PostText').value,
+                    PreMargin: num(get('PreMargin').value), PostMargin: num(get('PostMargin').value),
+                    TagMsg: get('TagMsg').value, ResSeparator: get('ResSeparator').value, TagIndex: num(get('TagIndex').value)
+                });
+                document.querySelectorAll('#newRow [data-f]').forEach(function (el) { el.value = ''; });
+                changed();
+            });
+
+            document.getElementById('saveForm').addEventListener('submit', function () {
+                document.getElementById('rowsJson').value = JSON.stringify(rows);
+            });
+
+            window.addEventListener('beforeunload', function (e) {
+                if (dirty.style.display === '' && !document.getElementById('rowsJson').value) { e.preventDefault(); e.returnValue = ''; }
+            });
+
+            // Text between PreTxt(+PreMargin) and PostText(+PostMargin); then split by separator at Sr. No.
+            function extract(resp, r) {
+                var start = 0;
+                if (r.PreTxt) {
+                    var p = resp.indexOf(r.PreTxt);
+                    if (p < 0) return null;
+                    start = p + r.PreTxt.length;
+                }
+                start += r.PreMargin || 0;
+                var end = resp.length;
+                if (r.PostText) {
+                    var q = resp.indexOf(r.PostText, Math.max(start, 0));
+                    if (q < 0) return null;
+                    end = q;
+                }
+                end += r.PostMargin || 0;
+                if (start < 0 || end > resp.length || end < start) return null;
+                var v = resp.substring(start, end);
+                if (r.ResSeparator) {
+                    var parts = v.split(r.ResSeparator);
+                    v = parts[r.TagIndex || 0];
+                    if (v == null) return null;
+                }
+                return v.trim();
+            }
+
+            var sample = document.getElementById('sampleResp');
+            var out = document.getElementById('testOut');
+            function runTest() {
+                out.innerHTML = '';
+                if (!sample.value.trim() || !rows.length) return;
+                rows.forEach(function (r) {
+                    var v = extract(sample.value, r);
+                    var line = document.createElement('div');
+                    var name = r.TagName || tagNames[r.TagId];
+                    var verdict;
+                    if (v == null) { verdict = 'not found'; line.className = 'text-danger'; }
+                    else if (r.CompareTxt) {
+                        var hit = v.toLowerCase() === r.CompareTxt.toLowerCase();
+                        verdict = '"' + v + '" ' + (hit ? '= ' : '≠ ') + '"' + r.CompareTxt + '"' + (hit ? ' → match' : '');
+                        line.className = hit ? 'text-success fw-semibold' : 'text-muted';
+                    }
+                    else { verdict = '"' + v + '"'; line.className = 'text-dark'; }
+                    line.textContent = name + ': ' + verdict;
+                    out.appendChild(line);
+                });
+            }
+            sample.addEventListener('input', runTest);
+
+            render();
+        })();
+    </script>
+}

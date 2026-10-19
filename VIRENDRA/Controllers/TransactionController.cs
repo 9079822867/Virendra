@@ -15,14 +15,16 @@ namespace VIRENDRA.Controllers
         private readonly IRechargeRepository    _rechargeRepo;
         private readonly IComplaintRepository   _complaintRepo;
         private readonly ComplaintService       _complaintSvc;
+        private readonly IUserRepository        _userRepo;
 
         public TransactionController(ITransactionRepository txnRepo, IRechargeRepository rechargeRepo,
-            IComplaintRepository complaintRepo, ComplaintService complaintSvc)
+            IComplaintRepository complaintRepo, ComplaintService complaintSvc, IUserRepository userRepo)
         {
             _txnRepo       = txnRepo;
             _rechargeRepo  = rechargeRepo;
             _complaintRepo = complaintRepo;
             _complaintSvc  = complaintSvc;
+            _userRepo      = userRepo;
         }
 
         [HttpGet]
@@ -79,6 +81,59 @@ namespace VIRENDRA.Controllers
                 TotalCount  = rows.Count,
                 TotalCredit = rows.Sum(r => r.Credit),
                 TotalDebit  = rows.Sum(r => r.Debit)
+            };
+
+            return View(model);
+        }
+
+        // Outstanding (credit) ledger — TxnLedgerCredit. Admins see everyone (or pick a user);
+        // other roles only their own rows.
+        [HttpGet]
+        public ActionResult OutStandingReport(DateTime? fromDate, DateTime? toDate, int? userId,
+            int? txnTypeId, int? amtTypeId, string searchText)
+        {
+            DateTime from = fromDate ?? DateTime.Today;
+            DateTime to   = toDate   ?? DateTime.Today;
+            if (to < from) { var t = from; from = to; to = t; }
+
+            bool isAdmin   = IsAdmin();
+            int? scopedId  = GetScopedUserId();
+            int? filterId  = isAdmin ? (userId > 0 ? userId : null) : scopedId;
+
+            var rows = _txnRepo.GetOutStandingReport(filterId, from, to,
+                txnTypeId > 0 ? txnTypeId : null, amtTypeId > 0 ? amtTypeId : null, searchText);
+
+            if (isAdmin)
+            {
+                ViewBag.UserList = _userRepo.GetAllUsers()
+                    .Where(u => !u.IsDeleted)
+                    .OrderBy(u => u.Username)
+                    .Select(u => new SelectListItem
+                    {
+                        Value    = u.Id.ToString(),
+                        Text     = u.Username + (string.IsNullOrEmpty(u.RoleName) ? "" : " (" + u.RoleName + ")"),
+                        Selected = u.Id == filterId
+                    }).ToList();
+            }
+            ViewBag.TxnTypeList = _txnRepo.GetTxnTypes()
+                .Select(x => new SelectListItem { Value = x.Id.ToString(), Text = x.Name, Selected = x.Id == txnTypeId }).ToList();
+            ViewBag.AmtTypeList = _txnRepo.GetAmtTypes()
+                .Select(x => new SelectListItem { Value = x.Id.ToString(), Text = x.Name, Selected = x.Id == amtTypeId }).ToList();
+
+            var model = new OutStandingReportViewModel
+            {
+                FromDate           = from,
+                ToDate             = to,
+                UserId             = filterId,
+                TxnTypeId          = txnTypeId,
+                AmtTypeId          = amtTypeId,
+                SearchText         = searchText,
+                IsAdmin            = isAdmin,
+                CurrentOutstanding = filterId.HasValue ? _txnRepo.GetOutStandingBalance(filterId.Value) : null,
+                Items              = rows,
+                TotalCount         = rows.Count,
+                TotalCredit        = rows.Sum(r => r.Credit),
+                TotalDebit         = rows.Sum(r => r.Debit)
             };
 
             return View(model);

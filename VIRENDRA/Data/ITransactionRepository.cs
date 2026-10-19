@@ -15,5 +15,13 @@ namespace VIRENDRA.Data
 
         List<TransactionHistoryItem> GetTransactionHistory(
             int? userId, DateTime fromDate, DateTime toDate, string type, string searchText);
+
+        List<OutStandingItem> GetOutStandingReport(
+            int? userId, DateTime fromDate, DateTime toDate, int? txnTypeId, int? amtTypeId, string searchText);
+
+        decimal? GetOutStandingBalance(int userId);
+
+        List<LookupItem> GetTxnTypes();
+        List<LookupItem> GetAmtTypes();
     }
 }
