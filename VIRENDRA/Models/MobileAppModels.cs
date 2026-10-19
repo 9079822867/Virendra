@@ -237,28 +237,4 @@ namespace VIRENDRA.Models
         public decimal  Balance     { get; set; }
         public DateTime Date        { get; set; }
     }
-
-    /// <summary>Recharge fields needed to book a complaint.</summary>
-    public class AppComplainRecharge
-    {
-        public long   Id          { get; set; }
-        public int    UserId      { get; set; }
-        public int?   ApiId       { get; set; }
-        public int    StatusId    { get; set; }
-        public string CustomerNo  { get; set; }
-        public string UserTxnId   { get; set; }
-        public string OurRefTxnId { get; set; }
-        public string ApiTxnId    { get; set; }
-    }
-
-    /// <summary>Vendor ComplainRequest URL + credentials.</summary>
-    public class AppComplainApiUrl
-    {
-        public string Url         { get; set; }
-        public string Method      { get; set; }
-        public string PostData    { get; set; }
-        public string ApiUserId   { get; set; }
-        public string ApiPassword { get; set; }
-        public string Remark      { get; set; }
-    }
 }

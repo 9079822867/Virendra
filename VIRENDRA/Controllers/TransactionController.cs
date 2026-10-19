@@ -4,6 +4,7 @@ using System.Web.Mvc;
 using VIRENDRA.Data;
 using VIRENDRA.Infrastructure;
 using VIRENDRA.Models;
+using VIRENDRA.Services;
 
 namespace VIRENDRA.Controllers
 {
@@ -12,11 +13,16 @@ namespace VIRENDRA.Controllers
     {
         private readonly ITransactionRepository _txnRepo;
         private readonly IRechargeRepository    _rechargeRepo;
+        private readonly IComplaintRepository   _complaintRepo;
+        private readonly ComplaintService       _complaintSvc;
 
-        public TransactionController(ITransactionRepository txnRepo, IRechargeRepository rechargeRepo)
+        public TransactionController(ITransactionRepository txnRepo, IRechargeRepository rechargeRepo,
+            IComplaintRepository complaintRepo, ComplaintService complaintSvc)
         {
-            _txnRepo      = txnRepo;
-            _rechargeRepo = rechargeRepo;
+            _txnRepo       = txnRepo;
+            _rechargeRepo  = rechargeRepo;
+            _complaintRepo = complaintRepo;
+            _complaintSvc  = complaintSvc;
         }
 
         [HttpGet]
@@ -146,6 +152,81 @@ namespace VIRENDRA.Controllers
         {
             byte roleId = (byte)(Session["RoleId"] ?? (byte)0);
             return roleId == RoleConstants.SuperAdmin || roleId == RoleConstants.Admin;
+        }
+
+        // ── Complaints (disputes) ────────────────────────────────────────────
+
+        // Book a complaint from Recharge History. Non-admins only on their own recharges.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateComplaint(long recId, string remark, string returnUrl)
+        {
+            ActionResult back = Url.IsLocalUrl(returnUrl)
+                ? (ActionResult)Redirect(returnUrl)
+                : RedirectToAction("RechargeHistory");
+
+            try
+            {
+                int userId = (int)Session["UserId"];
+                var result = _complaintSvc.Book(recId.ToString(), remark, userId, IsAdmin() ? (int?)null : userId);
+
+                if (result.Status == ComplaintBookStatus.Booked)
+                    TempData["SuccessMessage"] = "Complaint #" + result.ComplaintId + " booked for recharge #" + recId + ".";
+                else
+                    TempData["ErrorMessage"] = result.Message;
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Complaint failed: " + ex.GetBaseException().Message;
+            }
+
+            return back;
+        }
+
+        // Dispute / complaint report. Admins see every user's complaints; others only their own.
+        [HttpGet]
+        public ActionResult ComplaintReport(DateTime? fromDate, DateTime? toDate, int? statusId, string searchText)
+        {
+            DateTime to   = toDate   ?? DateTime.Today;
+            DateTime from = fromDate ?? to.AddDays(-30);
+
+            var model = new ComplaintReportViewModel
+            {
+                FromDate   = from,
+                ToDate     = to,
+                StatusId   = statusId,
+                SearchText = searchText,
+                IsAdmin    = IsAdmin(),
+                Items      = _complaintRepo.GetComplaintReport(GetScopedUserId(), from, to, statusId, searchText)
+            };
+
+            return View(model);
+        }
+
+        // Admin: resolve (or keep processing) with an optional refund of the recharge.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
+        public ActionResult ResolveComplaint(long complaintId, bool isResolved, bool isRefund, string comment, string returnUrl)
+        {
+            ActionResult back = Url.IsLocalUrl(returnUrl)
+                ? (ActionResult)Redirect(returnUrl)
+                : RedirectToAction("ComplaintReport");
+
+            try
+            {
+                int    adminId   = (int)Session["UserId"];
+                string adminName = (Session["Username"] ?? "admin").ToString();
+
+                var (ok, message) = _complaintSvc.Resolve(complaintId, isResolved, isRefund, comment, adminId, adminName);
+                TempData[ok ? "SuccessMessage" : "ErrorMessage"] = message;
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Complaint update failed: " + ex.GetBaseException().Message;
+            }
+
+            return back;
         }
 
         [HttpGet]

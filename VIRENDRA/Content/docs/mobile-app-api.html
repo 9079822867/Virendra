@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VIRENDRA Mobile App API</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --ink: #1d1d1b; --muted: #5f5f5a; --line: #e3e2dd;
+  --code-bg: #f1f0ec; --accent: #2457c5; --accent-soft: #e8eefb;
+  --ok: #1e7a3c; --ok-soft: #e4f3e8; --warn: #a15c00; --warn-soft: #fbf0dc;
+  --bad: #b3261e; --bad-soft: #fbe6e4; --post: #0d7a5f; --post-soft: #dff3ec;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161615; --panel: #1f1f1d; --ink: #ecebe6; --muted: #a6a59f; --line: #34332f;
+    --code-bg: #262623; --accent: #7aa2ff; --accent-soft: #1f2b45;
+    --ok: #6fd18f; --ok-soft: #1c3324; --warn: #f0b45a; --warn-soft: #3a2c15;
+    --bad: #ff8a80; --bad-soft: #3d1f1c; --post: #5fd3b0; --post-soft: #173329;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161615; --panel: #1f1f1d; --ink: #ecebe6; --muted: #a6a59f; --line: #34332f;
+  --code-bg: #262623; --accent: #7aa2ff; --accent-soft: #1f2b45;
+  --ok: #6fd18f; --ok-soft: #1c3324; --warn: #f0b45a; --warn-soft: #3a2c15;
+  --bad: #ff8a80; --bad-soft: #3d1f1c; --post: #5fd3b0; --post-soft: #173329;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; font-size: 13px; }
+:not(pre) > code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+
+.layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100vh; }
+nav.side {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  border-right: 1px solid var(--line); background: var(--panel); padding: 20px 16px;
+}
+nav.side .brand { font-weight: 700; font-size: 16px; margin-bottom: 2px; }
+nav.side .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 18px; }
+nav.side h4 { margin: 18px 0 6px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+nav.side a { display: block; padding: 4px 8px; border-radius: 6px; color: var(--ink); font-size: 14px; }
+nav.side a:hover { background: var(--accent-soft); text-decoration: none; }
+nav.side a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.theme-btn {
+  margin-top: 20px; width: 100%; padding: 6px; border: 1px solid var(--line); border-radius: 6px;
+  background: transparent; color: var(--muted); cursor: pointer; font: inherit; font-size: 13px;
+}
+
+main { padding: 32px 40px 80px; max-width: 980px; }
+h1 { font-size: 28px; margin: 0 0 6px; }
+.lead { color: var(--muted); margin: 0 0 24px; font-size: 16px; }
+section { margin-bottom: 44px; scroll-margin-top: 16px; }
+h2 { font-size: 21px; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+h3 { font-size: 17px; margin: 26px 0 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+p { margin: 8px 0; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin: 14px 0; }
+.endpoint { scroll-margin-top: 16px; }
+.route { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.method { font: 700 12px/1 ui-monospace, monospace; padding: 5px 8px; border-radius: 5px; background: var(--post-soft); color: var(--post); }
+.path { font-family: ui-monospace, monospace; font-size: 14px; font-weight: 600; word-break: break-all; }
+.tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.tag.auth { border-color: transparent; background: var(--accent-soft); color: var(--accent); }
+.alias { font-size: 12.5px; color: var(--muted); }
+
+table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12.5px; color: var(--muted); font-weight: 600; background: var(--code-bg); }
+.table-wrap { overflow-x: auto; }
+
+.code { position: relative; margin: 10px 0; }
+.code .label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+pre { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+.copy {
+  position: absolute; right: 8px; top: 26px; font-size: 12px; padding: 3px 8px;
+  border: 1px solid var(--line); border-radius: 5px; background: var(--panel); color: var(--muted); cursor: pointer;
+}
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.two > .code { min-width: 0; }
+
+.badge { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 5px; white-space: nowrap; }
+.b-ok { background: var(--ok-soft); color: var(--ok); }
+.b-warn { background: var(--warn-soft); color: var(--warn); }
+.b-bad { background: var(--bad-soft); color: var(--bad); }
+.note { border-left: 3px solid var(--warn); background: var(--warn-soft); padding: 10px 14px; border-radius: 6px; margin: 12px 0; }
+.note.info { border-left-color: var(--accent); background: var(--accent-soft); }
+
+ol.flow { padding-left: 22px; }
+ol.flow li { margin: 4px 0; }
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+  nav.side { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  main { padding: 20px 16px 60px; }
+  .two { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="side" id="nav">
+    <div class="brand">VIRENDRA App API</div>
+    <div class="sub">Mobile app web services &middot; v1</div>
+    <h4>Start</h4>
+    <a href="#overview">Overview</a>
+    <a href="#errors">Error codes</a>
+    <h4>Account</h4>
+    <a href="#login">Login</a>
+    <a href="#changepass">ChangePass</a>
+    <a href="#forgot">ResendOTP / ForgetPass</a>
+    <h4>Wallet</h4>
+    <a href="#balance">BalanceCheck</a>
+    <a href="#dashboard">DashboardHome</a>
+    <h4>Recharge</h4>
+    <a href="#operator">Operator</a>
+    <a href="#recharge">RechargeCall</a>
+    <h4>Commission</h4>
+    <a href="#commission">Commission</a>
+    <a href="#slab">OperatorSlabCommission</a>
+    <h4>Reports</h4>
+    <a href="#rechargereport">RechargeReport</a>
+    <a href="#txnreport">TransactionReport</a>
+    <h4>Support</h4>
+    <a href="#complain">BookComplain</a>
+    <a href="#notes">Setup notes</a>
+    <button class="theme-btn" id="themeBtn" type="button">Toggle theme</button>
+  </nav>
+
+  <main>
+    <h1>VIRENDRA Mobile App API</h1>
+    <p class="lead">13 JSON endpoints for the retailer mobile app: login, wallet, recharge, commission, reports and complaints.</p>
+
+    <!-- ── Overview ─────────────────────────────────────────── -->
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>Every endpoint is <code>POST</code> with <code>Content-Type: application/json</code> under:</p>
+      <div class="code"><div class="label">Base URL</div><pre><code>https://&lt;your-domain&gt;/App/webservice/</code></pre></div>
+      <ol class="flow">
+        <li>Call <a href="#login"><code>Login</code></a> with username and password. The reply carries <code>TOKENID</code>.</li>
+        <li>Send it as <code>Tokenid</code> (<code>TokenID</code> for <code>RechargeCall</code>) on every other call.</li>
+        <li>A new login replaces the token, so only the latest device stays signed in. On <code>ERROR = 9</code>, send the user back to Login.</li>
+      </ol>
+      <p>Response keys come back exactly as written (<code>ERROR</code>, <code>STATUSCODE</code>, <code>MESSAGE</code>), not camelCase. Response dates use <code>yyyy-MM-dd HH:mm:ss</code>. Request dates accept <code>yyyy-MM-dd</code>, <code>dd-MM-yyyy</code> or <code>dd/MM/yyyy</code>.</p>
+
+      <div class="table-wrap"><table>
+        <thead><tr><th>Endpoint</th><th>Also answers at</th><th>Token</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><a href="#login">Login</a></td><td>&mdash;</td><td>No</td><td>Sign in, get <code>TOKENID</code></td></tr>
+          <tr><td><a href="#changepass">ChangePass</a></td><td>&mdash;</td><td>Yes</td><td>Change password</td></tr>
+          <tr><td><a href="#forgot">ResendOTP</a></td><td>&mdash;</td><td>No</td><td>Create forgot-password OTP</td></tr>
+          <tr><td><a href="#forgot">ForgetPass</a></td><td>ForgotPass</td><td>No</td><td>Reset password with OTP</td></tr>
+          <tr><td><a href="#balance">BalanceCheck</a></td><td>Balance</td><td>Yes</td><td>Wallet balance</td></tr>
+          <tr><td><a href="#dashboard">DashboardHome</a></td><td>Dashboard</td><td>Yes</td><td>Today's figures + last recharges</td></tr>
+          <tr><td><a href="#operator">Operator</a></td><td>OperatorList</td><td>Yes</td><td>Active operators</td></tr>
+          <tr><td><a href="#recharge">RechargeCall</a></td><td>Recharge</td><td>Yes</td><td>Do a recharge</td></tr>
+          <tr><td><a href="#commission">Commission</a></td><td>CommissionList</td><td>Yes</td><td>Commission, all operators</td></tr>
+          <tr><td><a href="#slab">OperatorSlabCommission</a></td><td>&mdash;</td><td>Yes</td><td>Commission, one operator</td></tr>
+          <tr><td><a href="#rechargereport">RechargeReport</a></td><td>&mdash;</td><td>Yes</td><td>Recharge history</td></tr>
+          <tr><td><a href="#txnreport">TransactionReport</a></td><td>TxnReport</td><td>Yes</td><td>Wallet ledger, paged</td></tr>
+          <tr><td><a href="#complain">BookComplain</a></td><td>&mdash;</td><td>Yes</td><td>Complaint on a recharge</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ── Errors ───────────────────────────────────────────── -->
+    <section id="errors">
+      <h2>Error codes</h2>
+      <p>Check <code>ERROR</code> first: <code>0</code> means the call was handled, even when the result is a failed recharge or an empty list. Account endpoints (<code>ChangePass</code>, <code>ResendOTP</code>, <code>ForgetPass</code>, <code>BookComplain</code>) use <code>Error</code> / <code>Status</code> / <code>Message</code> instead.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ERROR</th><th>Meaning</th><th>App should</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>Request handled</td><td>Read <code>STATUSCODE</code> / <code>MESSAGE</code></td></tr>
+          <tr><td>2</td><td>Record not found, user inactive, or OTP expired</td><td>Show <code>MESSAGE</code></td></tr>
+          <tr><td>3</td><td>User locked, wrong old password, or wrong OTP</td><td>Show <code>MESSAGE</code></td></tr>
+          <tr><td>4</td><td>Wrong password at login</td><td>Show remaining attempts from <code>MESSAGE</code></td></tr>
+          <tr><td>5</td><td>Unexpected server error</td><td>Retry later; for a recharge, check the report first</td></tr>
+          <tr><td>9</td><td>Authentication error (token missing, wrong or replaced)</td><td>Go back to Login</td></tr>
+          <tr><td>10</td><td>Invalid amount</td><td>Fix the amount</td></tr>
+          <tr><td>11</td><td>Missing or invalid parameters</td><td>Fix the request</td></tr>
+          <tr><td>12</td><td>Wrong transaction PIN</td><td>Ask for the PIN again</td></tr>
+        </tbody>
+      </table></div>
+      <p><code>STATUSCODE</code>: <code>1</code> = success, <code>2</code> = failed or processing. <code>RechargeCall</code> also uses <code>3</code> = failed.</p>
+    </section>
+
+    <!-- ── Account ──────────────────────────────────────────── -->
+    <section id="account">
+      <h2>Account</h2>
+
+      <div class="card endpoint" id="login">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/Login</span><span class="tag">no token</span></div>
+        <p>Same checks as the web login. 5 wrong passwords lock the account.</p>
+        <div class="two">
+          <div class="code"><div class="label">Request</div><pre><code>{
+  "Name": "9876543210",
+  "Pass": "secret",
+  "FireToken": "&lt;firebase token&gt;",
+  "Version": "1.0"
+}</code></pre></div>
+          <div class="code"><div class="label">Response</div><pre><code>{
+  "ERROR": "0",
+  "STATUSCODE": "1",
+  "MESSAGE": "Login Success",
+  "TOKENID": "3f9c0b…",
+  "USERID": "12",
+  "SHOPNAME": "9876543210",
+  "MOBILENUMBER": "9876543210",
+  "EMAIL": "",
+  "ROLEID": "4",
+  "USERTYPE": "Retailer",
+  "BALANCE": "1250.00",
+  "OTPCheck": "True"
+}</code></pre></div>
+        </div>
+        <p><code>ROLEID</code>: 1 Super Admin, 2 Admin, 3 API User, 4 Retailer. <code>FireToken</code> is saved to <code>User.Firebasetoken</code> when sent.</p>
+      </div>
+
+      <div class="card endpoint" id="changepass">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/ChangePass</span><span class="tag auth">Tokenid</span></div>
+        <div class="two">
+          <div class="code"><div class="label">Request</div><pre><code>{
+  "Tokenid": "3f9c0b…",
+  "OldPassword": "secret",
+  "Password": "newSecret"
+}</code></pre></div>
+          <div class="code"><div class="label">Response</div><pre><code>{
+  "Error": "0",
+  "Status": "1",
+  "Message": "Password Change has been successfully"
+}</code></pre></div>
+        </div>
+        <p>New password: 4+ characters, different from the old one. Wrong old password returns <code>Error</code> <code>3</code>.</p>
+      </div>
+
+      <div class="card endpoint" id="forgot">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/ResendOTP</span><span class="tag">no token</span></div>
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/ForgetPass</span><span class="tag">no token</span><span class="alias">also /ForgotPass</span></div>
+        <p>Forgot password is two calls. The OTP is 6 digits and is valid for 10 minutes.</p>
+        <div class="two">
+          <div class="code"><div class="label">Step 1 &middot; ResendOTP</div><pre><code>{ "Mobileno": "9876543210" }
+
+→ { "Error": "0", "Status": "1",
+    "Time": "600",
+    "Message": "OTP has been sent to your
+                registered mobile number" }</code></pre></div>
+          <div class="code"><div class="label">Step 2 &middot; ForgetPass</div><pre><code>{
+  "Mobileno": "9876543210",
+  "OTP": "482913",
+  "Password": "newSecret"
+}
+
+→ { "Error": "0", "Status": "1",
+    "Message": "Password has been
+                successfully changed" }</code></pre></div>
+        </div>
+        <p>Step 1 always replies "OTP has been sent", so usernames can't be probed. <code>ForgetPass</code> without <code>OTP</code> does step 1. Wrong OTP = <code>Error 3</code>, expired = <code>Error 2</code>. A successful reset also unlocks a locked account.</p>
+      </div>
+    </section>
+
+    <!-- ── Wallet ───────────────────────────────────────────── -->
+    <section id="wallet">
+      <h2>Wallet</h2>
+
+      <div class="card endpoint" id="balance">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/BalanceCheck</span><span class="tag auth">Tokenid</span><span class="alias">also /Balance</span></div>
+        <div class="two">
+          <div class="code"><div class="label">Request</div><pre><code>{ "Tokenid": "3f9c0b…" }</code></pre></div>
+          <div class="code"><div class="label">Response</div><pre><code>{
+  "ERROR": "0",
+  "STATUSCODE": "1",
+  "MESSAGE": "SUCCESS",
+  "WBalance": "1250.00",
+  "OutStandingBalance": "0.00"
+}</code></pre></div>
+        </div>
+        <p><code>WBalance</code> = <code>User.UserBal</code>; <code>OutStandingBalance</code> = <code>User.UserOutStandingBal</code>.</p>
+      </div>
+
+      <div class="card endpoint" id="dashboard">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/DashboardHome</span><span class="tag auth">Tokenid</span><span class="alias">also /Dashboard</span></div>
+        <div class="code"><div class="label">Request</div><pre><code>{ "Tokenid": "3f9c0b…", "FormDate": "2026-10-01", "ToDate": "2026-10-18" }</code></pre></div>
+        <p>The dates only set the <code>LastRecharge</code> range (default: last 30 days). Every other figure is for today.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>OpeningBalance</code></td><td>Balance before today's first ledger entry</td></tr>
+            <tr><td><code>ClosingBalance</code></td><td>Current wallet balance</td></tr>
+            <tr><td><code>Commission</code></td><td>Today's commission on successful recharges</td></tr>
+            <tr><td><code>TopUpAmount</code></td><td>Today's wallet credits</td></tr>
+            <tr><td><code>TodayData</code></td><td><code>SuccessAmount</code>, <code>FailedAmount</code>, <code>TotalCount</code>, <code>SuccessCount</code>, <code>FailedCount</code>, <code>PendingCount</code></td></tr>
+            <tr><td><code>LastRecharge</code></td><td>Up to 10 latest recharges, same row as <a href="#rechargereport">RechargeReport</a></td></tr>
+            <tr><td><code>Notification</code></td><td>Always empty for now</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- ── Recharge ─────────────────────────────────────────── -->
+    <section id="recharge-section">
+      <h2>Recharge</h2>
+
+      <div class="card endpoint" id="operator">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/Operator</span><span class="tag auth">Tokenid</span><span class="alias">also /OperatorList</span></div>
+        <div class="two">
+          <div class="code"><div class="label">Request</div><pre><code>{ "Tokenid": "3f9c0b…", "mode": "1" }</code></pre></div>
+          <div class="code"><div class="label">Response</div><pre><code>{
+  "ERROR": "0", "STATUSCODE": "1",
+  "MESSAGE": "SUCCESS",
+  "Operator": [
+    { "Id": 1, "OperatorName": "Airtel",
+      "OperatorCode": "AT", "OpTypeId": 1,
+      "OperatorType": "Prepaid" }
+  ]
+}</code></pre></div>
+        </div>
+        <p><code>mode</code> = operator type id; blank returns all active operators. Send <code>Id</code> as <code>Operator</code> in RechargeCall.</p>
+      </div>
+
+      <div class="card endpoint" id="recharge">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/RechargeCall</span><span class="tag auth">TokenID</span><span class="alias">also /Recharge</span></div>
+        <p>Runs the same pipeline as the web Recharge page: validation, routing, vendor call, and switching to the next vendor when one fails.</p>
+        <div class="two">
+          <div class="code"><div class="label">Request</div><pre><code>{
+  "TokenID": "3f9c0b…",
+  "MobileNo": "9876543210",
+  "Operator": "1",
+  "CircleId": "5",
+  "Amount": "199",
+  "Pin": "12345",
+  "RefTxnId": "APP1001"
+}</code></pre></div>
+          <div class="code"><div class="label">Response</div><pre><code>{
+  "ERROR": "0",
+  "STATUS": "Recharge SUCCESS",
+  "STATUSCODE": "1",
+  "MESSAGE": "Recharge successful. …",
+  "WBalance": "1051.00",
+  "RECID": "8812",
+  "TXNID": "APP1001",
+  "OPERATORTXNID": "BR0001"
+}</code></pre></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Field</th><th>Rule</th></tr></thead>
+          <tbody>
+            <tr><td><code>MobileNo</code></td><td>6&ndash;15 digits</td></tr>
+            <tr><td><code>Operator</code></td><td><code>Id</code> from <a href="#operator">Operator</a></td></tr>
+            <tr><td><code>CircleId</code> (or <code>CricleID</code>)</td><td>Optional; filled by validation when blank</td></tr>
+            <tr><td><code>Amount</code></td><td>Greater than 0, up to 99,999</td></tr>
+            <tr><td><code>Pin</code></td><td>Checked only when the user has a PIN set</td></tr>
+            <tr><td><code>RefTxnId</code></td><td>Optional; generated when blank</td></tr>
+          </tbody>
+        </table></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>STATUSCODE</th><th>STATUS</th><th>Wallet</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge b-ok">1</span></td><td>Recharge SUCCESS</td><td>Debited</td></tr>
+            <tr><td><span class="badge b-warn">2</span></td><td>Recharge Under Processing</td><td>Debited; final status comes later</td></tr>
+            <tr><td><span class="badge b-bad">3</span></td><td>Recharge FAILED</td><td>Refunded (or never debited if validation failed)</td></tr>
+          </tbody>
+        </table></div>
+        <p><strong>How the debit works:</strong></p>
+        <ol class="flow">
+          <li>Token, PIN and amount are checked; then the validation SP builds the vendor route list. A rejection here fails with nothing debited.</li>
+          <li>The first vendor try debits the wallet once.</li>
+          <li>Vendor reply <span class="badge b-ok">success</span> &rarr; done. <span class="badge b-warn">processing</span> or no response tag matched &rarr; stays processing.</li>
+          <li>Vendor reply <span class="badge b-bad">failed</span> &rarr; the next vendor is tried, with no second debit.</li>
+          <li>No vendor left &rarr; marked failed and the debit is refunded.</li>
+        </ol>
+        <div class="note">When <code>ERROR</code> is <code>5</code>, the wallet may already be debited. Show the <a href="#rechargereport">RechargeReport</a> instead of retrying.</div>
+      </div>
+    </section>
+
+    <!-- ── Commission ───────────────────────────────────────── -->
+    <section id="commission-section">
+      <h2>Commission</h2>
+      <p>Both read the commission set on the user's package (<code>PackageComm</code>). A user with no package gets an empty list.</p>
+
+      <div class="card endpoint" id="commission">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/Commission</span><span class="tag auth">Tokenid</span><span class="alias">also /CommissionList</span></div>
+        <div class="two">
+          <div class="code"><div class="label">Request</div><pre><code>{ "Tokenid": "3f9c0b…" }</code></pre></div>
+          <div class="code"><div class="label">Response</div><pre><code>{
+  "ERROR": "0", "STATUSCODE": "1",
+  "MESSAGE": "SUCCESS",
+  "Commissionlist": [
+    { "OperatorId": 1,
+      "OperatorName": "Airtel",
+      "OperatorCode": "AT",
+      "PackageName": "Retail Gold",
+      "Commission": 3.5,
+      "CommType": "P" }
+  ]
+}</code></pre></div>
+        </div>
+        <p><code>CommType</code>: <code>P</code> = percent of the recharge amount, <code>F</code> = flat rupees.</p>
+      </div>
+
+      <div class="card endpoint" id="slab">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/OperatorSlabCommission</span><span class="tag auth">Tokenid</span></div>
+        <div class="code"><div class="label">Request</div><pre><code>{ "Tokenid": "3f9c0b…", "Operator": "1" }</code></pre></div>
+        <p>Same response as <a href="#commission">Commission</a>, filtered to that one operator.</p>
+      </div>
+    </section>
+
+    <!-- ── Reports ──────────────────────────────────────────── -->
+    <section id="reports">
+      <h2>Reports</h2>
+      <p>Only the logged-in user's own rows, newest first. <code>TOTAL</code> = row count; rows are in <code>REPORT</code>.</p>
+
+      <div class="card endpoint" id="rechargereport">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/RechargeReport</span><span class="tag auth">Tokenid</span></div>
+        <div class="two">
+          <div class="code"><div class="label">Request</div><pre><code>{
+  "Tokenid": "3f9c0b…",
+  "Startdate": "2026-10-01",
+  "Enddate": "2026-10-18",
+  "status": "Success",
+  "MobileNo": "98765"
+}</code></pre></div>
+          <div class="code"><div class="label">Response</div><pre><code>{
+  "ERROR": "0", "STATUSCODE": "1",
+  "MESSAGE": "SUCCESS", "TOTAL": 1,
+  "REPORT": [
+    { "RecId": 8812, "TxnId": "APP1001",
+      "OurRefTxnId": "E2610181…",
+      "OperatorTxnId": "BR0001",
+      "MobileNo": "9876543210",
+      "Operator": "Airtel",
+      "Amount": 199.0, "Commission": 6.97,
+      "Status": "Success",
+      "StatusMsg": "p1-v3-…",
+      "Date": "2026-10-18 11:42:10" }
+  ]
+}</code></pre></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Filter</th><th>Values</th></tr></thead>
+          <tbody>
+            <tr><td><code>Startdate</code> / <code>Enddate</code></td><td>Default today</td></tr>
+            <tr><td><code>status</code></td><td><code>Success</code>, <code>Failed</code>, <code>Pending</code> (or <code>Process</code>); ids <code>1</code> Success, <code>2</code> Failed, <code>3</code> Pending; blank or <code>All</code> = everything</td></tr>
+            <tr><td><code>MobileNo</code></td><td>Part of the number, txn id or operator name</td></tr>
+          </tbody>
+        </table></div>
+        <p>Send <code>RecId</code> to <a href="#complain">BookComplain</a>.</p>
+      </div>
+
+      <div class="card endpoint" id="txnreport">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/TransactionReport</span><span class="tag auth">Tokenid</span><span class="alias">also /TxnReport</span></div>
+        <div class="two">
+          <div class="code"><div class="label">Request</div><pre><code>{
+  "Tokenid": "3f9c0b…",
+  "PageIndex": 1,
+  "PageSize": 20,
+  "Startdate": "2026-09-18",
+  "Enddate": "2026-10-18"
+}</code></pre></div>
+          <div class="code"><div class="label">Row in REPORT</div><pre><code>{
+  "TxnId": "APP1001",
+  "Type": "Recharge",
+  "Description": "Recharge Debit - 98765…",
+  "Credit": 0.0,
+  "Debit": 199.0,
+  "Balance": 1051.0,
+  "Date": "2026-10-18 11:42:09"
+}</code></pre></div>
+        </div>
+        <p>Wallet ledger: debits, refunds, commission, top-ups. <code>PageIndex</code> starts at 1; <code>PageSize</code> defaults to 20, max 200. Dates default to the last 30 days. <code>TOTAL</code> counts all rows in the range, not just this page.</p>
+      </div>
+    </section>
+
+    <!-- ── Complaints ───────────────────────────────────────── -->
+    <section id="support">
+      <h2>Complaints</h2>
+      <div class="card endpoint" id="complain">
+        <div class="route"><span class="method">POST</span><span class="path">/App/webservice/BookComplain</span><span class="tag auth">Tokenid</span></div>
+        <p>One complaint per recharge, only on the user's own <strong>successful</strong> recharge.</p>
+        <div class="two">
+          <div class="code"><div class="label">Request</div><pre><code>{
+  "Tokenid": "3f9c0b…",
+  "RecID": "8812",
+  "Remark": "Recharge success but not credited"
+}</code></pre></div>
+          <div class="code"><div class="label">Response</div><pre><code>{
+  "Error": "0",
+  "Status": "1",
+  "Message": "Your Complain Successfully Submitted"
+}</code></pre></div>
+        </div>
+        <p><code>RecID</code> accepts the <code>RecId</code> from RechargeReport, our reference id, or the user's txn id.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Message</th><th>When</th></tr></thead>
+          <tbody>
+            <tr><td>Your Complain Successfully Submitted</td><td>Saved (<code>Status</code> 1)</td></tr>
+            <tr><td>Recharge id not found, try again</td><td>No such recharge for this user</td></tr>
+            <tr><td>Sorry, Transaction ID Failed or Recharge Not Success</td><td>Recharge is failed or still pending</td></tr>
+            <tr><td>Already complain done</td><td>A complaint already exists for it</td></tr>
+          </tbody>
+        </table></div>
+        <p>The complaint is saved in <code>Complaint</code> (status Pending) and forwarded to the vendor's <code>ComplainRequest</code> URL when one is set. The vendor's reply, or its error, is stored in <code>Complaint.ApiResponse</code>; a vendor error does not fail the complaint.</p>
+      </div>
+    </section>
+
+    <!-- ── Notes ────────────────────────────────────────────── -->
+    <section id="notes">
+      <h2>Setup notes</h2>
+      <div class="note"><strong>SMS for OTP is not connected yet.</strong> <code>SendOtpSms()</code> in <code>MobileAppController</code> is empty, so ForgetPass can't reach users. The OTP is saved in <code>User.OTP</code> and never returned by the API.</div>
+      <ul>
+        <li><strong>Username = mobile number.</strong> The User table has no mobile or email column, so <code>MOBILENUMBER</code> and <code>SHOPNAME</code> repeat the username and <code>EMAIL</code> is blank.</li>
+        <li><strong>PIN</strong> is compared as plain text with <code>User.UserPin</code>; users without a PIN can recharge without one.</li>
+        <li><strong>Status ids</strong>: 1 = Success, 2 = Failed, 3 = Pending (<code>RechargeStatusCodes</code>). They must match <code>usp_UpdateRechargeStatus</code>.</li>
+        <li><strong>MediumId</strong>: app recharges are saved with <code>MediumId = 1</code>, the same as the web panel.</li>
+        <li><strong>Not built yet</strong>: ComplainList, Profile, wallet requests and member endpoints from the STC app.</li>
+      </ul>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  // Copy buttons on code blocks
+  document.querySelectorAll('.code').forEach(function (box) {
+    var pre = box.querySelector('pre');
+    if (!pre || !navigator.clipboard) return;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', function () {
+      navigator.clipboard.writeText(pre.innerText).then(function () {
+        btn.textContent = 'Copied';
+        setTimeout(function () { btn.textContent = 'Copy'; }, 1200);
+      });
+    });
+    box.appendChild(btn);
+  });
+
+  // Theme toggle (remembered per browser)
+  var root = document.documentElement;
+  try { var saved = localStorage.getItem('appApiTheme'); if (saved) root.setAttribute('data-theme', saved); } catch (e) {}
+  document.getElementById('themeBtn').addEventListener('click', function () {
+    var dark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var next = dark ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('appApiTheme', next); } catch (e) {}
+  });
+
+  // Highlight the nav link of the section in view
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav.side a'));
+  var targets = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id); });
+      });
+    }, { rootMargin: '0px 0px -70% 0px' });
+    targets.forEach(function (t) { if (t) io.observe(t); });
+  }
+})();
+</script>
+</body>
+</html>

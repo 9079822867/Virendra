@@ -131,6 +131,8 @@ namespace VIRENDRA.Data
                     ROW_NUMBER() OVER (ORDER BY r.RequestTime DESC) AS SrNo,
                     r.Id     AS RecId,
                     r.StatusId,
+                    CAST(CASE WHEN EXISTS (SELECT 1 FROM Complaint cp WHERE cp.RecId = r.Id)
+                              THEN 1 ELSE 0 END AS BIT) AS HasComplaint,
                     r.TxnId  AS TxnId,
                     r.OurRefTxnId,
                     r.ApiTxnId,

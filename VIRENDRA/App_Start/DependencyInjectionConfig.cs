@@ -43,6 +43,7 @@ namespace VIRENDRA.App_Start
         private readonly IRechargeRepository       _rechargeRepo;
         private readonly RechargeService           _rechargeSvc;
         private readonly ICommonRoutingRepository  _routingRepo;
+        private readonly IComplaintRepository      _complaintRepo = new ComplaintRepository();
 
         public CustomControllerFactory(
             IUserRepository userRepo, IPackageRepository pkgRepo,
@@ -96,7 +97,8 @@ namespace VIRENDRA.App_Start
                 return new VendorController(_vendorRepo);
 
             if (controllerType == typeof(TransactionController))
-                return new TransactionController(_txnRepo, _rechargeRepo);
+                return new TransactionController(_txnRepo, _rechargeRepo, _complaintRepo,
+                    new ComplaintService(_complaintRepo, _rechargeRepo));
 
             if (controllerType == typeof(RechargeController))
                 return new RechargeController(_rechargeSvc, _rechargeRepo);

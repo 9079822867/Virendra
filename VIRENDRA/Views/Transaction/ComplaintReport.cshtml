@@ -1,0 +1,265 @@
+@model VIRENDRA.Models.ComplaintReportViewModel
+@using VIRENDRA.Models
+@{
+    ViewBag.Title = "Complaint Report";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+    bool isAdmin = Model.IsAdmin;
+
+    Func<int, string> rcStatus = s =>
+          s == RechargeStatusCodes.SUCCESS ? "Success"
+        : s == RechargeStatusCodes.FAILED  ? "Failed"
+        : "Pending";
+
+    Func<byte, string> cpClass = s =>
+          s == ComplaintStatusCodes.RESOLVED   ? "success"
+        : s == ComplaintStatusCodes.PROCESSING ? "pending"
+        : "failed";
+
+    int openCount     = Model.Items.Count(i => i.IsOpen);
+    int resolvedCount = Model.Items.Count(i => i.StatusId == ComplaintStatusCodes.RESOLVED);
+    int refundCount   = Model.Items.Count(i => i.IsRefund);
+}
+
+<div class="history-page">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+        <h4 class="mb-sm-0 font-size-18">Complaint Report</h4>
+        <div class="page-title-right">
+            <ol class="breadcrumb m-0">
+                <li class="breadcrumb-item"><a href="javascript:void(0);">Transaction</a></li>
+                <li class="breadcrumb-item active">Complaint Report</li>
+            </ol>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-3" style="border-radius:10px;">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible mb-3" style="border-radius:10px;">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form class="history-filter" method="get" action="@Url.Action("ComplaintReport", "Transaction")">
+        <div class="row g-3 align-items-center">
+            <div class="col-lg-2 col-md-4">
+                <input type="date" name="fromDate" class="form-control" value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <input type="date" name="toDate" class="form-control" value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <select name="statusId" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="@ComplaintStatusCodes.PENDING" @(Model.StatusId == ComplaintStatusCodes.PENDING ? "selected" : "")>Pending</option>
+                    <option value="@ComplaintStatusCodes.PROCESSING" @(Model.StatusId == ComplaintStatusCodes.PROCESSING ? "selected" : "")>Processing</option>
+                    <option value="@ComplaintStatusCodes.RESOLVED" @(Model.StatusId == ComplaintStatusCodes.RESOLVED ? "selected" : "")>Resolved</option>
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <input type="text" name="searchText" class="form-control" value="@Model.SearchText" placeholder="Recharge ID, number, txn ID" />
+            </div>
+            <div class="col-lg-1 col-md-3">
+                <button type="submit" class="btn btn-history-search w-100">Search</button>
+            </div>
+            <div class="col-lg-1 col-md-3">
+                <a href="@Url.Action("ComplaintReport", "Transaction")" class="btn btn-history-reset w-100">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <hr class="history-divider" />
+
+    <div class="table-responsive history-table-wrap">
+        <table class="table history-table mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Complaint Date</th>
+                    <th>Status</th>
+                    <th>Complaint By</th>
+                    <th>Recharge ID</th>
+                    <th>Number</th>
+                    <th>Operator</th>
+                    <th class="text-end">Amount</th>
+                    <th>Recharge</th>
+                    <th>Recharge Date</th>
+                    <th>@(isAdmin ? "Vendor" : "Operator Txn ID")</th>
+                    <th>Remark</th>
+                    <th>Admin Comment</th>
+                    <th>Refund</th>
+                    <th>Resolved</th>
+                    @if (isAdmin)
+                    {
+                        <th>Vendor Reply</th>
+                        <th class="text-center">Action</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr><td colspan="@(isAdmin ? 17 : 15)" class="text-center text-muted py-4">No complaints in this period.</td></tr>
+                }
+                @foreach (var c in Model.Items)
+                {
+                    <tr>
+                        <td>@c.Id</td>
+                        <td class="text-nowrap">@(c.ComplaintDate?.ToString("dd MMM yyyy hh:mm tt"))</td>
+                        <td><span class="status-badge status-@cpClass(c.StatusId)">@c.StatusName</span></td>
+                        <td>@c.ComplaintBy</td>
+                        <td>
+                            @c.RecId
+                            @if (!string.IsNullOrEmpty(c.OurRefTxnId))
+                            {
+                                <div class="small text-muted">@c.OurRefTxnId</div>
+                            }
+                        </td>
+                        <td>@c.CustomerNo</td>
+                        <td>@c.Operator</td>
+                        <td class="text-end">@c.Amount.ToString("0.00")</td>
+                        <td><span class="status-badge status-@rcStatus(c.RechargeStatusId).ToLower()">@rcStatus(c.RechargeStatusId)</span></td>
+                        <td class="text-nowrap">@(c.RequestTime?.ToString("dd MMM yyyy hh:mm tt"))</td>
+                        <td>@(isAdmin ? c.ApiName : c.ApiTxnId)</td>
+                        <td style="min-width:180px">@c.Remark</td>
+                        <td style="min-width:160px">@c.Comment</td>
+                        <td>@(c.IsRefund ? "Yes" : "")</td>
+                        <td class="text-nowrap">
+                            @(c.ResolvedDate?.ToString("dd MMM yyyy hh:mm tt"))
+                            @if (!string.IsNullOrEmpty(c.ResolvedBy))
+                            {
+                                <div class="small text-muted">by @c.ResolvedBy</div>
+                            }
+                        </td>
+                        @if (isAdmin)
+                        {
+                            <td class="small" style="max-width:220px" title="@c.ApiResponse">
+                                @(c.ApiResponse != null && c.ApiResponse.Length > 60 ? c.ApiResponse.Substring(0, 60) + "…" : c.ApiResponse)
+                            </td>
+                            <td class="text-center">
+                                @if (c.IsOpen)
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-primary js-resolve"
+                                            data-id="@c.Id" data-recid="@c.RecId" data-number="@c.CustomerNo"
+                                            data-amount="@c.Amount.ToString("0.00")" data-remark="@c.Remark"
+                                            data-can-refund="@(c.RechargeStatusId == RechargeStatusCodes.SUCCESS ? "1" : "0")">
+                                        Resolve
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Closed</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="@(isAdmin ? 17 : 15)" class="fw-semibold">
+                        <span class="text-success me-3">Total @Model.Items.Count</span>
+                        <span class="me-3">Open @openCount</span>
+                        <span class="me-3">Resolved @resolvedCount</span>
+                        <span>Refunded @refundCount</span>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+@if (isAdmin)
+{
+    <div class="modal fade" id="resolveModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" method="post" action="@Url.Action("ResolveComplaint", "Transaction")" id="resolveForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="complaintId" id="rsId" />
+                <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Resolve Complaint</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1 small text-muted" id="rsInfo"></p>
+                    <p class="mb-3 small" id="rsRemark"></p>
+
+                    <div class="mb-3">
+                        <label class="form-label d-block">Outcome</label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="isResolved" id="rsResolved" value="true" checked />
+                            <label class="form-check-label" for="rsResolved">Resolved</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="isResolved" id="rsProcessing" value="false" />
+                            <label class="form-check-label" for="rsProcessing">Keep processing</label>
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        @* checkbox first, hidden after: MVC binds the first value, like Html.CheckBox *@
+                        <input class="form-check-input" type="checkbox" name="isRefund" id="rsRefund" value="true" />
+                        <input type="hidden" name="isRefund" value="false" />
+                        <label class="form-check-label" for="rsRefund" id="rsRefundLabel">Refund: mark recharge Failed and credit the wallet</label>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label" for="rsComment">Comment (shown to the user)</label>
+                        <textarea name="comment" id="rsComment" class="form-control" rows="3" maxlength="1000"
+                                  placeholder="e.g. Operator confirmed credit, ref BR0001"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Complaint</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @if (isAdmin)
+    {
+        <script>
+            (function () {
+                var modal = new bootstrap.Modal(document.getElementById('resolveModal'));
+                var refund = document.getElementById('rsRefund');
+
+                document.querySelectorAll('.js-resolve').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var canRefund = btn.getAttribute('data-can-refund') === '1';
+                        document.getElementById('rsId').value = btn.getAttribute('data-id');
+                        document.getElementById('rsInfo').textContent =
+                            'Complaint #' + btn.getAttribute('data-id') + ' • Recharge #' + btn.getAttribute('data-recid') +
+                            ' • ' + btn.getAttribute('data-number') + ' • ₹' + btn.getAttribute('data-amount');
+                        document.getElementById('rsRemark').textContent = 'User remark: ' + (btn.getAttribute('data-remark') || '-');
+                        document.getElementById('rsResolved').checked = true;
+                        document.getElementById('rsComment').value = '';
+                        refund.checked = false;
+                        refund.disabled = !canRefund;
+                        document.getElementById('rsRefundLabel').textContent = canRefund
+                            ? 'Refund: mark recharge Failed and credit ₹' + btn.getAttribute('data-amount') + ' to the wallet'
+                            : 'Refund not available (recharge is no longer Success)';
+                        modal.show();
+                    });
+                });
+
+                document.getElementById('resolveForm').addEventListener('submit', function (e) {
+                    if (refund.checked && !confirm('Refund this recharge? It will be marked Failed and the amount credited back.'))
+                        e.preventDefault();
+                });
+            })();
+        </script>
+    }
+}
+
+@Html.Partial("_HistoryStyles")

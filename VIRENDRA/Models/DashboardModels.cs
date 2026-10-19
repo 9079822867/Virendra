@@ -118,6 +118,7 @@ namespace VIRENDRA.Models
         public int SrNo { get; set; }
         public long RecId { get; set; }            // Recharge.Id
         public int StatusId { get; set; }          // Recharge.StatusId
+        public bool HasComplaint { get; set; }     // a Complaint row exists for this recharge
         public string TxnId { get; set; }         // UserTxnId
         public string OurRefTxnId { get; set; }   // Internal reference ID
         public string ApiTxnId { get; set; }       // API-side transaction ID

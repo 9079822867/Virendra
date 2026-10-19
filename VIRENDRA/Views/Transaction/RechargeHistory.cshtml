@@ -4,7 +4,7 @@
     ViewBag.Title = "Recharge History";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
     bool canChangeStatus = ViewBag.CanChangeStatus == true;
-    int colCount = canChangeStatus ? 9 : 8;
+    int colCount = 9;
 }
 
 <div class="history-page">
@@ -75,10 +75,7 @@
                     <th class="text-end">Commission</th>
                     <th>Status</th>
                     <th>Date</th>
-                    @if (canChangeStatus)
-                    {
-                        <th class="text-center">Action</th>
-                    }
+                    <th class="text-center">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -93,10 +90,25 @@
                         <td class="text-end">@item.Commission.ToString("0.00")</td>
                         <td><span class="status-badge status-@item.Status.ToLower()">@item.Status</span></td>
                         <td>@item.Date.ToString("dd MMM yyyy hh:mm tt")</td>
-                        @if (canChangeStatus)
-                        {
-                            <td class="text-center">
-                                @if (item.StatusId != RechargeStatusCodes.FAILED)
+                        <td class="text-center text-nowrap">
+                            @if (item.HasComplaint)
+                            {
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   href="@Url.Action("ComplaintReport", "Transaction", new { searchText = item.RecId, fromDate = item.Date.AddDays(-1).ToString("yyyy-MM-dd") })">
+                                    Complained
+                                </a>
+                            }
+                            else if (item.StatusId == RechargeStatusCodes.SUCCESS)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-warning js-complain"
+                                        data-recid="@item.RecId" data-number="@item.Number"
+                                        data-amount="@item.Amount.ToString("0.00")" data-txn="@item.TxnId">
+                                    Complain
+                                </button>
+                            }
+                            @if (canChangeStatus)
+                            {
+                                if (item.StatusId != RechargeStatusCodes.FAILED)
                                 {
                                     <button type="button" class="btn btn-sm btn-outline-primary js-change-status"
                                             data-recid="@item.RecId" data-status="@item.StatusId"
@@ -105,12 +117,12 @@
                                         Change
                                     </button>
                                 }
-                                else
+                                else if (!item.HasComplaint)
                                 {
                                     <span class="text-muted small">Final</span>
                                 }
-                            </td>
-                        }
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -123,6 +135,32 @@
                 </tr>
             </tfoot>
         </table>
+    </div>
+</div>
+
+<div class="modal fade" id="complainModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="post" action="@Url.Action("CreateComplaint", "Transaction")" id="complainForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="recId" id="cpRecId" />
+            <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
+
+            <div class="modal-header">
+                <h5 class="modal-title">Book Complaint</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3 small text-muted" id="cpInfo"></p>
+                <label class="form-label" for="cpRemark">What went wrong?</label>
+                <textarea name="remark" id="cpRemark" class="form-control" rows="3" maxlength="500" required
+                          placeholder="e.g. Recharge shows success but not credited to the customer"></textarea>
+                <div class="form-text">One complaint per recharge. It is also forwarded to the vendor.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-warning">Submit Complaint</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -169,6 +207,21 @@
 }
 
 @section Scripts {
+    <script>
+        (function () {
+            var modal = new bootstrap.Modal(document.getElementById('complainModal'));
+            document.querySelectorAll('.js-complain').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    document.getElementById('cpRecId').value = btn.getAttribute('data-recid');
+                    document.getElementById('cpRemark').value = '';
+                    document.getElementById('cpInfo').textContent =
+                        'Recharge #' + btn.getAttribute('data-recid') + ' • Number ' + btn.getAttribute('data-number') +
+                        ' • Amount ₹' + btn.getAttribute('data-amount');
+                    modal.show();
+                });
+            });
+        })();
+    </script>
     @if (canChangeStatus)
     {
         <script>

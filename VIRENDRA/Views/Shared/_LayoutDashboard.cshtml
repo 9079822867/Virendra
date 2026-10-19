@@ -374,6 +374,12 @@
                                     <i class="fas fa-list-alt"></i> Transaction History
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item @(txnActive && currentAction=="ComplaintReport" ? "active" : "")"
+                                   href="@Url.Action("ComplaintReport","Transaction")">
+                                    <i class="fas fa-exclamation-circle"></i> Complaint Report
+                                </a>
+                            </li>
                         </ul>
                     </li>
 
@@ -468,7 +474,7 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="ddSupport">
                             <li>
-                                <a class="dropdown-item" href="javascript:void(0);">
+                                <a class="dropdown-item" href="@Url.Action("ComplaintReport","Transaction")">
                                     <i class="fas fa-exclamation-circle"></i> Dispute
                                 </a>
                             </li>
@@ -485,21 +491,41 @@
                         <i class="fa fa-rupee-sign"></i>@bal.ToString("N2")
                     </span>
 
-                    <!-- User pill -->
-                    <div class="nav-user-pill d-none d-md-flex">
-                        <i class="fas fa-user-circle"></i>
-                        <span>@uname</span>
-                        <span class="badge ms-1"
-                              style="background:rgba(255,255,255,.25);font-size:.65rem;">@roleName</span>
-                        </div>
-
-                        <!-- Logout -->
-                        <a href="@Url.Action("Logout","Auth")"
-                           class="btn btn-sm btn-outline-light ms-1"
-                           title="Logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span class="d-inline d-lg-none ms-1">Logout</span>
+                    <!-- User menu -->
+                    <div class="dropdown">
+                        <a href="#" class="nav-user-pill dropdown-toggle text-decoration-none" id="ddUser"
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false" style="cursor:pointer;">
+                            <i class="fas fa-user-circle"></i>
+                            <span>Hello, @uname</span>
+                            <span class="badge ms-1 d-none d-md-inline"
+                                  style="background:rgba(255,255,255,.25);font-size:.65rem;">@roleName</span>
                         </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="ddUser">
+                            <li>
+                                <a class="dropdown-item @(currentController=="Setting" && currentAction=="UserProfile" ? "active" : "")"
+                                   href="@Url.Action("UserProfile","Setting")">
+                                    <i class="fas fa-user"></i> User Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="@Url.Action("ComplaintReport","Transaction")">
+                                    <i class="fas fa-headphones"></i> Support
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController=="Setting" && currentAction=="ChangePassword" ? "active" : "")"
+                                   href="@Url.Action("ChangePassword","Setting")">
+                                    <i class="fas fa-lock"></i> Password
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <a class="dropdown-item" href="@Url.Action("Logout","Auth")">
+                                    <i class="fas fa-sign-out-alt"></i> Sign Out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                     </div>
 
                 </div><!-- /collapse -->

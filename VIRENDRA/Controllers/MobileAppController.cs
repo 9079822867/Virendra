@@ -29,7 +29,6 @@ namespace VIRENDRA.Controllers
     {
         private const int  MAX_RETRY_COUNT    = 5;      // same as AuthController
         private const int  OTP_VALID_MINUTES  = 10;
-        private const byte COMPLAINT_PENDING  = RechargeStatusCodes.PENDING;
 
         // App contract uses exact property names (ERROR, STATUSCODE…), not the API's camelCase
         private static readonly JsonSerializerSettings _json = new JsonSerializerSettings
@@ -44,6 +43,8 @@ namespace VIRENDRA.Controllers
         private readonly MobileAppRepository   _appRepo  = new MobileAppRepository();
         private readonly Services.RechargeService _rechargeSvc =
             new Services.RechargeService(new RechargeRepository());
+        private readonly Services.ComplaintService _complaintSvc =
+            new Services.ComplaintService(new ComplaintRepository(), new RechargeRepository());
 
         #region Login
 
@@ -402,93 +403,15 @@ namespace VIRENDRA.Controllers
                 if (user == null)
                     return Reply(Signup("9", "2", "Authentication error!"));
 
-                var rec = _appRepo.FindRechargeForComplaint(user.Id, req.RecID.Trim());
-                if (rec == null)
-                    return Reply(Signup("0", "3", "Recharge id not found, try again"));
-
-                // Same rule as STC: complaints only for successful recharges
-                if (rec.StatusId != RechargeStatusCodes.SUCCESS)
-                    return Reply(Signup("0", "3", "Sorry, Transaction ID Failed or Recharge Not Success"));
-
-                if (_appRepo.ComplaintExists(rec.Id))
-                    return Reply(Signup("0", "3", "Already complain done"));
-
-                string remark = string.IsNullOrWhiteSpace(req.Remark) ? "Recharge complaint" : req.Remark.Trim();
-                if (remark.Length > 500) remark = remark.Substring(0, 500);
-
-                long complaintId = _appRepo.InsertComplaint(rec.Id, user.Id, remark, COMPLAINT_PENDING);
-
-                // Forward to the vendor's ComplainRequest URL when one is configured
-                if (rec.ApiId.HasValue)
-                {
-                    try
-                    {
-                        string apiRes = SendVendorComplaint(rec, remark);
-                        if (apiRes != null)
-                            _appRepo.UpdateComplaintApiResponse(complaintId,
-                                apiRes.Length > 500 ? apiRes.Substring(0, 500) : apiRes);
-                    }
-                    catch (Exception ex)
-                    {
-                        _appRepo.UpdateComplaintApiResponse(complaintId, "VENDOR_ERROR: " + ex.Message);
-                    }
-                }
-
-                return Reply(Signup("0", "1", "Your Complain Successfully Submitted"));
+                var result = _complaintSvc.Book(req.RecID, req.Remark, user.Id, user.Id);
+                return Reply(result.Status == ComplaintBookStatus.Booked
+                    ? Signup("0", "1", result.Message)
+                    : Signup("0", "3", result.Message));
             }
             catch (Exception)
             {
                 return Reply(Signup("5", "2", "Unexpected error"));
             }
-        }
-
-        private string SendVendorComplaint(AppComplainRecharge rec, string remark)
-        {
-            var api = _appRepo.GetComplainApiUrl(rec.ApiId.Value);
-            if (api == null) return null;
-
-            string ourRef = rec.OurRefTxnId ?? rec.UserTxnId ?? rec.Id.ToString(CultureInfo.InvariantCulture);
-            bool   isPost = string.Equals(api.Method, "POST", StringComparison.OrdinalIgnoreCase)
-                            && !string.IsNullOrWhiteSpace(api.PostData);
-
-            string url = Fill(api.Url, api, rec, ourRef, isPost ? remark : HttpUtility.UrlEncode(remark));
-
-            var http = (HttpWebRequest)WebRequest.Create(url);
-            http.Timeout   = 30000;
-            http.UserAgent = "VRecharge/1.0";
-
-            if (isPost)
-            {
-                string body = Fill(api.PostData, api, rec, ourRef, remark);
-                byte[] bytes = Encoding.UTF8.GetBytes(body);
-                http.Method        = "POST";
-                http.ContentType   = body.TrimStart().StartsWith("{") ? "application/json" : "application/x-www-form-urlencoded";
-                http.ContentLength = bytes.Length;
-                using (var s = http.GetRequestStream()) s.Write(bytes, 0, bytes.Length);
-            }
-            else
-            {
-                http.Method = "GET";
-            }
-
-            using (var resp = (HttpWebResponse)http.GetResponse())
-            using (var rdr  = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
-                return rdr.ReadToEnd();
-        }
-
-        private static string Fill(string template, AppComplainApiUrl api, AppComplainRecharge rec,
-            string ourRef, string remark)
-        {
-            if (string.IsNullOrEmpty(template)) return string.Empty;
-            return template
-                .Replace("[UUU]",         api.ApiUserId   ?? "")
-                .Replace("[PPP]",         api.ApiPassword ?? "")
-                .Replace("[RRR]",         api.Remark      ?? "")
-                .Replace("[MMM]",         rec.CustomerNo  ?? "")
-                .Replace("[TTT]",         ourRef)
-                .Replace("[VVV]",         ourRef)
-                .Replace("[OPTXN]",       rec.ApiTxnId    ?? "")
-                .Replace("[Description]", remark          ?? "");
         }
 
         #endregion
