@@ -173,6 +173,8 @@ namespace VIRENDRA.Models
         public string SHOPNAME     { get; set; }
         public string BALANCE      { get; set; }
         public string OTPCheck     { get; set; }
+        public string KYCAPPROVED  { get; set; }   // "True" | "False" (admins always True)
+        public string KYCSTATUS    { get; set; }   // Approved | Under Review | Rejected | Incomplete
     }
 
     public class AppSignupResponse
@@ -236,5 +238,41 @@ namespace VIRENDRA.Models
         public decimal  Debit       { get; set; }
         public decimal  Balance     { get; set; }
         public DateTime Date        { get; set; }
+    }
+
+    // ── KYC ──────────────────────────────────────────────────────────────────
+
+    /// <summary>KycDocument request; KycUpload sends the same fields plus the file.</summary>
+    public class AppKycDocumentRequest : AppTokenRequest
+    {
+        public string Category { get; set; }        // AadhaarFront | AadhaarBack | PanCard | Selfie
+    }
+
+    /// <summary>JSON variant of KycUpload (multipart/form-data is also accepted).</summary>
+    public class AppKycUploadRequest : AppKycDocumentRequest
+    {
+        public string FileName   { get; set; }      // e.g. "front.jpg" (extension decides the type)
+        public string FileBase64 { get; set; }      // file content, base64 (data: prefix allowed)
+    }
+
+    public class AppKycStatusResponse
+    {
+        public string ERROR       { get; set; }
+        public string STATUSCODE  { get; set; }
+        public string MESSAGE     { get; set; }
+        public string KYCAPPROVED { get; set; }
+        public string KYCSTATUS   { get; set; }
+        public List<AppKycDocument> DOCUMENTS { get; set; }
+    }
+
+    public class AppKycDocument
+    {
+        public string CATEGORY   { get; set; }
+        public string TITLE      { get; set; }
+        public string STATUSID   { get; set; }      // 0 not uploaded, 1 pending, 2 approved, 3 rejected
+        public string STATUS     { get; set; }
+        public string REMARK     { get; set; }      // rejection reason
+        public string UPLOADEDON { get; set; }
+        public string CANUPLOAD  { get; set; }      // "True" unless already approved
     }
 }

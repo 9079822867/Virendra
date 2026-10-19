@@ -1,0 +1,148 @@
+@model VIRENDRA.Models.KycAdminIndexViewModel
+@{
+    ViewBag.Title = "KYC Approval";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+
+    var tabs = new[]
+    {
+        new { Key = "Pending",    Label = "Pending",    Icon = "fa-hourglass-half",      Count = (int?)Model.PendingTotal },
+        new { Key = "Rejected",   Label = "Rejected",   Icon = "fa-times-circle",        Count = (int?)Model.RejectedTotal },
+        new { Key = "Approved",   Label = "Approved",   Icon = "fa-check-circle",        Count = (int?)Model.ApprovedTotal },
+        new { Key = "Incomplete", Label = "Incomplete", Icon = "fa-exclamation-circle",  Count = (int?)null },
+        new { Key = "All",        Label = "All",        Icon = "fa-list",                Count = (int?)null }
+    };
+}
+
+<style>
+    .kyc-stat { border-radius: 14px; color: #fff; padding: 1.1rem 1.25rem; display: flex; align-items: center; gap: 1rem; }
+    .kyc-stat .ico { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,.22); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+    .kyc-stat h3 { margin: 0; font-weight: 800; }
+    .kyc-tabs .nav-link { border-radius: 30px; color: #667eea; font-weight: 600; font-size: .83rem; padding: .45rem 1rem; }
+    .kyc-tabs .nav-link.active { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: #fff; }
+    .kyc-table thead th { background: #f6f7fb; font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; border-bottom: none; }
+    .kyc-table td { vertical-align: middle; font-size: .86rem; }
+    .kyc-dot { display: inline-block; min-width: 26px; padding: .15rem .45rem; border-radius: 12px; font-size: .72rem; font-weight: 700; text-align: center; }
+</style>
+
+<div class="container-fluid">
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-1 fw-bold text-dark"><i class="fas fa-user-check text-primary me-2"></i>KYC Approval</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0" style="font-size:.82rem;">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard","Home")">Dashboard</a></li>
+                    <li class="breadcrumb-item active">KYC Approval</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-4" style="border-radius:10px;">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible mb-4" style="border-radius:10px;">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="kyc-stat shadow-sm" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+                <div class="ico"><i class="fas fa-hourglass-half"></i></div>
+                <div><h3>@Model.PendingTotal</h3><small>Pending review</small></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kyc-stat shadow-sm" style="background:linear-gradient(135deg,#eb3349 0%,#f45c43 100%);">
+                <div class="ico"><i class="fas fa-times-circle"></i></div>
+                <div><h3>@Model.RejectedTotal</h3><small>Awaiting re-upload</small></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kyc-stat shadow-sm" style="background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);">
+                <div class="ico"><i class="fas fa-check-circle"></i></div>
+                <div><h3>@Model.ApprovedTotal</h3><small>Approved</small></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius:14px;">
+        <div class="card-body px-4 py-3 border-bottom">
+            <ul class="nav nav-pills kyc-tabs gap-1 flex-wrap">
+                @foreach (var t in tabs)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @(Model.Status == t.Key ? "active" : "")" href="@Url.Action("Index", new { status = t.Key })">
+                            <i class="fas @t.Icon me-1"></i>@t.Label
+                            @if (t.Count.HasValue)
+                            {
+                                <span class="badge rounded-pill ms-1 @(Model.Status == t.Key ? "bg-light text-primary" : "bg-primary")">@t.Count</span>
+                            }
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 kyc-table">
+                <thead>
+                    <tr>
+                        <th class="ps-4">User</th>
+                        <th>Role</th>
+                        <th>Mobile</th>
+                        <th class="text-center">Documents</th>
+                        <th>Last Upload</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Users.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-5">
+                                <i class="fas fa-inbox fa-2x mb-2 d-block" style="color:#c5c9e8;"></i>
+                                No users in this list.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var u in Model.Users)
+                    {
+                        string s = u.OverallStatus;
+                        string cls = s == "Approved" ? "bg-success" : s == "Rejected" ? "bg-danger" : s == "Pending" ? "bg-warning text-dark" : "bg-secondary";
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-semibold">@(string.IsNullOrWhiteSpace(u.FullName) ? u.Username : u.FullName)</div>
+                                <small class="text-muted">@u.Username &middot; ID @u.UserId</small>
+                            </td>
+                            <td>@(u.RoleName ?? "-")</td>
+                            <td>@(u.MobileNumber ?? "-")</td>
+                            <td class="text-center">
+                                <span class="kyc-dot bg-light text-dark" title="Uploaded">@u.UploadedCount/4</span>
+                                @if (u.PendingCount > 0) { <span class="kyc-dot bg-warning text-dark" title="Pending">@u.PendingCount</span> }
+                                @if (u.ApprovedCount > 0) { <span class="kyc-dot bg-success text-white" title="Approved">@u.ApprovedCount</span> }
+                                @if (u.RejectedCount > 0) { <span class="kyc-dot bg-danger text-white" title="Rejected">@u.RejectedCount</span> }
+                            </td>
+                            <td><small>@u.LastUpload.ToString("dd MMM yyyy, hh:mm tt")</small></td>
+                            <td><span class="badge rounded-pill @cls">@s</span></td>
+                            <td class="text-end pe-4">
+                                <a href="@Url.Action("Review", new { id = u.UserId })" class="btn btn-sm btn-primary"
+                                   style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:none;">
+                                    <i class="fas fa-search me-1"></i>Review
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

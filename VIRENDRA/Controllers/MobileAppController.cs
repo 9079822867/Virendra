@@ -4,13 +4,17 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using Newtonsoft.Json;
 using VIRENDRA.Data;
 using VIRENDRA.Models;
+using VIRENDRA.Services;
 
 namespace VIRENDRA.Controllers
 {
@@ -21,14 +25,20 @@ namespace VIRENDRA.Controllers
     ///        App/webservice/BalanceCheck | DashboardHome | RechargeReport | TransactionReport | BookComplain
     /// Login returns TOKENID (stored in User.AppToken); every other call sends it as Tokenid.
     ///
+    ///        App/webservice/KycStatus | KycUpload | KycDocument
+    ///
     /// ERROR codes: 0 OK, 1 invalid username, 2 not found / inactive, 3 locked,
-    ///              4 invalid password / OTP, 5 unexpected, 9 authentication, 11 bad parameters.
+    ///              4 invalid password / OTP, 5 unexpected, 9 authentication, 11 bad parameters,
+    ///              13 KYC not approved (non-admin users can only call Login, password and Kyc* until
+    ///              an admin approves all 4 documents — same rule as the web KycGateAttribute).
     /// </summary>
     [RoutePrefix("App/webservice")]
     public class MobileAppController : ApiController
     {
         private const int  MAX_RETRY_COUNT    = 5;      // same as AuthController
         private const int  OTP_VALID_MINUTES  = 10;
+        private const string KYC_ERROR   = "13";
+        private const string KYC_MESSAGE = "KYC not approved. Please upload your KYC documents and wait for admin approval.";
 
         // App contract uses exact property names (ERROR, STATUSCODE…), not the API's camelCase
         private static readonly JsonSerializerSettings _json = new JsonSerializerSettings
@@ -41,6 +51,7 @@ namespace VIRENDRA.Controllers
         private readonly TransactionRepository _txnRepo  = new TransactionRepository();
         private readonly PackageRepository     _pkgRepo  = new PackageRepository();
         private readonly MobileAppRepository   _appRepo  = new MobileAppRepository();
+        private readonly KycRepository         _kycRepo  = new KycRepository();
         private readonly Services.RechargeService _rechargeSvc =
             new Services.RechargeService(new RechargeRepository());
         private readonly Services.ComplaintService _complaintSvc =
@@ -80,6 +91,10 @@ namespace VIRENDRA.Controllers
                 string token = Guid.NewGuid().ToString("N");
                 _appRepo.SaveAppLogin(user.Id, token, ld.FireToken);
 
+                // Login still succeeds without KYC so the app can upload documents with this token
+                var kyc = new KycStatusViewModel { UserId = user.Id, Documents = _kycRepo.GetByUser(user.Id) };
+                bool kycOk = IsAdminRole(user) || kyc.IsApproved;
+
                 return Reply(new AppUserLogResponse
                 {
                     ERROR        = "0",
@@ -93,7 +108,9 @@ namespace VIRENDRA.Controllers
                     ROLEID       = (user.RoleId ?? RoleConstants.Retailer).ToString(CultureInfo.InvariantCulture),
                     USERTYPE     = user.RoleName ?? string.Empty,
                     BALANCE      = (user.UserBal ?? 0m).ToString("0.00", CultureInfo.InvariantCulture),
-                    OTPCheck     = "True"
+                    OTPCheck     = "True",
+                    KYCAPPROVED  = kycOk ? "True" : "False",
+                    KYCSTATUS    = kycOk ? "Approved" : kyc.OverallStatus
                 });
             }
             catch (Exception)
@@ -259,6 +276,11 @@ namespace VIRENDRA.Controllers
                     res.ERROR = "9"; res.STATUSCODE = "2"; res.MESSAGE = "Authentication error!";
                     return Reply(res);
                 }
+                if (KycBlocked(user))
+                {
+                    res.ERROR = KYC_ERROR; res.STATUSCODE = "2"; res.MESSAGE = KYC_MESSAGE;
+                    return Reply(res);
+                }
 
                 var rows = _pkgRepo.GetCommissionsByUser(user.Id)
                     .Select(c => new AppCommissionRow
@@ -298,6 +320,11 @@ namespace VIRENDRA.Controllers
                 if (user == null)
                 {
                     res.ERROR = "9"; res.STATUSCODE = "2"; res.MESSAGE = "Authentication error!";
+                    return Reply(res);
+                }
+                if (KycBlocked(user))
+                {
+                    res.ERROR = KYC_ERROR; res.STATUSCODE = "2"; res.MESSAGE = KYC_MESSAGE;
                     return Reply(res);
                 }
 
@@ -346,6 +373,11 @@ namespace VIRENDRA.Controllers
                 if (user == null)
                 {
                     res.ERROR = "9"; res.STATUSCODE = "2"; res.MESSAGE = "Authentication error!";
+                    return Reply(res);
+                }
+                if (KycBlocked(user))
+                {
+                    res.ERROR = KYC_ERROR; res.STATUSCODE = "2"; res.MESSAGE = KYC_MESSAGE;
                     return Reply(res);
                 }
 
@@ -402,6 +434,8 @@ namespace VIRENDRA.Controllers
                 User user = AuthUser(req.Tokenid);
                 if (user == null)
                     return Reply(Signup("9", "2", "Authentication error!"));
+                if (KycBlocked(user))
+                    return Reply(Signup(KYC_ERROR, "2", KYC_MESSAGE));
 
                 var result = _complaintSvc.Book(req.RecID, req.Remark, user.Id, user.Id);
                 return Reply(result.Status == ComplaintBookStatus.Booked
@@ -439,6 +473,11 @@ namespace VIRENDRA.Controllers
             if (user == null)
             {
                 res.ERROR = "9"; res.MESSAGE = "Authentication error!";
+                return Reply(res);
+            }
+            if (KycBlocked(user))
+            {
+                res.ERROR = KYC_ERROR; res.MESSAGE = KYC_MESSAGE;
                 return Reply(res);
             }
 
@@ -521,9 +560,15 @@ namespace VIRENDRA.Controllers
             var res = new AppOperatorResponse();
             try
             {
-                if (AuthUser(req?.Tokenid) == null)
+                User user = AuthUser(req?.Tokenid);
+                if (user == null)
                 {
                     res.ERROR = "9"; res.STATUSCODE = "2"; res.MESSAGE = "Authentication error!";
+                    return Reply(res);
+                }
+                if (KycBlocked(user))
+                {
+                    res.ERROR = KYC_ERROR; res.STATUSCODE = "2"; res.MESSAGE = KYC_MESSAGE;
                     return Reply(res);
                 }
 
@@ -554,6 +599,11 @@ namespace VIRENDRA.Controllers
                 if (user == null)
                 {
                     res.ERROR = "9"; res.STATUSCODE = "2"; res.MESSAGE = "Authentication error!";
+                    return Reply(res);
+                }
+                if (KycBlocked(user))
+                {
+                    res.ERROR = KYC_ERROR; res.STATUSCODE = "2"; res.MESSAGE = KYC_MESSAGE;
                     return Reply(res);
                 }
                 if (!int.TryParse(req.Operator, out int opId) || opId <= 0)
@@ -604,6 +654,11 @@ namespace VIRENDRA.Controllers
                     res.ERROR = "9"; res.STATUSCODE = "2"; res.MESSAGE = "Authentication error!";
                     return Reply(res);
                 }
+                if (KycBlocked(user))
+                {
+                    res.ERROR = KYC_ERROR; res.STATUSCODE = "2"; res.MESSAGE = KYC_MESSAGE;
+                    return Reply(res);
+                }
 
                 var (bal, outBal) = _appRepo.GetUserBalances(user.Id);
 
@@ -636,6 +691,11 @@ namespace VIRENDRA.Controllers
                 if (user == null)
                 {
                     res.ERROR = "9"; res.STATUSCODE = "2"; res.MESSAGE = "Authentication error!";
+                    return Reply(res);
+                }
+                if (KycBlocked(user))
+                {
+                    res.ERROR = KYC_ERROR; res.STATUSCODE = "2"; res.MESSAGE = KYC_MESSAGE;
                     return Reply(res);
                 }
 
@@ -692,7 +752,195 @@ namespace VIRENDRA.Controllers
 
         #endregion
 
+        #region KYC
+
+        /// <summary>The user's 4 KYC documents with status / rejection reason.</summary>
+        [HttpPost]
+        [Route("KycStatus")]
+        public IHttpActionResult KycStatus([FromBody] AppTokenRequest req)
+        {
+            var res = new AppKycStatusResponse();
+            try
+            {
+                User user = AuthUser(req?.Tokenid);
+                if (user == null)
+                {
+                    res.ERROR = "9"; res.STATUSCODE = "2"; res.MESSAGE = "Authentication error!";
+                    return Reply(res);
+                }
+                return Reply(BuildKycStatus(user, "KYC status"));
+            }
+            catch (Exception)
+            {
+                res.ERROR = "5"; res.STATUSCODE = "2"; res.MESSAGE = "Unexpected error";
+                return Reply(res);
+            }
+        }
+
+        /// <summary>
+        /// Uploads one document (jpg / jpeg / png / pdf, max 2 MB). Either
+        ///   multipart/form-data: Tokenid, Category, file
+        ///   JSON: { Tokenid, Category, FileName, FileBase64 }
+        /// Replying with the updated KycStatus on success.
+        /// </summary>
+        [HttpPost]
+        [Route("KycUpload")]
+        public async Task<IHttpActionResult> KycUpload()
+        {
+            var res = new AppKycStatusResponse { ERROR = "11", STATUSCODE = "2" };
+            string token, category, fileName;
+            byte[] data = null;
+
+            try
+            {
+                if (Request.Content.IsMimeMultipartContent())
+                {
+                    var http = HttpContext.Current.Request;
+                    token    = http.Form["Tokenid"] ?? http.Form["TokenID"];
+                    category = http.Form["Category"];
+                    HttpPostedFile file = http.Files["file"] ?? (http.Files.Count > 0 ? http.Files[0] : null);
+                    fileName = file?.FileName;
+                    if (file != null && file.ContentLength > KycConstants.MaxFileBytes)
+                    {
+                        res.MESSAGE = "File must be 2 MB or smaller.";
+                        return Reply(res);
+                    }
+                    if (file != null && file.ContentLength > 0)
+                    {
+                        using (var ms = new MemoryStream())
+                        {
+                            file.InputStream.CopyTo(ms);
+                            data = ms.ToArray();
+                        }
+                    }
+                }
+                else
+                {
+                    var body = JsonConvert.DeserializeObject<AppKycUploadRequest>(
+                        await Request.Content.ReadAsStringAsync());
+                    token    = body?.Tokenid;
+                    category = body?.Category;
+                    fileName = body?.FileName;
+
+                    string b64 = body?.FileBase64;
+                    if (!string.IsNullOrWhiteSpace(b64))
+                    {
+                        int comma = b64.IndexOf(',');
+                        if (b64.StartsWith("data:", StringComparison.OrdinalIgnoreCase) && comma > 0)
+                            b64 = b64.Substring(comma + 1);
+                        if (b64.Length > (KycConstants.MaxFileBytes / 3 + 1) * 4 + 4)
+                        {
+                            res.MESSAGE = "File must be 2 MB or smaller.";
+                            return Reply(res);
+                        }
+                        data = Convert.FromBase64String(b64.Trim());
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                res.MESSAGE = "Invalid Request Parameters";
+                return Reply(res);
+            }
+
+            try
+            {
+                User user = AuthUser(token);
+                if (user == null)
+                {
+                    res.ERROR = "9"; res.MESSAGE = "Authentication error!";
+                    return Reply(res);
+                }
+
+                string error = new KycService(_kycRepo).Upload(user.Id, (category ?? "").Trim(), fileName, data);
+                if (error != null)
+                {
+                    res.MESSAGE = error;
+                    return Reply(res);
+                }
+
+                return Reply(BuildKycStatus(user,
+                    KycConstants.CategoryTitle(category.Trim()) + " uploaded. It will be reviewed by the admin."));
+            }
+            catch (Exception)
+            {
+                res.ERROR = "5"; res.MESSAGE = "Unexpected error";
+                return Reply(res);
+            }
+        }
+
+        /// <summary>Streams the caller's own uploaded document (image / pdf bytes).</summary>
+        [HttpPost]
+        [Route("KycDocument")]
+        public IHttpActionResult KycDocument([FromBody] AppKycDocumentRequest req)
+        {
+            try
+            {
+                User user = AuthUser(req?.Tokenid);
+                if (user == null)
+                    return Reply(Signup("9", "2", "Authentication error!"));
+
+                string path = new KycService(_kycRepo).GetFilePath(user.Id, (req.Category ?? "").Trim());
+                if (path == null)
+                    return Reply(Signup("2", "2", "Document not found"));
+
+                var msg = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new ByteArrayContent(File.ReadAllBytes(path))
+                };
+                msg.Content.Headers.ContentType = new MediaTypeHeaderValue(KycService.MimeType(path));
+                msg.Headers.CacheControl = new CacheControlHeaderValue { NoStore = true, Private = true };
+                return ResponseMessage(msg);
+            }
+            catch (Exception)
+            {
+                return Reply(Signup("5", "2", "Unexpected error"));
+            }
+        }
+
+        private AppKycStatusResponse BuildKycStatus(User user, string message)
+        {
+            var kyc = new KycStatusViewModel { UserId = user.Id, Documents = _kycRepo.GetByUser(user.Id) };
+            bool ok = IsAdminRole(user) || kyc.IsApproved;
+
+            return new AppKycStatusResponse
+            {
+                ERROR       = "0",
+                STATUSCODE  = "1",
+                MESSAGE     = message,
+                KYCAPPROVED = ok ? "True" : "False",
+                KYCSTATUS   = ok ? "Approved" : kyc.OverallStatus,
+                DOCUMENTS   = KycConstants.Categories.Select(c =>
+                {
+                    var d = kyc.Get(c);
+                    return new AppKycDocument
+                    {
+                        CATEGORY   = c,
+                        TITLE      = KycConstants.CategoryTitle(c),
+                        STATUSID   = (d?.StatusId ?? 0).ToString(CultureInfo.InvariantCulture),
+                        STATUS     = KycConstants.StatusName(d?.StatusId),
+                        REMARK     = d?.StatusId == KycConstants.Rejected ? (d.Remark ?? string.Empty) : string.Empty,
+                        UPLOADEDON = d?.AddedbyDate.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) ?? string.Empty,
+                        CANUPLOAD  = d?.StatusId == KycConstants.Approved ? "False" : "True"
+                    };
+                }).ToList()
+            };
+        }
+
+        #endregion
+
         #region Helpers
+
+        private static bool IsAdminRole(User user) =>
+            user.RoleId == RoleConstants.SuperAdmin || user.RoleId == RoleConstants.Admin;
+
+        /// <summary>Non-admin user whose 4 KYC documents are not all approved (fails closed).</summary>
+        private bool KycBlocked(User user)
+        {
+            if (IsAdminRole(user)) return false;
+            try { return !_kycRepo.IsApproved(user.Id); }
+            catch { return true; }
+        }
 
         /// <summary>Active, unlocked user owning this app token, or null.</summary>
         private User AuthUser(string token)

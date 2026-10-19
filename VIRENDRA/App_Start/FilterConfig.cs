@@ -9,6 +9,7 @@ namespace VIRENDRA
         {
             filters.Add(new HandleErrorAttribute());
             filters.Add(new VIRENDRA.Infrastructure.RefreshUserBalanceAttribute());
+            filters.Add(new VIRENDRA.Infrastructure.KycGateAttribute());
         }
     }
 }

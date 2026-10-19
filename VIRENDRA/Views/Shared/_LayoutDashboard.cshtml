@@ -16,6 +16,9 @@
                     : isApiUser ? "API User"
                     : "Retailer";
 
+    // Non-admin users without approved KYC only see the KYC page (KycGateAttribute)
+    bool kycLocked = !(isSuperAdmin || isAdmin) && !(Session["KycApproved"] is bool kycOk && kycOk);
+
     // Helper: is any of the listed controllers the current one?
     Func<string[], bool> anyActive = controllers =>
         System.Array.IndexOf(controllers, currentController) >= 0;
@@ -264,6 +267,16 @@
                 <!-- ── Left nav links ──────────────────────────── -->
                 <ul class="navbar-nav me-auto align-items-lg-stretch">
 
+                    @if (kycLocked)
+                    {
+                        <li class="nav-item active">
+                            <a class="nav-link active" href="@Url.Action("Index","Kyc")">
+                                <i class="fas fa-user-shield me-1"></i>KYC Verification
+                            </a>
+                        </li>
+                    }
+                    else
+                    {<text>
                     @*<%-- Dashboard \u2014 all roles --%>*@
                     <li class="nav-item @(currentController == "Home" ? "active" : "")">
                         <a class="nav-link @(currentController == "Home" ? "active" : "")"
@@ -275,7 +288,7 @@
                     @*<%-- Administration \u2014 SuperAdmin + Admin --%>*@
                     @if (isSuperAdmin || isAdmin)
                     {
-                        bool adminActive = anyActive(new[] { "User", "Package", "Operator", "Vendor", "BankAccount", "Services", "CommonRouting" });
+                        bool adminActive = anyActive(new[] { "User", "Package", "Operator", "Vendor", "BankAccount", "Services", "CommonRouting", "KycAdmin" });
                         <li class="nav-item dropdown @(adminActive ? "active" : "")">
                             <a class="nav-link dropdown-toggle @(adminActive ? "active" : "")"
                                href="#" id="ddAdmin" role="button"
@@ -288,6 +301,12 @@
                                     <a class="dropdown-item @(currentController=="User" ? "active" : "")"
                                        href="@Url.Action("Index","User")">
                                         <i class="fas fa-users"></i> User Management
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item @(currentController=="KycAdmin" ? "active" : "")"
+                                       href="@Url.Action("Index","KycAdmin")">
+                                        <i class="fas fa-user-check"></i> KYC Approval
                                     </a>
                                 </li>
                                 <li>
@@ -480,6 +499,7 @@
                             </li>
                         </ul>
                     </li>
+                    </text>}
 
                 </ul><!-- /navbar-nav -->
                 <!-- ── Right-side: balance + user + logout ───────── -->
@@ -507,6 +527,23 @@
                                     <i class="fas fa-user"></i> User Profile
                                 </a>
                             </li>
+                            @if (!(isSuperAdmin || isAdmin))
+                            {
+                                <li>
+                                    <a class="dropdown-item @(currentController=="Kyc" ? "active" : "")"
+                                       href="@Url.Action("Index","Kyc")">
+                                        <i class="fas fa-user-shield"></i> KYC Status
+                                        @if (kycLocked)
+                                        {
+                                            <span class="badge bg-warning text-dark ms-auto" style="font-size:.62rem;">Pending</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success ms-auto" style="font-size:.62rem;">Verified</span>
+                                        }
+                                    </a>
+                                </li>
+                            }
                             <li>
                                 <a class="dropdown-item" href="@Url.Action("ComplaintReport","Transaction")">
                                     <i class="fas fa-headphones"></i> Support

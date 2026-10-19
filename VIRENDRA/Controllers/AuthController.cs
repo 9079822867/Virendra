@@ -79,6 +79,18 @@ namespace VIRENDRA.Controllers
                     Session["RoleId"]   = user.RoleId ?? RoleConstants.Retailer;
                     Session["UserBal"]  = user.UserBal ?? 0m;
 
+                    // Non-admin users must finish KYC (admin approval) before using the portal
+                    byte roleId = (byte)Session["RoleId"];
+                    if (roleId != RoleConstants.SuperAdmin && roleId != RoleConstants.Admin)
+                    {
+                        bool kycApproved = false;
+                        try { kycApproved = new KycRepository().IsApproved(user.Id); }
+                        catch { /* treat as not approved */ }
+
+                        Session["KycApproved"] = kycApproved;
+                        if (!kycApproved) return RedirectToAction("Index", "Kyc");
+                    }
+
                     return RedirectToAction("Dashboard", "Home");
                 }
                 else

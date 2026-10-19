@@ -1,0 +1,300 @@
+@model VIRENDRA.Models.KycStatusViewModel
+@using VIRENDRA.Models
+@{
+    ViewBag.Title = "KYC Verification";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+
+    int total = KycConstants.Categories.Length;
+    int pct = Model.ApprovedCount * 100 / total;
+    string overall = Model.IsApproved ? "Approved"
+                   : Model.AnyRejected ? "Action Required"
+                   : Model.UploadedCount == total ? "Under Review"
+                   : "Incomplete";
+    string overallIcon = Model.IsApproved ? "fa-shield-alt"
+                       : Model.AnyRejected ? "fa-exclamation-triangle"
+                       : Model.UploadedCount == total ? "fa-hourglass-half"
+                       : "fa-cloud-upload-alt";
+
+    var icons = new Dictionary<string, string>
+    {
+        { KycConstants.AadhaarFront, "fa-id-card" },
+        { KycConstants.AadhaarBack,  "fa-id-card-alt" },
+        { KycConstants.PanCard,      "fa-address-card" },
+        { KycConstants.Selfie,       "fa-user-circle" }
+    };
+    var hints = new Dictionary<string, string>
+    {
+        { KycConstants.AadhaarFront, "Front side with photo, name and Aadhaar number" },
+        { KycConstants.AadhaarBack,  "Back side with address" },
+        { KycConstants.PanCard,      "Clear photo of your PAN card" },
+        { KycConstants.Selfie,       "A recent, clear photo of your face" }
+    };
+}
+
+<style>
+    .kyc-hero { border-radius: 14px; overflow: hidden; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: #fff; }
+    .kyc-hero .hero-icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 1.7rem; }
+    .kyc-hero .progress { height: 8px; background: rgba(255,255,255,.25); border-radius: 10px; }
+    .kyc-hero .progress-bar { background: #fff; border-radius: 10px; }
+    .kyc-steps span { background: rgba(255,255,255,.18); border-radius: 20px; padding: .3rem .8rem; font-size: .78rem; }
+
+    .kyc-tile { border-radius: 14px; overflow: hidden; transition: transform .15s, box-shadow .15s; height: 100%; }
+    .kyc-tile:hover { transform: translateY(-2px); box-shadow: 0 .6rem 1.4rem rgba(102,126,234,.18) !important; }
+    .kyc-tile .tile-head { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: #fff; padding: .85rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+    .kyc-tile .tile-head h6 { margin: 0; font-weight: 700; font-size: .92rem; }
+    .kyc-tile .tile-head .badge { font-size: .7rem; }
+    .kyc-tile.is-approved .tile-head { background: linear-gradient(135deg,#11998e 0%,#38ef7d 100%); }
+    .kyc-tile.is-rejected .tile-head { background: linear-gradient(135deg,#eb3349 0%,#f45c43 100%); }
+
+    .kyc-preview { height: 170px; border-radius: 10px; background: #f6f7fb; border: 2px dashed #d5d9f2; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
+    .kyc-preview img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+    .kyc-preview .placeholder { text-align: center; color: #9aa0c3; font-size: .82rem; }
+    .kyc-preview .placeholder i { font-size: 2.2rem; display: block; margin-bottom: .4rem; color: #667eea; opacity: .6; }
+    .kyc-preview.has-file { border-style: solid; border-color: #667eea; }
+    .kyc-preview .pdf-box { text-align: center; color: #dc3545; }
+    .kyc-preview .pdf-box i { font-size: 2.6rem; }
+    .kyc-preview .new-tag { position: absolute; top: 8px; left: 8px; background: #667eea; color: #fff; font-size: .68rem; padding: .15rem .5rem; border-radius: 10px; }
+    .kyc-tile .file-name { font-size: .75rem; color: #6c757d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.1rem; }
+    .btn-kyc { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: #fff; border: none; }
+    .btn-kyc:hover, .btn-kyc:focus { color: #fff; opacity: .92; }
+    .btn-kyc:disabled { opacity: .55; color: #fff; }
+</style>
+
+<div class="container-fluid">
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-1 fw-bold text-dark"><i class="fas fa-user-shield text-primary me-2"></i>KYC Verification</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0" style="font-size:.82rem;">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard","Home")">Dashboard</a></li>
+                    <li class="breadcrumb-item active">KYC</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-4" style="border-radius:10px;">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible mb-4" style="border-radius:10px;">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- ── Overall status ─────────────────────────────── -->
+    <div class="kyc-hero shadow-sm mb-4">
+        <div class="p-4 d-flex flex-column flex-md-row align-items-md-center gap-3">
+            <div class="hero-icon flex-shrink-0"><i class="fas @overallIcon"></i></div>
+            <div class="flex-grow-1">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                    <h5 class="fw-bold mb-0">KYC Status: @overall</h5>
+                </div>
+                <p class="mb-2" style="opacity:.9;font-size:.88rem;">
+                    @if (Model.IsApproved)
+                    {
+                        <text>Your KYC is verified. You have full access to the portal.</text>
+                    }
+                    else if (Model.AnyRejected)
+                    {
+                        <text>One or more documents were rejected. Please check the reason and re-upload.</text>
+                    }
+                    else if (Model.UploadedCount == total)
+                    {
+                        <text>All documents are submitted. The portal unlocks as soon as an admin approves them.</text>
+                    }
+                    else
+                    {
+                        <text>Upload all 4 documents below. The portal unlocks after admin approval.</text>
+                    }
+                </p>
+                <div class="progress mb-1"><div class="progress-bar" style="width:@(pct)%"></div></div>
+                <small style="opacity:.85;">@Model.ApprovedCount of @total approved &middot; @Model.UploadedCount of @total uploaded</small>
+            </div>
+            @if (Model.IsApproved)
+            {
+                <a href="@Url.Action("Dashboard","Home")" class="btn btn-light fw-semibold px-4 flex-shrink-0">
+                    <i class="fas fa-home me-1"></i>Go to Dashboard
+                </a>
+            }
+        </div>
+        <div class="px-4 pb-3 kyc-steps d-flex flex-wrap gap-2">
+            <span><i class="fas fa-file-image me-1"></i>JPG, JPEG, PNG or PDF</span>
+            <span><i class="fas fa-weight-hanging me-1"></i>Max 2 MB per file</span>
+            <span><i class="fas fa-eye me-1"></i>Clear, uncropped, readable</span>
+        </div>
+    </div>
+
+    <!-- ── Document tiles ─────────────────────────────── -->
+    <div class="row g-4">
+        @foreach (var cat in KycConstants.Categories)
+        {
+            var doc = Model.Get(cat);
+            int? st = doc?.StatusId;
+            bool approved = st == KycConstants.Approved;
+            bool rejected = st == KycConstants.Rejected;
+            string badgeCls = approved ? "bg-light text-success"
+                            : rejected ? "bg-light text-danger"
+                            : st == KycConstants.Pending ? "bg-warning text-dark"
+                            : "bg-light text-secondary";
+            string docUrl = doc == null ? null
+                : Url.Action("Document", "Kyc", new { category = cat, v = doc.AddedbyDate.Ticks });
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card border-0 shadow-sm kyc-tile @(approved ? "is-approved" : rejected ? "is-rejected" : "")">
+                    <div class="tile-head">
+                        <h6><i class="fas @icons[cat] me-2"></i>@KycConstants.CategoryTitle(cat)</h6>
+                        <span class="badge rounded-pill @badgeCls">@KycConstants.StatusName(st)</span>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <p class="text-muted mb-2" style="font-size:.78rem;">@hints[cat]</p>
+
+                        <div class="kyc-preview @(doc != null ? "has-file" : "")" id="preview-@cat"
+                             data-url="@docUrl" data-pdf="@(doc != null && doc.IsPdf ? "1" : "0")">
+                            @if (doc == null)
+                            {
+                                <div class="placeholder"><i class="fas fa-cloud-upload-alt"></i>Click to choose a file</div>
+                            }
+                            else if (doc.IsPdf)
+                            {
+                                <div class="pdf-box"><i class="fas fa-file-pdf"></i><div class="small mt-1">PDF uploaded &middot; click to view</div></div>
+                            }
+                            else
+                            {
+                                <img src="@docUrl" alt="@KycConstants.CategoryTitle(cat)" />
+                            }
+                        </div>
+
+                        @if (doc != null)
+                        {
+                            <div class="small text-muted mt-2"><i class="far fa-clock me-1"></i>Uploaded @doc.AddedbyDate.ToString("dd MMM yyyy, hh:mm tt")</div>
+                        }
+                        @if (rejected && !string.IsNullOrWhiteSpace(doc.Remark))
+                        {
+                            <div class="alert alert-danger py-2 px-3 mt-2 mb-0" style="font-size:.8rem;border-radius:8px;">
+                                <i class="fas fa-times-circle me-1"></i><strong>Reason:</strong> @doc.Remark
+                            </div>
+                        }
+
+                        <div class="mt-auto pt-3">
+                            @if (approved)
+                            {
+                                <div class="text-success fw-semibold small text-center"><i class="fas fa-check-circle me-1"></i>Verified</div>
+                            }
+                            else
+                            {
+                                using (Html.BeginForm("Upload", "Kyc", FormMethod.Post, new { enctype = "multipart/form-data", @class = "kyc-form" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="category" value="@cat" />
+                                    <input type="file" name="file" class="d-none kyc-file" id="file-@cat" data-cat="@cat"
+                                           accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" />
+                                    <div class="file-name mb-2" id="name-@cat"></div>
+                                    <div class="d-flex gap-2">
+                                        <label for="file-@cat" class="btn btn-outline-primary btn-sm flex-grow-1 mb-0">
+                                            <i class="fas fa-folder-open me-1"></i>@(doc == null ? "Choose" : "Replace")
+                                        </label>
+                                        <button type="submit" class="btn btn-kyc btn-sm flex-grow-1" id="btn-@cat" disabled>
+                                            <i class="fas fa-upload me-1"></i>Upload
+                                        </button>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Preview modal -->
+<div class="modal fade" id="kycModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0" style="border-radius:14px;overflow:hidden;">
+            <div class="modal-header text-white" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+                <h6 class="modal-title fw-bold" id="kycModalTitle">Document</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center bg-light">
+                <img id="kycModalImg" src="" alt="" style="max-width:100%;max-height:75vh;" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var MAX = @KycConstants.MaxFileBytes;
+            var ALLOWED = ['jpg', 'jpeg', 'png', 'pdf'];
+
+            function openPreview(box) {
+                var input = document.getElementById('file-' + box.id.replace('preview-', ''));
+                var url = box.dataset.localUrl || box.dataset.url;
+                if (!url) { if (input) input.click(); return; }
+                if (box.dataset.pdf === '1') { window.open(url, '_blank'); return; }
+                document.getElementById('kycModalImg').src = url;
+                document.getElementById('kycModalTitle').textContent =
+                    box.closest('.kyc-tile').querySelector('.tile-head h6').textContent;
+                new bootstrap.Modal(document.getElementById('kycModal')).show();
+            }
+
+            document.querySelectorAll('.kyc-preview').forEach(function (box) {
+                box.addEventListener('click', function () { openPreview(box); });
+            });
+
+            document.querySelectorAll('.kyc-file').forEach(function (input) {
+                input.addEventListener('change', function () {
+                    var cat = input.dataset.cat;
+                    var btn = document.getElementById('btn-' + cat);
+                    var nameEl = document.getElementById('name-' + cat);
+                    var box = document.getElementById('preview-' + cat);
+                    var f = input.files[0];
+                    btn.disabled = true;
+                    nameEl.className = 'file-name mb-2';
+                    if (!f) { nameEl.textContent = ''; return; }
+
+                    var ext = (f.name.split('.').pop() || '').toLowerCase();
+                    if (ALLOWED.indexOf(ext) < 0) {
+                        nameEl.textContent = 'Only JPG, JPEG, PNG or PDF allowed';
+                        nameEl.className = 'file-name mb-2 text-danger';
+                        input.value = ''; return;
+                    }
+                    if (f.size > MAX) {
+                        nameEl.textContent = 'File is ' + (f.size / 1048576).toFixed(1) + ' MB — max 2 MB';
+                        nameEl.className = 'file-name mb-2 text-danger';
+                        input.value = ''; return;
+                    }
+
+                    nameEl.textContent = f.name + ' (' + Math.ceil(f.size / 1024) + ' KB)';
+                    btn.disabled = false;
+
+                    if (box.dataset.localUrl) URL.revokeObjectURL(box.dataset.localUrl);
+                    var local = URL.createObjectURL(f);
+                    box.dataset.localUrl = local;
+                    box.dataset.pdf = ext === 'pdf' ? '1' : '0';
+                    box.classList.add('has-file');
+                    box.innerHTML = (ext === 'pdf'
+                        ? '<div class="pdf-box"><i class="fas fa-file-pdf"></i><div class="small mt-1">PDF selected</div></div>'
+                        : '<img src="' + local + '" alt="preview" />') + '<span class="new-tag">New</span>';
+                });
+            });
+
+            document.querySelectorAll('.kyc-form').forEach(function (form) {
+                form.addEventListener('submit', function () {
+                    var btn = form.querySelector('button[type=submit]');
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Uploading';
+                });
+            });
+        })();
+    </script>
+}
