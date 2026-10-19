@@ -243,12 +243,12 @@
                                 <div class="col-sm-5">
                                     <label class="form-label small fw-semibold" for="panNumber">PAN number</label>
                                     <input type="text" class="form-control text-uppercase" id="panNumber" name="panNumber" required
-                                           maxlength="10" autocomplete="off" placeholder="ABCDE1234F" value="@det?.PanNumber" />
+                                           maxlength="10" autocomplete="off" placeholder="ABCDE1234F" value="@(det?.PanNumber)" />
                                 </div>
                                 <div class="col-sm-7">
                                     <label class="form-label small fw-semibold" for="panName">Name as on PAN</label>
                                     <input type="text" class="form-control" id="panName" name="panName" required
-                                           maxlength="100" value="@det?.PanName" />
+                                           maxlength="100" value="@(det?.PanName)" />
                                 </div>
                                 <div class="col-sm-5">
                                     <label class="form-label small fw-semibold" for="panDob">Date of birth</label>

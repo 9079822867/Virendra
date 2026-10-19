@@ -37,4 +37,25 @@ namespace VIRENDRA.Models
         public bool IsOtpCheck { get; set; }
         public bool? IsJioActiveHigh { get; set; }
     }
+
+    /// <summary>A user that can be picked as ParentID for another user.</summary>
+    public class ParentUserOption
+    {
+        public int Id { get; set; }
+        public string Username { get; set; }
+        public string FullName { get; set; }
+        public byte? RoleId { get; set; }
+        public string RoleName { get; set; }
+
+        public string DisplayName
+        {
+            get
+            {
+                string text = Username;
+                if (!string.IsNullOrWhiteSpace(FullName)) text += " - " + FullName.Trim();
+                if (!string.IsNullOrWhiteSpace(RoleName)) text += " (" + RoleName + ")";
+                return text;
+            }
+        }
+    }
 }

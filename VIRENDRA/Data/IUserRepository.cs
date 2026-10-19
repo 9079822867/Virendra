@@ -12,6 +12,7 @@ namespace VIRENDRA.Data
         List<Circle>   GetAllCircles();
         User GetUserByUsername(string username);
         User GetUserById(int id);
+        List<ParentUserOption> GetParentUserOptions(byte[] parentRoleIds);
         void CreateUser(User user);
         void UpdateUser(User user);
         void DeleteUser(int id);

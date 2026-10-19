@@ -112,6 +112,22 @@ namespace VIRENDRA.Data
             }
         }
 
+        public List<ParentUserOption> GetParentUserOptions(byte[] parentRoleIds)
+        {
+            using (IDbConnection db = new SqlConnection(_connectionString))
+            {
+                db.Open();
+                string query = @"
+                    SELECT u.Id, u.Username, up.FullName, u.RoleId, r.RoleName
+                    FROM [User] u
+                    LEFT JOIN [Role] r ON r.Id = u.RoleId
+                    OUTER APPLY (SELECT TOP 1 p.FullName FROM UserProfile p WHERE p.UserId = u.Id) up
+                    WHERE u.IsDeleted = 0 AND u.IsActive = 1 AND u.RoleId IN @RoleIds
+                    ORDER BY u.RoleId, u.Username";
+                return db.Query<ParentUserOption>(query, new { RoleIds = parentRoleIds }).ToList();
+            }
+        }
+
         public void CreateUser(User user)
         {
             using (IDbConnection db = new SqlConnection(_connectionString))
@@ -146,7 +162,7 @@ namespace VIRENDRA.Data
                                     IsDeleted = @IsDeleted, RetryCount = @RetryCount, OTP = @OTP,
                                     PassCode = @PassCode, LoginIP = @LoginIP, UpdatedDate = @UpdatedDate,
                                     UpdatedById = @UpdatedById, CallbackURL = @CallbackURL, ResetCode = @ResetCode,
-                                    PackageId = @PackageId, UserBal = @UserBal, UserPin = @UserPin,
+                                    PackageId = @PackageId, UserBal = @UserBal, ParentID = @ParentID, UserPin = @UserPin,
                                     AppToken = @AppToken, Firebasetoken = @Firebasetoken,
                                     ComplainCallbackURL = @ComplainCallbackURL, UserOutStandingBal = @UserOutStandingBal,
                                     IsComm = @IsComm, IsOtpCheck = @IsOtpCheck, IsJioActiveHigh = @IsJioActiveHigh

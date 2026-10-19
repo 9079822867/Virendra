@@ -1,4 +1,6 @@
 using System;
+using System.Data.SqlClient;
+using System.Linq;
 using System.Net;
 using System.Web.Mvc;
 using VIRENDRA.Data;
@@ -10,6 +12,10 @@ namespace VIRENDRA.Controllers
     [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
     public class UserController : Controller
     {
+        // Roles whose users can own child users (be picked as ParentID).
+        private static readonly byte[] ParentRoleIds =
+            { RoleConstants.SuperAdmin, RoleConstants.Admin, RoleConstants.ApiUser };
+
         private readonly IUserRepository    _userRepository;
         private readonly IPackageRepository _packageRepository;
 
@@ -43,8 +49,7 @@ namespace VIRENDRA.Controllers
 
         public ActionResult Create()
         {
-            PopulateRoleList();
-            PopulatePackageList();
+            PopulateLists(null, null, null);
             return View(BuildNewUser());
         }
 
@@ -62,6 +67,13 @@ namespace VIRENDRA.Controllers
                 ModelState.AddModelError("Password", "Password is required.");
             }
 
+            if (user.RoleId == null)
+            {
+                ModelState.AddModelError("RoleId", "Role is required.");
+            }
+
+            ValidateParent(user.ParentID, null);
+
             if (!string.IsNullOrWhiteSpace(user.Username) &&
                 _userRepository.GetUserByUsername(user.Username.Trim()) != null)
             {
@@ -70,18 +82,28 @@ namespace VIRENDRA.Controllers
 
             if (!ModelState.IsValid)
             {
-                PopulateRoleList(user.RoleId);
-                PopulatePackageList(user.PackageId);
+                PopulateLists(user.RoleId, user.PackageId, user.ParentID);
                 return View(user);
             }
 
             user.Username = user.Username.Trim();
             user.Password = user.Password.Trim();
             user.AddedDate = DateTime.Now;
+            user.AddedById = CurrentUserId();
             user.RetryCount = 0;
             user.IsDeleted = false;
 
-            _userRepository.CreateUser(user);
+            try
+            {
+                _userRepository.CreateUser(user);
+            }
+            catch (SqlException ex)
+            {
+                ModelState.AddModelError("", "Could not create user: " + ex.Message);
+                PopulateLists(user.RoleId, user.PackageId, user.ParentID);
+                return View(user);
+            }
+
             TempData["SuccessMessage"] = "User created successfully.";
 
             return RedirectToAction("Index");
@@ -101,8 +123,7 @@ namespace VIRENDRA.Controllers
                 return HttpNotFound();
             }
 
-            PopulateRoleList(user.RoleId);
-            PopulatePackageList(user.PackageId);
+            PopulateLists(user.RoleId, user.PackageId, user.ParentID, user.Id);
             return View(user);
         }
 
@@ -128,11 +149,21 @@ namespace VIRENDRA.Controllers
                 ModelState.AddModelError("Username", "Username already exists.");
             }
 
+            if (model.RoleId == null)
+            {
+                ModelState.AddModelError("RoleId", "Role is required.");
+            }
+
+            // Keeping the existing parent is always allowed, even if it is no longer eligible.
+            if (model.ParentID != user.ParentID)
+            {
+                ValidateParent(model.ParentID, id);
+            }
+
             if (!ModelState.IsValid)
             {
                 model.Id = id;
-                PopulateRoleList(model.RoleId);
-                PopulatePackageList(model.PackageId);
+                PopulateLists(model.RoleId, model.PackageId, model.ParentID, id);
                 return View(model);
             }
 
@@ -158,8 +189,20 @@ namespace VIRENDRA.Controllers
             user.IsOtpCheck = model.IsOtpCheck;
             user.IsJioActiveHigh = model.IsJioActiveHigh;
             user.UpdatedDate = DateTime.Now;
+            user.UpdatedById = CurrentUserId();
 
-            _userRepository.UpdateUser(user);
+            try
+            {
+                _userRepository.UpdateUser(user);
+            }
+            catch (SqlException ex)
+            {
+                ModelState.AddModelError("", "Could not update user: " + ex.Message);
+                model.Id = id;
+                PopulateLists(model.RoleId, model.PackageId, model.ParentID, id);
+                return View(model);
+            }
+
             TempData["SuccessMessage"] = "User updated successfully.";
 
             return RedirectToAction("Index");
@@ -204,16 +247,59 @@ namespace VIRENDRA.Controllers
             };
         }
 
-        private void PopulateRoleList(byte? selectedRoleId = null)
+        private int? CurrentUserId()
+        {
+            return Session["UserId"] == null ? (int?)null : Convert.ToInt32(Session["UserId"]);
+        }
+
+        // ParentID is optional; when given it must be an active, non-deleted
+        // SuperAdmin / Admin / API User, and never the user being edited.
+        private void ValidateParent(int? parentId, int? editingUserId)
+        {
+            if (parentId == null) return;
+
+            if (parentId == editingUserId)
+            {
+                ModelState.AddModelError("ParentID", "A user cannot be their own parent.");
+                return;
+            }
+
+            if (!_userRepository.GetParentUserOptions(ParentRoleIds).Any(p => p.Id == parentId.Value))
+            {
+                ModelState.AddModelError("ParentID", "Select a valid parent user.");
+            }
+        }
+
+        private void PopulateLists(byte? selectedRoleId, int? selectedPackageId,
+                                   int? selectedParentId, int? editingUserId = null)
         {
             ViewBag.RoleList = new SelectList(
                 _userRepository.GetAllRoles(), "Id", "RoleName", selectedRoleId);
-        }
 
-        private void PopulatePackageList(int? selectedPackageId = null)
-        {
             ViewBag.PackageList = new SelectList(
                 _packageRepository.GetAllPackages(), "Id", "PackageName", selectedPackageId);
+
+            var parents = _userRepository.GetParentUserOptions(ParentRoleIds)
+                                         .Where(p => p.Id != editingUserId)
+                                         .ToList();
+
+            // Show a saved parent that is no longer eligible so editing does not silently clear it.
+            if (selectedParentId != null && parents.All(p => p.Id != selectedParentId.Value))
+            {
+                User current = _userRepository.GetUserById(selectedParentId.Value);
+                if (current != null)
+                {
+                    parents.Insert(0, new ParentUserOption
+                    {
+                        Id       = current.Id,
+                        Username = current.Username,
+                        RoleId   = current.RoleId,
+                        RoleName = (current.RoleName ?? "No role") + ", not eligible"
+                    });
+                }
+            }
+
+            ViewBag.ParentList = new SelectList(parents, "Id", "DisplayName", selectedParentId);
         }
     }
 }
