@@ -4,6 +4,7 @@ using System.Web.Mvc;
 using VIRENDRA.Data;
 using VIRENDRA.Infrastructure;
 using VIRENDRA.Models;
+using VIRENDRA.Services;
 
 namespace VIRENDRA.Controllers
 {
@@ -44,11 +45,54 @@ namespace VIRENDRA.Controllers
                 return RedirectToAction("Index");
             }
 
+            ViewBag.PanApiEnabled = KycIdService.ApiEnabled;
             return View(new KycAdminReviewViewModel
             {
                 User = user,
-                Kyc  = new KycStatusViewModel { UserId = id, Documents = _kycRepo.GetByUser(id) }
+                Kyc  = _kycRepo.GetStatus(id)
             });
+        }
+
+        // ── Aadhaar / PAN numbers ───────────────────────────────────────────
+
+        /// <param name="type">"Aadhaar" or "Pan"</param>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult VerifyNumber(int userId, string type)
+        {
+            bool aadhaar = type == "Aadhaar";
+            if (!aadhaar && type != "Pan") return Done(userId, null, "Invalid request.");
+
+            var d = _kycRepo.GetDetail(userId);
+            if ((aadhaar ? d?.AadhaarNumber : d?.PanNumber) == null)
+                return Done(userId, null, (aadhaar ? "Aadhaar number" : "PAN") + " has not been submitted.");
+
+            _kycRepo.SetNumberStatus(userId, aadhaar, KycConstants.Approved, null, CurrentUserId);
+            return Done(userId, (aadhaar ? "Aadhaar number" : "PAN") + " verified.", null);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult RejectNumber(int userId, string type, string remark)
+        {
+            bool aadhaar = type == "Aadhaar";
+            if (!aadhaar && type != "Pan") return Done(userId, null, "Invalid request.");
+
+            remark = (remark ?? "").Trim();
+            if (remark.Length == 0) return Done(userId, null, "Please enter a reason for rejection.");
+            if (remark.Length > 250) remark = remark.Substring(0, 250);
+
+            _kycRepo.SetNumberStatus(userId, aadhaar, KycConstants.Rejected, remark, CurrentUserId);
+            return Done(userId, (aadhaar ? "Aadhaar number" : "PAN") + " rejected.", null);
+        }
+
+        /// <summary>Manual update: admin enters / corrects the numbers, saved as verified.</summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UpdateNumbers(int userId, string aadhaarNumber, string panNumber, string panName, string panDob)
+        {
+            var r = new KycIdService(_kycRepo).AdminUpdate(userId, aadhaarNumber, panNumber, panName, panDob, CurrentUserId);
+            return r.Ok ? Done(userId, r.Message, null) : Done(userId, null, r.Message);
         }
 
         [HttpPost]
@@ -82,11 +126,13 @@ namespace VIRENDRA.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult ApproveAll(int userId)
         {
-            var docs = _kycRepo.GetByUser(userId);
-            if (KycConstants.Categories.Any(c => docs.All(d => d.Category != c)))
-                return Done(userId, null, "All 4 documents must be uploaded before approving the KYC.");
+            var kyc = _kycRepo.GetStatus(userId);
+            if (!kyc.AllSubmitted)
+                return Done(userId, null, "All 4 documents and the Aadhaar / PAN numbers must be submitted before approving the KYC.");
 
             _kycRepo.SetStatus(userId, null, KycConstants.Approved, null, CurrentUserId);
+            if (!kyc.AadhaarVerified) _kycRepo.SetNumberStatus(userId, true,  KycConstants.Approved, null, CurrentUserId);
+            if (!kyc.PanVerified)     _kycRepo.SetNumberStatus(userId, false, KycConstants.Approved, null, CurrentUserId);
             return Done(userId, "KYC approved. The user now has full portal access.", null);
         }
 

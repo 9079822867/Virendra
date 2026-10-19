@@ -99,6 +99,7 @@
                         <th>Role</th>
                         <th>Mobile</th>
                         <th class="text-center">Documents</th>
+                        <th class="text-center">Aadhaar / PAN</th>
                         <th>Last Upload</th>
                         <th>Status</th>
                         <th class="text-end pe-4">Action</th>
@@ -108,7 +109,7 @@
                     @if (!Model.Users.Any())
                     {
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
+                            <td colspan="8" class="text-center text-muted py-5">
                                 <i class="fas fa-inbox fa-2x mb-2 d-block" style="color:#c5c9e8;"></i>
                                 No users in this list.
                             </td>
@@ -130,6 +131,16 @@
                                 @if (u.PendingCount > 0) { <span class="kyc-dot bg-warning text-dark" title="Pending">@u.PendingCount</span> }
                                 @if (u.ApprovedCount > 0) { <span class="kyc-dot bg-success text-white" title="Approved">@u.ApprovedCount</span> }
                                 @if (u.RejectedCount > 0) { <span class="kyc-dot bg-danger text-white" title="Rejected">@u.RejectedCount</span> }
+                            </td>
+                            <td class="text-center">
+                                @foreach (var n in new[] { new { L = "Aadhaar", S = u.AadhaarStatusId }, new { L = "PAN", S = u.PanStatusId } })
+                                {
+                                    string nc = n.S == VIRENDRA.Models.KycConstants.Approved ? "bg-success text-white"
+                                              : n.S == VIRENDRA.Models.KycConstants.Rejected ? "bg-danger text-white"
+                                              : n.S == VIRENDRA.Models.KycConstants.Pending ? "bg-warning text-dark"
+                                              : "bg-light text-muted";
+                                    <span class="kyc-dot @nc" title="@n.L: @VIRENDRA.Models.KycConstants.NumberStatusName(n.S)">@n.L</span>
+                                }
                             </td>
                             <td><small>@u.LastUpload.ToString("dd MMM yyyy, hh:mm tt")</small></td>
                             <td><span class="badge rounded-pill @cls">@s</span></td>

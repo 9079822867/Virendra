@@ -5,15 +5,23 @@
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
 
     int total = KycConstants.Categories.Length;
-    int pct = Model.ApprovedCount * 100 / total;
+    int pct = Model.VerifiedSteps * 100 / Model.TotalSteps;
     string overall = Model.IsApproved ? "Approved"
                    : Model.AnyRejected ? "Action Required"
-                   : Model.UploadedCount == total ? "Under Review"
+                   : Model.AllSubmitted ? "Under Review"
                    : "Incomplete";
     string overallIcon = Model.IsApproved ? "fa-shield-alt"
                        : Model.AnyRejected ? "fa-exclamation-triangle"
-                       : Model.UploadedCount == total ? "fa-hourglass-half"
+                       : Model.AllSubmitted ? "fa-hourglass-half"
                        : "fa-cloud-upload-alt";
+
+    var det = Model.Detail;
+    bool panApi = (ViewBag.PanApiEnabled as bool?) ?? false;
+    Func<int?, string> numBadge = s => s == KycConstants.Approved ? "bg-light text-success"
+                                     : s == KycConstants.Rejected ? "bg-light text-danger"
+                                     : s == KycConstants.Pending ? "bg-warning text-dark"
+                                     : "bg-light text-secondary";
+    Func<int?, string> numTile = s => s == KycConstants.Approved ? "is-approved" : s == KycConstants.Rejected ? "is-rejected" : "";
 
     var icons = new Dictionary<string, string>
     {
@@ -106,17 +114,17 @@
                     {
                         <text>One or more documents were rejected. Please check the reason and re-upload.</text>
                     }
-                    else if (Model.UploadedCount == total)
+                    else if (Model.AllSubmitted)
                     {
-                        <text>All documents are submitted. The portal unlocks as soon as an admin approves them.</text>
+                        <text>Everything is submitted. The portal unlocks as soon as an admin approves it.</text>
                     }
                     else
                     {
-                        <text>Upload all 4 documents below. The portal unlocks after admin approval.</text>
+                        <text>Enter your Aadhaar &amp; PAN numbers and upload all 4 documents below. The portal unlocks after verification.</text>
                     }
                 </p>
                 <div class="progress mb-1"><div class="progress-bar" style="width:@(pct)%"></div></div>
-                <small style="opacity:.85;">@Model.ApprovedCount of @total approved &middot; @Model.UploadedCount of @total uploaded</small>
+                <small style="opacity:.85;">@Model.VerifiedSteps of @Model.TotalSteps verified &middot; @Model.UploadedCount of @total documents uploaded</small>
             </div>
             @if (Model.IsApproved)
             {
@@ -132,7 +140,145 @@
         </div>
     </div>
 
+    <!-- ── Identity numbers ───────────────────────────── -->
+    <h6 class="fw-bold mb-3"><i class="fas fa-fingerprint text-primary me-2"></i>Identity Numbers</h6>
+    <div class="row g-4 mb-4">
+
+        <!-- Aadhaar number -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm kyc-tile @numTile(det?.AadhaarStatusId)">
+                <div class="tile-head">
+                    <h6><i class="fas fa-id-card me-2"></i>Aadhaar Number</h6>
+                    <span class="badge rounded-pill @numBadge(det?.AadhaarStatusId)">@KycConstants.NumberStatusName(det?.AadhaarStatusId)</span>
+                </div>
+                <div class="card-body">
+                    @if (det?.AadhaarNumber != null)
+                    {
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div>
+                                <div class="text-muted small">Submitted number</div>
+                                <div class="fw-bold fs-5" style="letter-spacing:.08em;">@det.AadhaarMasked</div>
+                            </div>
+                            @if (det.AadhaarStatusId == KycConstants.Approved)
+                            {
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                                    <i class="fas fa-check-circle me-1"></i>Verified @(det.AadhaarVerifyMode == KycConstants.ModeApi ? "by API" : "by Admin")
+                                </span>
+                            }
+                        </div>
+                    }
+                    @if (det?.AadhaarStatusId == KycConstants.Rejected && !string.IsNullOrWhiteSpace(det.AadhaarRemark))
+                    {
+                        <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:.8rem;border-radius:8px;">
+                            <i class="fas fa-times-circle me-1"></i><strong>Reason:</strong> @det.AadhaarRemark
+                        </div>
+                    }
+                    @if (det?.AadhaarStatusId != KycConstants.Approved)
+                    {
+                        using (Html.BeginForm("SubmitAadhaar", "Kyc", FormMethod.Post, new { @class = "id-form" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <label class="form-label small fw-semibold" for="aadhaarNumber">@(det?.AadhaarNumber == null ? "Enter" : "Update") Aadhaar number</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-id-card text-primary"></i></span>
+                                <input type="text" class="form-control" id="aadhaarNumber" name="aadhaarNumber" required
+                                       inputmode="numeric" maxlength="14" autocomplete="off" placeholder="XXXX XXXX XXXX" />
+                                <button type="submit" class="btn btn-kyc px-3"><i class="fas fa-paper-plane me-1"></i>Submit</button>
+                            </div>
+                            <div class="small mt-1" id="aadhaarHint" style="min-height:1.1rem;"></div>
+                            <div class="text-muted" style="font-size:.75rem;"><i class="fas fa-info-circle me-1"></i>Checked instantly for validity, then verified by the admin against your Aadhaar card images.</div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- PAN -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm kyc-tile @numTile(det?.PanStatusId)">
+                <div class="tile-head">
+                    <h6><i class="fas fa-address-card me-2"></i>PAN Number</h6>
+                    <span class="badge rounded-pill @numBadge(det?.PanStatusId)">@KycConstants.NumberStatusName(det?.PanStatusId)</span>
+                </div>
+                <div class="card-body">
+                    @if (det?.PanNumber != null)
+                    {
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div>
+                                <div class="text-muted small">Submitted PAN</div>
+                                <div class="fw-bold fs-5" style="letter-spacing:.08em;">@det.PanNumber</div>
+                                <div class="small text-muted">@det.PanName</div>
+                            </div>
+                            @if (det.PanStatusId == KycConstants.Approved)
+                            {
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                                    <i class="fas fa-check-circle me-1"></i>Verified @(det.PanVerifyMode == KycConstants.ModeApi ? "by API" : "by Admin")
+                                </span>
+                            }
+                        </div>
+                    }
+                    @if (det?.PanStatusId == KycConstants.Rejected && !string.IsNullOrWhiteSpace(det.PanRemark))
+                    {
+                        <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:.8rem;border-radius:8px;">
+                            <i class="fas fa-times-circle me-1"></i><strong>Reason:</strong> @det.PanRemark
+                        </div>
+                    }
+                    @if (det?.PanStatusId != KycConstants.Approved)
+                    {
+                        using (Html.BeginForm("SubmitPan", "Kyc", FormMethod.Post, new { @class = "id-form" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <div class="row g-2">
+                                <div class="col-sm-5">
+                                    <label class="form-label small fw-semibold" for="panNumber">PAN number</label>
+                                    <input type="text" class="form-control text-uppercase" id="panNumber" name="panNumber" required
+                                           maxlength="10" autocomplete="off" placeholder="ABCDE1234F" value="@det?.PanNumber" />
+                                </div>
+                                <div class="col-sm-7">
+                                    <label class="form-label small fw-semibold" for="panName">Name as on PAN</label>
+                                    <input type="text" class="form-control" id="panName" name="panName" required
+                                           maxlength="100" value="@det?.PanName" />
+                                </div>
+                                <div class="col-sm-5">
+                                    <label class="form-label small fw-semibold" for="panDob">Date of birth</label>
+                                    <input type="date" class="form-control" id="panDob" name="panDob" required
+                                           max="@DateTime.Today.AddYears(-18).ToString("yyyy-MM-dd")"
+                                           value="@(det?.PanDob?.ToString("yyyy-MM-dd"))" />
+                                </div>
+                                <div class="col-sm-7 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-kyc w-100">
+                                        @if (panApi)
+                                        {
+                                            <i class="fas fa-bolt me-1"></i><text>Verify PAN Instantly</text>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-paper-plane me-1"></i><text>Submit PAN</text>
+                                        }
+                                    </button>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check small">
+                                        <input class="form-check-input" type="checkbox" value="true" id="consent" name="consent" required />
+                                        <label class="form-check-label" for="consent">
+                                            I consent to verify my PAN details for KYC.
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="small mt-1" id="panHint" style="min-height:1.1rem;"></div>
+                            <div class="text-muted" style="font-size:.75rem;">
+                                <i class="fas fa-info-circle me-1"></i>@(panApi ? "Verified online with the Income Tax database. If it can't be verified online, the admin verifies it." : "Verified by the admin against your PAN card image.")
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ── Document tiles ─────────────────────────────── -->
+    <h6 class="fw-bold mb-3"><i class="fas fa-file-image text-primary me-2"></i>Documents</h6>
     <div class="row g-4">
         @foreach (var cat in KycConstants.Categories)
         {
@@ -288,11 +434,63 @@
                 });
             });
 
-            document.querySelectorAll('.kyc-form').forEach(function (form) {
-                form.addEventListener('submit', function () {
+            // ── Aadhaar: 4-4-4 grouping + Verhoeff checksum ──
+            var D = [[0,1,2,3,4,5,6,7,8,9],[1,2,3,4,0,6,7,8,9,5],[2,3,4,0,1,7,8,9,5,6],[3,4,0,1,2,8,9,5,6,7],[4,0,1,2,3,9,5,6,7,8],
+                     [5,9,8,7,6,0,4,3,2,1],[6,5,9,8,7,1,0,4,3,2],[7,6,5,9,8,2,1,0,4,3],[8,7,6,5,9,3,2,1,0,4],[9,8,7,6,5,4,3,2,1,0]];
+            var P = [[0,1,2,3,4,5,6,7,8,9],[1,5,7,6,2,8,3,0,9,4],[5,8,0,3,7,9,6,1,4,2],[8,9,1,6,0,4,3,5,2,7],
+                     [9,4,5,3,1,2,6,8,7,0],[4,2,8,6,5,7,3,9,0,1],[2,7,9,3,8,0,6,4,1,5],[7,0,4,6,9,1,3,2,5,8]];
+            function aadhaarOk(n) {
+                if (!/^[2-9][0-9]{11}$/.test(n)) return false;
+                var c = 0;
+                for (var i = 0; i < n.length; i++) c = D[c][P[i % 8][+n[n.length - 1 - i]]];
+                return c === 0;
+            }
+            function hint(el, ok, okText, badText) {
+                el.className = 'small mt-1 ' + (ok ? 'text-success' : 'text-danger');
+                el.innerHTML = '<i class="fas ' + (ok ? 'fa-check-circle' : 'fa-times-circle') + ' me-1"></i>' + (ok ? okText : badText);
+            }
+
+            var aIn = document.getElementById('aadhaarNumber');
+            if (aIn) {
+                var aHint = document.getElementById('aadhaarHint');
+                aIn.addEventListener('input', function () {
+                    var d = aIn.value.replace(/\D/g, '').slice(0, 12);
+                    aIn.value = d.replace(/(\d{4})(?=\d)/g, '$1 ');
+                    if (d.length < 12) { aHint.textContent = ''; return; }
+                    hint(aHint, aadhaarOk(d), 'Valid Aadhaar number', 'Aadhaar number is not valid');
+                });
+                aIn.form.addEventListener('submit', function (e) {
+                    if (!aadhaarOk(aIn.value.replace(/\D/g, ''))) {
+                        e.preventDefault();
+                        hint(aHint, false, '', 'Enter a valid 12-digit Aadhaar number');
+                    }
+                });
+            }
+
+            var pIn = document.getElementById('panNumber');
+            if (pIn) {
+                var pHint = document.getElementById('panHint');
+                var panRe = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+                pIn.addEventListener('input', function () {
+                    pIn.value = pIn.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+                    if (pIn.value.length < 10) { pHint.textContent = ''; return; }
+                    hint(pHint, panRe.test(pIn.value), 'Valid PAN format', 'PAN must look like ABCDE1234F');
+                });
+                pIn.form.addEventListener('submit', function (e) {
+                    if (!panRe.test(pIn.value)) {
+                        e.preventDefault();
+                        hint(pHint, false, '', 'PAN must look like ABCDE1234F');
+                    }
+                });
+            }
+
+            document.querySelectorAll('.kyc-form, .id-form').forEach(function (form) {
+                form.addEventListener('submit', function (e) {
+                    if (e.defaultPrevented) return;
                     var btn = form.querySelector('button[type=submit]');
                     btn.disabled = true;
-                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Uploading';
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>' +
+                        (form.classList.contains('id-form') ? 'Please wait' : 'Uploading');
                 });
             });
         })();

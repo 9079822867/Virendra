@@ -1,4 +1,5 @@
 using System.IO;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using VIRENDRA.Data;
@@ -33,13 +34,32 @@ namespace VIRENDRA.Controllers
         [HttpGet]
         public ActionResult Index()
         {
-            var model = new KycStatusViewModel
-            {
-                UserId    = CurrentUserId,
-                Documents = _kycRepo.GetByUser(CurrentUserId)
-            };
+            var model = _kycRepo.GetStatus(CurrentUserId);
             if (!IsAdmin) Session["KycApproved"] = model.IsApproved;
+            ViewBag.PanApiEnabled = KycIdService.ApiEnabled;
             return View(model);
+        }
+
+        // ── Aadhaar / PAN numbers ───────────────────────────────────────────
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult SubmitAadhaar(string aadhaarNumber)
+        {
+            return Done(new KycIdService(_kycRepo).SubmitAadhaar(CurrentUserId, aadhaarNumber));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> SubmitPan(string panNumber, string panName, string panDob, bool consent = false)
+        {
+            return Done(await new KycIdService(_kycRepo).SubmitPanAsync(CurrentUserId, panNumber, panName, panDob, consent));
+        }
+
+        private ActionResult Done(KycIdResult r)
+        {
+            TempData[r.Ok ? "SuccessMessage" : "ErrorMessage"] = r.Message;
+            return RedirectToAction("Index");
         }
 
         [HttpPost]

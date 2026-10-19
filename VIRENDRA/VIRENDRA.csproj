@@ -229,6 +229,8 @@
     <Compile Include="Services\RechargeService.cs" />
     <Compile Include="Services\ComplaintService.cs" />
     <Compile Include="Services\KycService.cs" />
+    <Compile Include="Services\KycIdService.cs" />
+    <Compile Include="Services\SandboxKycApi.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap-grid.css" />
@@ -286,6 +288,7 @@
     <Content Include="Content\js\waves.min.js" />
     <Content Include="Database\CreateUsersTable.sql" />
     <Content Include="Database\CreateUserKycTable.sql" />
+    <Content Include="Database\CreateUserKycDetailTable.sql" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />

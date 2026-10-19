@@ -15,6 +15,12 @@
     <!-- External operator/circle lookup API (auto-detect operator from mobile number) -->
     <add key="PlanApiBaseUrl" value="https://onlinerechargeservice.in" />
     <add key="PlanApiTokenId" value="YOUR_PLAN_API_TOKEN" />
+    <!-- KYC PAN verification API (Sandbox.co.in). Leave ApiKey/ApiSecret blank for manual (admin) verification only.
+         Free test environment: https://test-api.sandbox.co.in ; production: https://api.sandbox.co.in -->
+    <add key="KycApi:Provider" value="Sandbox" />
+    <add key="KycApi:BaseUrl" value="https://test-api.sandbox.co.in" />
+    <add key="KycApi:ApiKey" value="" />
+    <add key="KycApi:ApiSecret" value="" />
   </appSettings>
   <system.web>
     <compilation debug="true" targetFramework="4.8.1" />

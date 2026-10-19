@@ -5,7 +5,12 @@
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
     var u = Model.User;
     var kyc = Model.Kyc;
-    bool allUploaded = kyc.UploadedCount == KycConstants.Categories.Length;
+    bool allUploaded = kyc.AllSubmitted;
+    var det = kyc.Detail;
+    Func<int?, string> numBadge = s => s == KycConstants.Approved ? "bg-success"
+                                     : s == KycConstants.Rejected ? "bg-danger"
+                                     : s == KycConstants.Pending ? "bg-warning text-dark"
+                                     : "bg-secondary";
 }
 
 <style>
@@ -66,7 +71,7 @@
                 }
             </div>
             <div class="mt-2">
-                <span class="badge rounded-pill bg-light text-dark">@kyc.ApprovedCount / 4 approved</span>
+                <span class="badge rounded-pill bg-light text-dark">@kyc.VerifiedSteps / @kyc.TotalSteps verified</span>
                 <span class="badge rounded-pill" style="background:rgba(255,255,255,.22);">@u.OverallStatus</span>
             </div>
         </div>
@@ -77,7 +82,7 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="userId" value="@u.UserId" />
                 <button type="submit" class="btn btn-light fw-semibold px-4" @(allUploaded ? "" : "disabled")
-                        title="@(allUploaded ? "Approve every document" : "All 4 documents must be uploaded first")">
+                        title="@(allUploaded ? "Approve every document and verify both numbers" : "All 4 documents and Aadhaar / PAN must be submitted first")">
                     <i class="fas fa-check-double me-1 text-success"></i>Approve All
                 </button>
             }
@@ -88,7 +93,107 @@
         }
     </div>
 
+    <!-- ── Identity numbers ───────────────────────────── -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;overflow:hidden;">
+        <div class="tile-head d-flex justify-content-between align-items-center px-4 py-3 text-white"
+             style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+            <h6 class="mb-0 fw-bold"><i class="fas fa-fingerprint me-2"></i>Identity Numbers</h6>
+            <button type="button" class="btn btn-sm btn-light fw-semibold" data-bs-toggle="modal" data-bs-target="#numbersModal">
+                <i class="fas fa-pen me-1 text-primary"></i>Manual Update
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle" style="font-size:.88rem;">
+                <thead>
+                    <tr class="text-muted" style="font-size:.75rem;text-transform:uppercase;">
+                        <th class="ps-4">Type</th><th>Number</th><th>Details</th><th>Status</th><th>Verified By</th><th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in new[] { "Aadhaar", "Pan" })
+                    {
+                        bool isA = row == "Aadhaar";
+                        string number = isA ? det?.AadhaarFormatted : det?.PanNumber;
+                        int? st = isA ? det?.AadhaarStatusId : det?.PanStatusId;
+                        string mode = isA ? det?.AadhaarVerifyMode : det?.PanVerifyMode;
+                        string remark = isA ? det?.AadhaarRemark : det?.PanRemark;
+                        DateTime? vdate = isA ? det?.AadhaarVerifiedDate : det?.PanVerifiedDate;
+                        <tr>
+                            <td class="ps-4 fw-semibold">
+                                <i class="fas @(isA ? "fa-id-card" : "fa-address-card") text-primary me-1"></i>@(isA ? "Aadhaar" : "PAN")
+                            </td>
+                            <td class="fw-bold" style="letter-spacing:.06em;">@(number ?? "-")</td>
+                            <td class="small text-muted">
+                                @if (!isA && det?.PanNumber != null)
+                                {
+                                    <div>@det.PanName</div>
+                                    <div>@(det.PanDob?.ToString("dd MMM yyyy"))</div>
+                                }
+                                @if (st == KycConstants.Rejected && !string.IsNullOrWhiteSpace(remark))
+                                {
+                                    <div class="text-danger">Reason: @remark</div>
+                                }
+                            </td>
+                            <td><span class="badge rounded-pill @numBadge(st)">@KycConstants.NumberStatusName(st)</span></td>
+                            <td class="small">
+                                @if (st == KycConstants.Approved)
+                                {
+                                    <span class="badge @(mode == KycConstants.ModeApi ? "bg-info text-dark" : "bg-light text-dark border")">@(mode ?? KycConstants.ModeManual)</span>
+                                    <div class="text-muted">@(vdate?.ToString("dd MMM yyyy, hh:mm tt"))</div>
+                                }
+                                else if (st == KycConstants.Rejected && mode == KycConstants.ModeApi)
+                                {
+                                    <span class="badge bg-info text-dark">API check failed</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                @if (number != null)
+                                {
+                                    <div class="d-inline-flex gap-2">
+                                        @if (st != KycConstants.Approved)
+                                        {
+                                            using (Html.BeginForm("VerifyNumber", "KycAdmin", FormMethod.Post))
+                                            {
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="userId" value="@u.UserId" />
+                                                <input type="hidden" name="type" value="@row" />
+                                                <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check me-1"></i>Verify</button>
+                                            }
+                                        }
+                                        @if (st != KycConstants.Rejected)
+                                        {
+                                            <button type="button" class="btn btn-outline-danger btn-sm btn-reject"
+                                                    data-url="@Url.Action("RejectNumber","KycAdmin")" data-type="@row"
+                                                    data-title="@(isA ? "Aadhaar Number" : "PAN")">
+                                                <i class="fas fa-times me-1"></i>Reject
+                                            </button>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <small class="text-muted">Not submitted</small>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (!((ViewBag.PanApiEnabled as bool?) ?? false))
+        {
+            <div class="px-4 py-2 small text-muted border-top">
+                <i class="fas fa-info-circle me-1"></i>PAN API verification is off (KycApi settings not configured) &mdash; verify numbers manually against the uploaded card images.
+            </div>
+        }
+    </div>
+
     <!-- ── Documents ──────────────────────────────────── -->
+    <h6 class="fw-bold mb-3"><i class="fas fa-file-image text-primary me-2"></i>Documents</h6>
     <div class="row g-4">
         @foreach (var cat in KycConstants.Categories)
         {
@@ -153,6 +258,7 @@
                                 @if (!rejected)
                                 {
                                     <button type="button" class="btn btn-outline-danger btn-sm flex-grow-1 btn-reject"
+                                            data-url="@Url.Action("Reject","KycAdmin")"
                                             data-cat="@cat" data-title="@KycConstants.CategoryTitle(cat)">
                                         <i class="fas fa-times me-1"></i>Reject
                                     </button>
@@ -190,11 +296,12 @@
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0" style="border-radius:14px;overflow:hidden;">
-            @using (Html.BeginForm("Reject", "KycAdmin", FormMethod.Post))
+            @using (Html.BeginForm("Reject", "KycAdmin", FormMethod.Post, new { id = "rejectForm" }))
             {
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="userId" value="@u.UserId" />
                 <input type="hidden" name="category" id="rejectCategory" />
+                <input type="hidden" name="type" id="rejectType" />
                 <div class="modal-header text-white" style="background:linear-gradient(135deg,#eb3349 0%,#f45c43 100%);">
                     <h6 class="modal-title fw-bold">Reject <span id="rejectTitle"></span></h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -204,16 +311,64 @@
                     <textarea name="remark" id="rejectRemark" class="form-control" rows="3" maxlength="250" required
                               placeholder="e.g. Image is blurry, please upload a clear photo"></textarea>
                     <div class="d-flex flex-wrap gap-1 mt-2">
-                        @foreach (var r in new[] { "Image is blurry / not readable", "Document is cropped", "Wrong document uploaded", "Name does not match", "Face not clearly visible" })
+                        @foreach (var r in new[] { "Image is blurry / not readable", "Document is cropped", "Wrong document uploaded", "Name does not match", "Face not clearly visible", "Number does not match the card" })
                         {
                             <button type="button" class="btn btn-light btn-sm reason-chip" style="font-size:.75rem;">@r</button>
                         }
                     </div>
-                    <small class="text-muted d-block mt-2">The user will see this reason and can re-upload the document.</small>
+                    <small class="text-muted d-block mt-2">The user will see this reason and can submit it again.</small>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-danger"><i class="fas fa-times me-1"></i>Reject</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Manual update modal -->
+<div class="modal fade" id="numbersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="border-radius:14px;overflow:hidden;">
+            @using (Html.BeginForm("UpdateNumbers", "KycAdmin", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" value="@u.UserId" />
+                <div class="modal-header text-white" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+                    <h6 class="modal-title fw-bold"><i class="fas fa-pen me-2"></i>Manual Update &mdash; @u.Username</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="mAadhaar">Aadhaar number</label>
+                        <input type="text" class="form-control" id="mAadhaar" name="aadhaarNumber" inputmode="numeric"
+                               maxlength="14" placeholder="@(det?.AadhaarFormatted ?? "XXXX XXXX XXXX")" />
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-sm-5">
+                            <label class="form-label fw-semibold" for="mPan">PAN</label>
+                            <input type="text" class="form-control text-uppercase" id="mPan" name="panNumber"
+                                   maxlength="10" placeholder="@(det?.PanNumber ?? "ABCDE1234F")" />
+                        </div>
+                        <div class="col-sm-7">
+                            <label class="form-label fw-semibold" for="mPanName">Name as on PAN</label>
+                            <input type="text" class="form-control" id="mPanName" name="panName" maxlength="100" value="@det?.PanName" />
+                        </div>
+                        <div class="col-sm-5">
+                            <label class="form-label fw-semibold" for="mPanDob">Date of birth</label>
+                            <input type="date" class="form-control" id="mPanDob" name="panDob" value="@(det?.PanDob?.ToString("yyyy-MM-dd"))" />
+                        </div>
+                    </div>
+                    <div class="alert alert-info py-2 px-3 mt-3 mb-0 small" style="border-radius:8px;">
+                        <i class="fas fa-info-circle me-1"></i>Numbers you save here are marked <strong>Verified (Manual)</strong>. Leave a field blank to keep it unchanged.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:none;">
+                        <i class="fas fa-save me-1"></i>Save &amp; Verify
+                    </button>
                 </div>
             }
         </div>
@@ -237,7 +392,9 @@
             var remark = document.getElementById('rejectRemark');
             document.querySelectorAll('.btn-reject').forEach(function (btn) {
                 btn.addEventListener('click', function () {
-                    document.getElementById('rejectCategory').value = btn.dataset.cat;
+                    document.getElementById('rejectForm').action = btn.dataset.url;
+                    document.getElementById('rejectCategory').value = btn.dataset.cat || '';
+                    document.getElementById('rejectType').value = btn.dataset.type || '';
                     document.getElementById('rejectTitle').textContent = btn.dataset.title;
                     remark.value = '';
                     rejectModal.show();

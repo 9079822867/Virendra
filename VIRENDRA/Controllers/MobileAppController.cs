@@ -25,7 +25,7 @@ namespace VIRENDRA.Controllers
     ///        App/webservice/BalanceCheck | DashboardHome | RechargeReport | TransactionReport | BookComplain
     /// Login returns TOKENID (stored in User.AppToken); every other call sends it as Tokenid.
     ///
-    ///        App/webservice/KycStatus | KycUpload | KycDocument
+    ///        App/webservice/KycStatus | KycUpload | KycDocument | KycAadhaar | KycPan
     ///
     /// ERROR codes: 0 OK, 1 invalid username, 2 not found / inactive, 3 locked,
     ///              4 invalid password / OTP, 5 unexpected, 9 authentication, 11 bad parameters,
@@ -92,7 +92,7 @@ namespace VIRENDRA.Controllers
                 _appRepo.SaveAppLogin(user.Id, token, ld.FireToken);
 
                 // Login still succeeds without KYC so the app can upload documents with this token
-                var kyc = new KycStatusViewModel { UserId = user.Id, Documents = _kycRepo.GetByUser(user.Id) };
+                var kyc = _kycRepo.GetStatus(user.Id);
                 bool kycOk = IsAdminRole(user) || kyc.IsApproved;
 
                 return Reply(new AppUserLogResponse
@@ -900,7 +900,7 @@ namespace VIRENDRA.Controllers
 
         private AppKycStatusResponse BuildKycStatus(User user, string message)
         {
-            var kyc = new KycStatusViewModel { UserId = user.Id, Documents = _kycRepo.GetByUser(user.Id) };
+            var kyc = _kycRepo.GetStatus(user.Id);
             bool ok = IsAdminRole(user) || kyc.IsApproved;
 
             return new AppKycStatusResponse
@@ -910,6 +910,12 @@ namespace VIRENDRA.Controllers
                 MESSAGE     = message,
                 KYCAPPROVED = ok ? "True" : "False",
                 KYCSTATUS   = ok ? "Approved" : kyc.OverallStatus,
+                PANAPI      = KycIdService.ApiEnabled ? "True" : "False",
+                AADHAAR     = Number(kyc.Detail?.AadhaarMasked, null, null, kyc.Detail?.AadhaarStatusId,
+                                     kyc.Detail?.AadhaarVerifyMode, kyc.Detail?.AadhaarRemark),
+                PAN         = Number(kyc.Detail?.PanNumber, kyc.Detail?.PanName,
+                                     kyc.Detail?.PanDob?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                     kyc.Detail?.PanStatusId, kyc.Detail?.PanVerifyMode, kyc.Detail?.PanRemark),
                 DOCUMENTS   = KycConstants.Categories.Select(c =>
                 {
                     var d = kyc.Get(c);
@@ -925,6 +931,79 @@ namespace VIRENDRA.Controllers
                     };
                 }).ToList()
             };
+        }
+
+        private static AppKycNumber Number(string number, string name, string dob, int? statusId, string mode, string remark) =>
+            new AppKycNumber
+            {
+                NUMBER    = number ?? string.Empty,
+                NAME      = name ?? string.Empty,
+                DOB       = dob ?? string.Empty,
+                STATUSID  = (statusId ?? 0).ToString(CultureInfo.InvariantCulture),
+                STATUS    = KycConstants.NumberStatusName(statusId),
+                MODE      = statusId == KycConstants.Approved ? (mode ?? KycConstants.ModeManual) : string.Empty,
+                REMARK    = statusId == KycConstants.Rejected ? (remark ?? string.Empty) : string.Empty,
+                CANSUBMIT = statusId == KycConstants.Approved ? "False" : "True"
+            };
+
+        /// <summary>Submit Aadhaar number (format + checksum checked, then verified by admin).</summary>
+        [HttpPost]
+        [Route("KycAadhaar")]
+        public IHttpActionResult KycAadhaar([FromBody] AppKycAadhaarRequest req)
+        {
+            var res = new AppKycStatusResponse { ERROR = "11", STATUSCODE = "2" };
+            try
+            {
+                User user = AuthUser(req?.Tokenid);
+                if (user == null)
+                {
+                    res.ERROR = "9"; res.MESSAGE = "Authentication error!";
+                    return Reply(res);
+                }
+
+                var r = new KycIdService(_kycRepo).SubmitAadhaar(user.Id, req.AadhaarNumber);
+                if (!r.Ok)
+                {
+                    res.MESSAGE = r.Message;
+                    return Reply(res);
+                }
+                return Reply(BuildKycStatus(user, r.Message));
+            }
+            catch (Exception)
+            {
+                res.ERROR = "5"; res.MESSAGE = "Unexpected error";
+                return Reply(res);
+            }
+        }
+
+        /// <summary>Submit PAN; verified instantly by the KYC API when configured, else by admin.</summary>
+        [HttpPost]
+        [Route("KycPan")]
+        public async Task<IHttpActionResult> KycPan([FromBody] AppKycPanRequest req)
+        {
+            var res = new AppKycStatusResponse { ERROR = "11", STATUSCODE = "2" };
+            try
+            {
+                User user = AuthUser(req?.Tokenid);
+                if (user == null)
+                {
+                    res.ERROR = "9"; res.MESSAGE = "Authentication error!";
+                    return Reply(res);
+                }
+
+                bool consent = string.Equals((req.Consent ?? "").Trim(), "Y", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals((req.Consent ?? "").Trim(), "true", StringComparison.OrdinalIgnoreCase);
+                var r = await new KycIdService(_kycRepo).SubmitPanAsync(user.Id, req.PanNumber, req.NameAsPerPan, req.Dob, consent);
+
+                var status = BuildKycStatus(user, r.Message);
+                if (!r.Ok) { status.ERROR = "11"; status.STATUSCODE = "2"; }
+                return Reply(status);
+            }
+            catch (Exception)
+            {
+                res.ERROR = "5"; res.MESSAGE = "Unexpected error";
+                return Reply(res);
+            }
         }
 
         #endregion

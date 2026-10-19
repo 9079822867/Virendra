@@ -255,6 +255,19 @@ namespace VIRENDRA.Models
         public string FileBase64 { get; set; }      // file content, base64 (data: prefix allowed)
     }
 
+    public class AppKycAadhaarRequest : AppTokenRequest
+    {
+        public string AadhaarNumber { get; set; }   // 12 digits (spaces allowed)
+    }
+
+    public class AppKycPanRequest : AppTokenRequest
+    {
+        public string PanNumber    { get; set; }    // ABCDE1234F
+        public string NameAsPerPan { get; set; }
+        public string Dob          { get; set; }    // dd/MM/yyyy, dd-MM-yyyy or yyyy-MM-dd
+        public string Consent      { get; set; }    // "Y" required
+    }
+
     public class AppKycStatusResponse
     {
         public string ERROR       { get; set; }
@@ -262,7 +275,22 @@ namespace VIRENDRA.Models
         public string MESSAGE     { get; set; }
         public string KYCAPPROVED { get; set; }
         public string KYCSTATUS   { get; set; }
+        public string PANAPI      { get; set; }     // "True" when PAN is verified instantly by API
+        public AppKycNumber AADHAAR { get; set; }
+        public AppKycNumber PAN     { get; set; }
         public List<AppKycDocument> DOCUMENTS { get; set; }
+    }
+
+    public class AppKycNumber
+    {
+        public string NUMBER    { get; set; }       // Aadhaar masked (XXXX XXXX 1234); PAN in full
+        public string NAME      { get; set; }       // PAN only
+        public string DOB       { get; set; }       // PAN only, dd/MM/yyyy
+        public string STATUSID  { get; set; }       // 0 not submitted, 1 pending, 2 verified, 3 rejected
+        public string STATUS    { get; set; }
+        public string MODE      { get; set; }       // API | Manual (when verified)
+        public string REMARK    { get; set; }       // rejection reason
+        public string CANSUBMIT { get; set; }       // "True" unless already verified
     }
 
     public class AppKycDocument
