@@ -26,11 +26,13 @@ namespace VIRENDRA.Controllers
     /// Login returns TOKENID (stored in User.AppToken); every other call sends it as Tokenid.
     ///
     ///        App/webservice/KycStatus | KycUpload | KycDocument | KycAadhaar | KycPan
+    ///        App/webservice/KycAadhaarDigilocker | KycAadhaarDigilockerStatus
     ///
     /// ERROR codes: 0 OK, 1 invalid username, 2 not found / inactive, 3 locked,
     ///              4 invalid password / OTP, 5 unexpected, 9 authentication, 11 bad parameters,
     ///              13 KYC not approved (non-admin users can only call Login, password and Kyc* until
-    ///              an admin approves all 4 documents — same rule as the web KycGateAttribute).
+    ///              an admin approves all 4 documents — same rule as the web KycGateAttribute),
+    ///              14 DigiLocker consent not finished yet (KycAadhaarDigilockerStatus; retry later).
     /// </summary>
     [RoutePrefix("App/webservice")]
     public class MobileAppController : ApiController
@@ -898,12 +900,15 @@ namespace VIRENDRA.Controllers
             }
         }
 
-        private AppKycStatusResponse BuildKycStatus(User user, string message)
+        private AppKycStatusResponse BuildKycStatus(User user, string message) =>
+            BuildKycStatus<AppKycStatusResponse>(user, message);
+
+        private T BuildKycStatus<T>(User user, string message) where T : AppKycStatusResponse, new()
         {
             var kyc = _kycRepo.GetStatus(user.Id);
             bool ok = IsAdminRole(user) || kyc.IsApproved;
 
-            return new AppKycStatusResponse
+            return new T
             {
                 ERROR       = "0",
                 STATUSCODE  = "1",
@@ -911,6 +916,7 @@ namespace VIRENDRA.Controllers
                 KYCAPPROVED = ok ? "True" : "False",
                 KYCSTATUS   = ok ? "Approved" : kyc.OverallStatus,
                 PANAPI      = KycIdService.ApiEnabled ? "True" : "False",
+                AADHAARAPI  = KycIdService.ApiEnabled ? "True" : "False",
                 AADHAAR     = Number(kyc.Detail?.AadhaarMasked, null, null, kyc.Detail?.AadhaarStatusId,
                                      kyc.Detail?.AadhaarVerifyMode, kyc.Detail?.AadhaarRemark),
                 PAN         = Number(kyc.Detail?.PanNumber, kyc.Detail?.PanName,
@@ -968,6 +974,72 @@ namespace VIRENDRA.Controllers
                     return Reply(res);
                 }
                 return Reply(BuildKycStatus(user, r.Message));
+            }
+            catch (Exception)
+            {
+                res.ERROR = "5"; res.MESSAGE = "Unexpected error";
+                return Reply(res);
+            }
+        }
+
+        /// <summary>
+        /// Aadhaar by DigiLocker (AADHAARAPI = "True"): saves AadhaarNumber (optional when already submitted)
+        /// as Pending and returns DIGILOCKERURL for a webview. When the webview reaches RETURNURL, close it
+        /// and call KycAadhaarDigilockerStatus.
+        /// </summary>
+        [HttpPost]
+        [Route("KycAadhaarDigilocker")]
+        public async Task<IHttpActionResult> KycAadhaarDigilocker([FromBody] AppKycAadhaarRequest req)
+        {
+            var res = new AppKycStatusResponse { ERROR = "11", STATUSCODE = "2" };
+            try
+            {
+                User user = AuthUser(req?.Tokenid);
+                if (user == null)
+                {
+                    res.ERROR = "9"; res.MESSAGE = "Authentication error!";
+                    return Reply(res);
+                }
+
+                string returnUrl = KycIdService.DigiLockerReturnUrl(Request.RequestUri, "~/Kyc/DigiLockerDone");
+                var r = await new KycIdService(_kycRepo).StartAadhaarDigiLockerAsync(user.Id, req.AadhaarNumber, returnUrl);
+
+                var status = BuildKycStatus<AppKycDigiLockerResponse>(user, r.Message);
+                if (!r.Ok) { status.ERROR = "11"; status.STATUSCODE = "2"; return Reply(status); }
+
+                status.DIGILOCKERURL = r.Url;
+                status.RETURNURL     = returnUrl;
+                return Reply(status);
+            }
+            catch (Exception)
+            {
+                res.ERROR = "5"; res.MESSAGE = "Unexpected error";
+                return Reply(res);
+            }
+        }
+
+        /// <summary>
+        /// After the DigiLocker webview: fetches the shared Aadhaar and verifies it (ERROR 0) or reports why not
+        /// (ERROR 11; the number stays Pending for the admin). ERROR 14 = consent not finished on DigiLocker yet.
+        /// </summary>
+        [HttpPost]
+        [Route("KycAadhaarDigilockerStatus")]
+        public async Task<IHttpActionResult> KycAadhaarDigilockerStatus([FromBody] AppTokenRequest req)
+        {
+            var res = new AppKycStatusResponse { ERROR = "11", STATUSCODE = "2" };
+            try
+            {
+                User user = AuthUser(req?.Tokenid);
+                if (user == null)
+                {
+                    res.ERROR = "9"; res.MESSAGE = "Authentication error!";
+                    return Reply(res);
+                }
+
+                var r = await new KycIdService(_kycRepo).CompleteAadhaarDigiLockerAsync(user.Id);
+                var status = BuildKycStatus(user, r.Message);
+                if (!r.Ok) { status.ERROR = r.Waiting ? "14" : "11"; status.STATUSCODE = "2"; }
+                return Reply(status);
             }
             catch (Exception)
             {

@@ -21,6 +21,9 @@
     <add key="KycApi:BaseUrl" value="https://test-api.sandbox.co.in" />
     <add key="KycApi:ApiKey" value="" />
     <add key="KycApi:ApiSecret" value="" />
+    <!-- Same keys enable Aadhaar verification through DigiLocker. Public HTTPS address of this portal that
+         DigiLocker returns the user to (optional; defaults to the request's host, which must be HTTPS). -->
+    <add key="KycApi:ReturnBaseUrl" value="" />
   </appSettings>
   <system.web>
     <compilation debug="true" targetFramework="4.8.1" />

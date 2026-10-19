@@ -129,6 +129,10 @@
                                     <div>@det.PanName</div>
                                     <div>@(det.PanDob?.ToString("dd MMM yyyy"))</div>
                                 }
+                                @if (isA && st != KycConstants.Rejected && !string.IsNullOrWhiteSpace(remark))
+                                {
+                                    <div>@remark</div>
+                                }
                                 @if (st == KycConstants.Rejected && !string.IsNullOrWhiteSpace(remark))
                                 {
                                     <div class="text-danger">Reason: @remark</div>

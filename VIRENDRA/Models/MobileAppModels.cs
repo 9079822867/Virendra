@@ -276,9 +276,20 @@ namespace VIRENDRA.Models
         public string KYCAPPROVED { get; set; }
         public string KYCSTATUS   { get; set; }
         public string PANAPI      { get; set; }     // "True" when PAN is verified instantly by API
+        public string AADHAARAPI  { get; set; }     // "True" when Aadhaar can be verified through DigiLocker
         public AppKycNumber AADHAAR { get; set; }
         public AppKycNumber PAN     { get; set; }
         public List<AppKycDocument> DOCUMENTS { get; set; }
+    }
+
+    /// <summary>
+    /// KycAadhaarDigilocker reply: open DIGILOCKERURL in a webview; when it navigates to a URL starting
+    /// with RETURNURL, close it and call KycAadhaarDigilockerStatus.
+    /// </summary>
+    public class AppKycDigiLockerResponse : AppKycStatusResponse
+    {
+        public string DIGILOCKERURL { get; set; }
+        public string RETURNURL     { get; set; }
     }
 
     public class AppKycNumber

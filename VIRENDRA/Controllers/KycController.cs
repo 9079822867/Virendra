@@ -14,6 +14,7 @@ namespace VIRENDRA.Controllers
     /// Always reachable (KycGateAttribute lets this controller through).
     /// Files are stored by KycService (never served by IIS) and streamed by Document()
     /// to the owner or an admin only.
+    /// Aadhaar can also be verified instantly through DigiLocker when the KYC API is configured.
     /// </summary>
     [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin, RoleConstants.ApiUser, RoleConstants.Retailer)]
     public class KycController : Controller
@@ -47,6 +48,39 @@ namespace VIRENDRA.Controllers
         public ActionResult SubmitAadhaar(string aadhaarNumber)
         {
             return Done(new KycIdService(_kycRepo).SubmitAadhaar(CurrentUserId, aadhaarNumber));
+        }
+
+        /// <summary>Saves the Aadhaar number (Pending) and sends the user to DigiLocker to share it.</summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> AadhaarDigiLocker(string aadhaarNumber)
+        {
+            string returnUrl = KycIdService.DigiLockerReturnUrl(Request.Url, "~/Kyc/DigiLockerCallback");
+            var r = await new KycIdService(_kycRepo).StartAadhaarDigiLockerAsync(CurrentUserId, aadhaarNumber, returnUrl);
+            return r.Ok ? Redirect(r.Url) : Done(r);
+        }
+
+        /// <summary>DigiLocker returns here after consent (or cancel).</summary>
+        [HttpGet]
+        public async Task<ActionResult> DigiLockerCallback()
+        {
+            var r = await new KycIdService(_kycRepo).CompleteAadhaarDigiLockerAsync(CurrentUserId);
+            if (r.Waiting)
+            {
+                TempData["ErrorMessage"] = "DigiLocker consent was not completed. Your Aadhaar number will be verified by the admin, or try DigiLocker again.";
+                return RedirectToAction("Index");
+            }
+            return Done(r);
+        }
+
+        /// <summary>Return page for the mobile app's webview: the app closes it and calls KycAadhaarDigilockerStatus.</summary>
+        [HttpGet]
+        [AllowAnonymous]
+        public ActionResult DigiLockerDone()
+        {
+            return Content("<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>DigiLocker</title></head>"
+                + "<body style=\"font-family:sans-serif;text-align:center;padding:40px 16px;\"><h3>DigiLocker step finished</h3>"
+                + "<p>You can return to the app.</p></body></html>", "text/html");
         }
 
         [HttpPost]

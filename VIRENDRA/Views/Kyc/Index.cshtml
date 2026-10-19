@@ -186,7 +186,18 @@
                                 <button type="submit" class="btn btn-kyc px-3"><i class="fas fa-paper-plane me-1"></i>Submit</button>
                             </div>
                             <div class="small mt-1" id="aadhaarHint" style="min-height:1.1rem;"></div>
-                            <div class="text-muted" style="font-size:.75rem;"><i class="fas fa-info-circle me-1"></i>Checked instantly for validity, then verified by the admin against your Aadhaar card images.</div>
+                            if (panApi)
+                            {
+                                <button type="submit" class="btn btn-outline-primary btn-sm w-100 mb-2" id="aadhaarDigiLocker"
+                                        formaction="@Url.Action("AadhaarDigiLocker", "Kyc")" data-wait="Opening DigiLocker">
+                                    <i class="fas fa-shield-alt me-1"></i>Verify Aadhaar with DigiLocker
+                                </button>
+                                <div class="text-muted" style="font-size:.75rem;"><i class="fas fa-info-circle me-1"></i>DigiLocker verifies your Aadhaar instantly (OTP on your Aadhaar-linked mobile). Or press Submit to have it verified by the admin against your Aadhaar card images.</div>
+                            }
+                            else
+                            {
+                                <div class="text-muted" style="font-size:.75rem;"><i class="fas fa-info-circle me-1"></i>Checked instantly for validity, then verified by the admin against your Aadhaar card images.</div>
+                            }
                         }
                     }
                 </div>
@@ -487,10 +498,10 @@
             document.querySelectorAll('.kyc-form, .id-form').forEach(function (form) {
                 form.addEventListener('submit', function (e) {
                     if (e.defaultPrevented) return;
-                    var btn = form.querySelector('button[type=submit]');
-                    btn.disabled = true;
-                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>' +
-                        (form.classList.contains('id-form') ? 'Please wait' : 'Uploading');
+                    var btn = e.submitter || form.querySelector('button[type=submit]');
+                    var wait = btn.getAttribute('data-wait') || (form.classList.contains('id-form') ? 'Please wait' : 'Uploading');
+                    form.querySelectorAll('button[type=submit]').forEach(function (b) { b.disabled = true; });
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>' + wait;
                 });
             });
         })();
