@@ -56,7 +56,7 @@
     .op-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:.55rem; }
     .op-chip {
         cursor:pointer; border:1px solid var(--line); border-radius:var(--radius);
-        padding:.7rem .5rem; text-align:center; transition:border-color .15s, box-shadow .15s; background:#fff;
+        padding:.7rem .5rem; text-align:center; transition:border-color .15s, box-shadow .15s; background:var(--surface);
     }
     .op-chip:hover { border-color:var(--line-2); }
     .op-chip.active { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-ring); }
@@ -70,8 +70,8 @@
     .amt-input { font-size:1.4rem; font-weight:800; }
     .amt-input::-webkit-outer-spin-button,
     .amt-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
-    .btn-pay { background:var(--ink); border:1px solid var(--ink); color:#fff; font-weight:700; border-radius:var(--radius-sm); padding:.75rem 1rem; width:100%; }
-    .btn-pay:hover { background:#1e293b; color:#fff; }
+    .btn-pay { background:var(--fill); border:1px solid var(--fill); color:var(--on-fill); font-weight:700; border-radius:var(--radius-sm); padding:.75rem 1rem; width:100%; }
+    .btn-pay:hover { background:var(--fill-hover); color:var(--on-fill); }
     .empty-ops { text-align:center; color:var(--muted); padding:2.2rem 1rem; }
 
     /* ── Confirm popup ──────────────────────────────────────── */
@@ -307,7 +307,7 @@
                 <!-- amount-wise search -->
                 <div class="px-3 pt-3">
                     <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                        <span class="input-group-text"><i class="fas fa-search text-muted"></i></span>
                         <input type="number" id="planSearch" class="form-control" placeholder="Search by amount, e.g. 199" autocomplete="off" />
                         <button type="button" id="planSearchClear" class="btn btn-outline-secondary d-none"><i class="fas fa-times"></i></button>
                     </div>
@@ -331,14 +331,14 @@
 </div>
 
 <style>
-    #planTabs .nav-link { font-size:.82rem; font-weight:600; padding:.35rem .9rem; border-radius:20px; color:#3a3f55; background:#f1f3f9; white-space:nowrap; }
-    #planTabs .nav-link.active { background:#00baf2; color:#fff; }
-    .plan-card { border:1px solid #eceef5; border-radius:12px; padding:.85rem 1rem; margin-bottom:.6rem; transition:all .15s; }
-    .plan-card:hover { border-color:#bcdcff; box-shadow:0 3px 12px rgba(0,186,242,.12); }
-    .plan-amt { font-size:1.3rem; font-weight:800; color:#002970; }
-    .plan-chip { display:inline-block; font-size:.72rem; font-weight:600; color:#00569c; background:#eef6ff; border-radius:14px; padding:.12rem .55rem; margin:.1rem .25rem .1rem 0; }
-    .plan-ott { display:inline-block; font-size:.7rem; font-weight:600; color:#7b1fa2; background:#f5edfb; border-radius:14px; padding:.12rem .55rem; margin:.1rem .25rem 0 0; }
-    .plan-benefit { font-size:.78rem; color:#5a6072; margin-top:.35rem; line-height:1.35; }
+    #planTabs .nav-link { font-size:.82rem; font-weight:600; padding:.35rem .9rem; border-radius:20px; color:var(--ink-2); background:var(--soft); border:1px solid var(--line); white-space:nowrap; }
+    #planTabs .nav-link.active { background:var(--fill); color:var(--on-fill); border-color:var(--fill); }
+    .plan-card { border:1px solid var(--line); background:var(--surface); border-radius:12px; padding:.85rem 1rem; margin-bottom:.6rem; transition:all .15s; }
+    .plan-card:hover { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-ring); }
+    .plan-amt { font-size:1.3rem; font-weight:800; color:var(--ink); }
+    .plan-chip { display:inline-block; font-size:.72rem; font-weight:600; color:var(--accent-ink); background:var(--accent-soft); border-radius:14px; padding:.12rem .55rem; margin:.1rem .25rem .1rem 0; }
+    .plan-ott { display:inline-block; font-size:.7rem; font-weight:600; color:var(--info); background:var(--info-soft); border-radius:14px; padding:.12rem .55rem; margin:.1rem .25rem 0 0; }
+    .plan-benefit { font-size:.78rem; color:var(--muted); margin-top:.35rem; line-height:1.35; }
     .btn-plan-select { font-size:.78rem; font-weight:700; border-radius:8px; padding:.3rem .9rem; }
 </style>
 

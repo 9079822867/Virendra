@@ -354,6 +354,7 @@
     <Content Include="Views\ApiDocument\Index.cshtml" />
     <Content Include="Views\ApiSettings\Index.cshtml" />
     <Content Include="Views\Shared\_LayoutDashboard.cshtml" />
+    <Content Include="Views\Shared\_ThemeInit.cshtml" />
     <Content Include="Views\Home\Dashboard.cshtml" />
     <Content Include="Views\Services\Index.cshtml" />
     <Content Include="Views\Services\Create.cshtml" />

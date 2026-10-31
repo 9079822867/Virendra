@@ -153,6 +153,7 @@
     <meta charset="utf-8">
     <title>@(ViewBag.Title != null ? ViewBag.Title + " · " : "")Express Recharge</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    @Html.Partial("_ThemeInit")
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -165,7 +166,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <link href="~/Content/css/app-theme.css?v=3" rel="stylesheet">
+    <link href="~/Content/css/app-theme.css?v=4" rel="stylesheet">
 </head>
 <body>
 <div class="app @(topMenu ? "menu-top" : "menu-side")" id="app">
@@ -255,6 +256,17 @@
                 }
             </nav>
 
+            <div class="dropdown">
+                <button type="button" class="app-theme-btn" id="ddTheme" data-bs-toggle="dropdown" aria-expanded="false" title="Theme" aria-label="Change theme">
+                    <i class="fas fa-circle-half-stroke" id="themeIcon"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end app-theme-menu" aria-labelledby="ddTheme" style="min-width:170px;">
+                    <li><a class="dropdown-item" href="#" data-theme-set="light"><i class="fas fa-sun"></i>Light<i class="fas fa-check"></i></a></li>
+                    <li><a class="dropdown-item" href="#" data-theme-set="dark"><i class="fas fa-moon"></i>Dark<i class="fas fa-check"></i></a></li>
+                    <li><a class="dropdown-item" href="#" data-theme-set="system"><i class="fas fa-desktop"></i>Same as device<i class="fas fa-check"></i></a></li>
+                </ul>
+            </div>
+
             <div class="app-money">
                 <span class="app-balance" title="Wallet balance">
                     <i class="fas fa-wallet"></i>
@@ -326,6 +338,29 @@
         var pair = '__RequestVerificationToken=' + encodeURIComponent(token);
         options.data = options.data ? options.data + '&' + pair : pair;
     });
+
+    // Theme switch: light / dark / same as device (saved in localStorage "vx-theme")
+    (function () {
+        var h = document.documentElement, mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+        function apply(pref) {
+            var dark = pref === 'dark' || (pref === 'system' && mq && mq.matches);
+            h.setAttribute('data-theme', dark ? 'dark' : 'light');
+            h.setAttribute('data-bs-theme', dark ? 'dark' : 'light');
+            h.setAttribute('data-theme-pref', pref);
+            document.getElementById('themeIcon').className = 'fas ' + (pref === 'system' ? 'fa-circle-half-stroke' : dark ? 'fa-moon' : 'fa-sun');
+            document.querySelectorAll('[data-theme-set]').forEach(function (a) { a.classList.toggle('on', a.getAttribute('data-theme-set') === pref); });
+        }
+        document.querySelectorAll('[data-theme-set]').forEach(function (a) {
+            a.addEventListener('click', function (e) {
+                e.preventDefault();
+                var pref = a.getAttribute('data-theme-set');
+                try { localStorage.setItem('vx-theme', pref); } catch (err) { }
+                apply(pref);
+            });
+        });
+        if (mq && mq.addEventListener) mq.addEventListener('change', function () { if (h.getAttribute('data-theme-pref') === 'system') apply('system'); });
+        apply(h.getAttribute('data-theme-pref') || 'system');
+    })();
 
     // Mobile sidebar
     (function () {

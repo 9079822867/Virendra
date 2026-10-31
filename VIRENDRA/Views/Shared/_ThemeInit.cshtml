@@ -1,0 +1,14 @@
+@* Applies the saved theme before the page paints (no white flash).
+   Choice in localStorage "vx-theme": light | dark | system (default = follow the device). *@
+<script>
+    (function () {
+        var pref = 'system';
+        try { pref = localStorage.getItem('vx-theme') || 'system'; } catch (e) { }
+        var dark = pref === 'dark' ||
+                   (pref === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        var h = document.documentElement;
+        h.setAttribute('data-theme', dark ? 'dark' : 'light');
+        h.setAttribute('data-bs-theme', dark ? 'dark' : 'light');
+        h.setAttribute('data-theme-pref', pref);
+    })();
+</script>
