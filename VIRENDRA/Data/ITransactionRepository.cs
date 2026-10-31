@@ -13,6 +13,8 @@ namespace VIRENDRA.Data
         List<RechargeHistoryItem> GetRechargeHistory(
             int? userId, DateTime fromDate, DateTime toDate, string status, string searchText);
 
+        List<RequestResponseLogItem> GetRequestResponseLogs(long recId);
+
         List<TransactionHistoryItem> GetTransactionHistory(
             int? userId, DateTime fromDate, DateTime toDate, string type, string searchText);
 

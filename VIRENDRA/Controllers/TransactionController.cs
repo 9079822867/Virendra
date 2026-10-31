@@ -204,6 +204,32 @@ namespace VIRENDRA.Controllers
             return back;
         }
 
+        // Raw vendor request/response log (RequestResponse table) for one recharge — SuperAdmin / Admin only.
+        [HttpGet]
+        [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
+        public ActionResult RequestResponseLog(long recId)
+        {
+            try
+            {
+                var rows = _txnRepo.GetRequestResponseLogs(recId).Select(r => new
+                {
+                    r.Id,
+                    r.UrlType,
+                    r.VendorName,
+                    r.RefId,
+                    r.Remark,
+                    r.RequestTxt,
+                    r.ResponseText,
+                    AddedDate = r.AddedDate?.ToString("dd MMM yyyy hh:mm:ss tt")
+                });
+                return Json(new { ok = true, rows }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { ok = false, message = ex.GetBaseException().Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
         private static string StatusName(int statusId)
             => statusId == RechargeStatusCodes.SUCCESS ? "Success"
              : statusId == RechargeStatusCodes.FAILED  ? "Failed"

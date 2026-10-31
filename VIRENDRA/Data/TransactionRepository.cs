@@ -169,6 +169,29 @@ namespace VIRENDRA.Data
                 }).ToList();
         }
 
+        public List<RequestResponseLogItem> GetRequestResponseLogs(long recId)
+        {
+            const string sql = @"
+                SELECT
+                    rr.Id,
+                    ISNULL(t.TypeName, '-') AS UrlType,
+                    ISNULL(a.ApiName, '-')  AS VendorName,
+                    rr.RefId,
+                    rr.Remark,
+                    rr.RequestTxt,
+                    rr.ResponseText,
+                    rr.AddedDate
+                FROM RequestResponse rr
+                LEFT JOIN ApiUrl     u ON u.Id = rr.UrlId
+                LEFT JOIN ApiUrlType t ON t.Id = u.UrlTypeId
+                LEFT JOIN ApiSource  a ON a.Id = u.ApiId
+                WHERE rr.RecId = @RecId
+                ORDER BY rr.AddedDate, rr.Id";
+
+            using (var conn = new SqlConnection(_connectionString))
+                return conn.Query<RequestResponseLogItem>(sql, new { RecId = recId }).ToList();
+        }
+
         public List<TransactionHistoryItem> GetTransactionHistory(
             int? userId, DateTime fromDate, DateTime toDate, string type, string searchText)
         {

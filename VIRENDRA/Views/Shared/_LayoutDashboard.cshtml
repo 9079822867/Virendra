@@ -359,23 +359,16 @@
                         </li>
                     }
 
-                    @*<%-- My Commission \u2014 all roles can view their own commission --%>*@
-                    @if (isSuperAdmin || isAdmin || isApiUser || isRetailer)
+                    @*<%-- Recharge \u2014 Retailer only --%>*@
+                    @if (isRetailer)
                     {
-                        <li class="nav-item @(currentController=="PackageComm" ? "active" : "")">
-                            <a class="nav-link @(currentController=="PackageComm" ? "active" : "")"
-                               href="@Url.Action("MyCommission","PackageComm")">
-                                <i class="fas fa-percent me-1"></i>My Commission
+                        <li class="nav-item @(currentController == "Recharge" ? "active" : "")">
+                            <a class="nav-link @(currentController == "Recharge" ? "active" : "")"
+                               href="@Url.Action("Index", "Recharge")">
+                                <i class="bx bx-mobile-alt me-1"></i>Recharge
                             </a>
                         </li>
                     }
-                    @*<%-- Recharge \u2014 all roles --%>*@
-                    <li class="nav-item @(currentController == "Recharge" ? "active" : "")">
-                        <a class="nav-link @(currentController == "Recharge" ? "active" : "")"
-                           href="@Url.Action("Index", "Recharge")">
-                            <i class="bx bx-mobile-alt me-1"></i>Recharge
-                        </a>
-                    </li>
                     @*<%-- Transaction \u2014 all roles --%>*@
                     @{
                         bool txnActive = currentController == "Transaction";
@@ -537,6 +530,13 @@
                                 <a class="dropdown-item @(currentController=="Setting" && currentAction=="UserProfile" ? "active" : "")"
                                    href="@Url.Action("UserProfile","Setting")">
                                     <i class="fas fa-user"></i> User Profile
+                                </a>
+                            </li>
+                            @*<%-- My Commission — all roles can view their own commission --%>*@
+                            <li>
+                                <a class="dropdown-item @(currentController=="PackageComm" && currentAction=="MyCommission" ? "active" : "")"
+                                   href="@Url.Action("MyCommission","PackageComm")">
+                                    <i class="fas fa-percent"></i> My Commission
                                 </a>
                             </li>
                             @if (!(isSuperAdmin || isAdmin))

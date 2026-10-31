@@ -132,6 +132,19 @@ namespace VIRENDRA.Models
         public DateTime Date { get; set; }
     }
 
+    // One RequestResponse row for a recharge — shown to SuperAdmin/Admin from Recharge History
+    public class RequestResponseLogItem
+    {
+        public long Id { get; set; }
+        public string UrlType { get; set; }        // ApiUrlType.TypeName (RechargeRequest, Callback, ...)
+        public string VendorName { get; set; }     // ApiSource.ApiName
+        public string RefId { get; set; }
+        public string Remark { get; set; }
+        public string RequestTxt { get; set; }
+        public string ResponseText { get; set; }
+        public DateTime? AddedDate { get; set; }
+    }
+
     public class TransactionHistoryViewModel
     {
         public DateTime FromDate { get; set; }

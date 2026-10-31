@@ -131,6 +131,11 @@
                                 {
                                     <span class="text-muted small">Final</span>
                                 }
+                                <button type="button" class="btn btn-sm btn-outline-info js-reqres"
+                                        data-recid="@item.RecId" data-number="@item.Number"
+                                        data-amount="@item.Amount.ToString("0.00")">
+                                    Logs
+                                </button>
                             }
                         </td>
                     </tr>
@@ -214,6 +219,43 @@
             </form>
         </div>
     </div>
+
+    <div class="modal fade" id="reqResModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Request / Response Log</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3 small text-muted" id="rrInfo"></p>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered mb-0 reqres-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Vendor</th>
+                                    <th>Ref / Remark</th>
+                                    <th>Request</th>
+                                    <th>Response</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rrBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        .reqres-table td { vertical-align: top; font-size: 12px; }
+        .reqres-table pre { white-space: pre-wrap; word-break: break-all; max-height: 220px; overflow: auto; margin: 0; font-size: 11px; }
+    </style>
 }
 
 @section Scripts {
@@ -262,6 +304,61 @@
                 document.getElementById('changeStatusForm').addEventListener('submit', function (e) {
                     var label = statusSel.options[statusSel.selectedIndex].text;
                     if (!confirm('Change this recharge to "' + label + '"?')) e.preventDefault();
+                });
+            })();
+
+            (function () {
+                var modal = new bootstrap.Modal(document.getElementById('reqResModal'));
+                var body = document.getElementById('rrBody');
+                var url = '@Url.Action("RequestResponseLog", "Transaction")';
+
+                function cell(text, asPre) {
+                    var td = document.createElement('td');
+                    var el = asPre ? document.createElement('pre') : td;
+                    el.textContent = text == null || text === '' ? '-' : text;
+                    if (asPre) td.appendChild(el);
+                    return td;
+                }
+
+                function message(text) {
+                    body.innerHTML = '';
+                    var tr = document.createElement('tr');
+                    var td = cell(text);
+                    td.colSpan = 7;
+                    td.className = 'text-center text-muted';
+                    tr.appendChild(td);
+                    body.appendChild(tr);
+                }
+
+                document.querySelectorAll('.js-reqres').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var recId = btn.getAttribute('data-recid');
+                        document.getElementById('rrInfo').textContent =
+                            'Recharge #' + recId + ' • Number ' + btn.getAttribute('data-number') +
+                            ' • Amount ₹' + btn.getAttribute('data-amount');
+                        message('Loading...');
+                        modal.show();
+
+                        fetch(url + '?recId=' + encodeURIComponent(recId), { credentials: 'same-origin' })
+                            .then(function (r) { return r.json(); })
+                            .then(function (res) {
+                                if (!res.ok) { message(res.message || 'Failed to load log.'); return; }
+                                if (!res.rows.length) { message('No request/response found for this recharge.'); return; }
+                                body.innerHTML = '';
+                                res.rows.forEach(function (row, i) {
+                                    var tr = document.createElement('tr');
+                                    tr.appendChild(cell(i + 1));
+                                    tr.appendChild(cell(row.AddedDate));
+                                    tr.appendChild(cell(row.UrlType));
+                                    tr.appendChild(cell(row.VendorName));
+                                    tr.appendChild(cell([row.RefId, row.Remark].filter(Boolean).join(' / ')));
+                                    tr.appendChild(cell(row.RequestTxt, true));
+                                    tr.appendChild(cell(row.ResponseText, true));
+                                    body.appendChild(tr);
+                                });
+                            })
+                            .catch(function () { message('Failed to load log.'); });
+                    });
                 });
             })();
         </script>
