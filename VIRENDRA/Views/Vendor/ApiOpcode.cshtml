@@ -53,6 +53,7 @@
                         <tr>
                             <th class="ps-3" style="width:60px;">ID</th>
                             <th>Operator Name</th>
+                            <th style="width:100px;">Type</th>
                             <th>Vendor Op-Code (OOO)</th>
                             <th>Extra Url (EEE)</th>
                             <th>Extra Parameters (DDD)</th>
@@ -68,6 +69,7 @@
                             <tr>
                                 <td class="ps-3 text-muted">@r.OpId</td>
                                 <td class="fw-semibold">@r.OperatorName</td>
+                                <td><span class="badge bg-info text-dark">@(r.OperatorType ?? "-")</span></td>
                                 <td>
                                     <input type="hidden" class="m-apiid" value="@r.ApiId" />
                                     <input type="hidden" class="m-opid"  value="@r.OpId" />

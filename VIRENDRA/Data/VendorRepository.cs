@@ -258,6 +258,7 @@ namespace VIRENDRA.Data
                     SELECT
                         o.Id              AS OpId,
                         o.Name            AS OperatorName,
+                        t.TypeName        AS OperatorType,
                         @ApiId            AS ApiId,
                         oc.OpCode         AS OpCode,
                         oc.ExtraUrl       AS ExtraUrl,
@@ -266,10 +267,11 @@ namespace VIRENDRA.Data
                         ISNULL(pc.AmtTypeId, 5)  AS AmtTypeId,
                         ISNULL(pc.CommTypeId, 2) AS CommTypeId
                     FROM [Operator] o
+                    LEFT JOIN OperatorType t  ON t.Id = o.OpTypeId
                     LEFT JOIN OperatorCode oc ON oc.OpId = o.Id AND oc.ApiId = @ApiId
                     LEFT JOIN PackageComm  pc ON pc.OpId = o.Id AND pc.PackId = @PackId
                     WHERE o.IsActive = 1
-                    ORDER BY o.Id";
+                    ORDER BY o.OpTypeId, o.Id";
 
                 vm.Rows = conn.Query<OperatorMarginDto>(sql,
                     new { ApiId = apiId, PackId = packId }).ToList();

@@ -12,6 +12,7 @@ namespace VIRENDRA.Models
         public int    ApiId        { get; set; }   // ApiSource.Id (vendor)
         public int    OpId         { get; set; }   // Operator.Id
         public string OperatorName { get; set; }   // display only
+        public string OperatorType { get; set; }   // OperatorType.TypeName — display only
 
         // ── OperatorCode columns ─────────────────────────────────────────────
         public string OpCode       { get; set; }   // Vendor Op-Code  [OOO]

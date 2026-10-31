@@ -122,15 +122,17 @@ namespace VIRENDRA.Data
                     o.Id   AS OperatorId,
                     o.Name AS OperatorName,
                     o.OpCode AS OperatorCode,
+                    t.TypeName AS OperatorType,
                     @PackageId AS PackageId,
                     ISNULL(pc.Id, 0)       AS Id,
                     ISNULL(pc.CommAmt, 0)  AS CommValue,
                     CASE ISNULL(pc.CommTypeId, 2) WHEN 2 THEN 'P' ELSE 'F' END AS CommType,
                     1 AS IsActive
                 FROM [Operator] o
+                LEFT JOIN OperatorType t ON t.Id = o.OpTypeId
                 LEFT JOIN [PackageComm] pc ON pc.OpId = o.Id AND pc.PackId = @PackageId
                 WHERE o.IsActive = 1
-                ORDER BY o.Name";
+                ORDER BY o.OpTypeId, o.Name";
 
             using (IDbConnection db = new SqlConnection(_conn))
                 return db.Query<PackageComm>(sql, new { PackageId = packageId }).ToList();
@@ -140,7 +142,7 @@ namespace VIRENDRA.Data
         {
             using (IDbConnection db = new SqlConnection(_conn))
                 return db.QueryFirstOrDefault<PackageComm>(
-                    "SELECT Id, PackId AS PackageId, OpId AS OperatorId, CommAmt AS CommValue, CASE CommTypeId WHEN 1 THEN 'P' ELSE 'F' END AS CommType FROM [PackageComm] WHERE PackId=@PackageId AND OpId=@OperatorId",
+                    "SELECT Id, PackId AS PackageId, OpId AS OperatorId, CommAmt AS CommValue, CASE CommTypeId WHEN 2 THEN 'P' ELSE 'F' END AS CommType FROM [PackageComm] WHERE PackId=@PackageId AND OpId=@OperatorId",
                     new { PackageId = packageId, OperatorId = operatorId });
         }
 
@@ -154,8 +156,9 @@ namespace VIRENDRA.Data
                         UpdatedDate=GETDATE()
                     WHERE PackId=@PackageId AND OpId=@OperatorId
                 ELSE
+                    -- CommType: 1=Flat, 2=Percent (same as the UPDATE above)
                     INSERT INTO [PackageComm] (PackId, OpId, CommAmt,AmtTypeId, CommTypeId, AddedDate)
-                    VALUES (@PackageId, @OperatorId, @CommValue,5, CASE WHEN @CommType='P' THEN 1 ELSE 2 END, GETDATE())";
+                    VALUES (@PackageId, @OperatorId, @CommValue,5, CASE WHEN @CommType='P' THEN 2 ELSE 1 END, GETDATE())";
 
             using (IDbConnection db = new SqlConnection(_conn))
                 db.Execute(sql, comm);
@@ -168,6 +171,7 @@ namespace VIRENDRA.Data
                     o.Id   AS OperatorId,
                     o.Name AS OperatorName,
                     o.OpCode AS OperatorCode,
+                    t.TypeName AS OperatorType,
                     u.PackageId,
                     ISNULL(pc.Id, 0)       AS Id,
                     ISNULL(pc.CommAmt, 0)  AS CommValue,
@@ -177,9 +181,10 @@ namespace VIRENDRA.Data
                 FROM [User] u
                 JOIN [Package] p  ON p.Id = u.PackageId
                 CROSS JOIN [Operator] o
+                LEFT JOIN OperatorType t ON t.Id = o.OpTypeId
                 LEFT JOIN [PackageComm] pc ON pc.PackId = u.PackageId AND pc.OpId = o.Id
                 WHERE u.Id = @UserId AND o.IsActive = 1
-                ORDER BY o.Name";
+                ORDER BY o.OpTypeId, o.Name";
 
             using (IDbConnection db = new SqlConnection(_conn))
                 return db.Query<PackageComm>(sql, new { UserId = userId }).ToList();
