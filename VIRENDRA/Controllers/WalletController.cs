@@ -56,13 +56,20 @@ namespace VIRENDRA.Controllers
         [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
         public ActionResult Index(int? statusId = null)
         {
-            var list = _walletRepo.GetTransactions(statusId: statusId);
+            var all = _walletRepo.GetTransactions();
 
+            // Pending covers 3 (pending), 5 (Hold — user top-up requests) and no status
+            Func<WalletRequest, bool> isPending = w => w.StatusId == null || w.StatusId == 3 || w.StatusId == 5;
+            var list = statusId == null ? all
+                     : statusId == 3    ? all.Where(isPending).ToList()
+                     : all.Where(w => w.StatusId == statusId).ToList();
+
+            // Tiles always count everything, whatever filter is applied
             ViewBag.StatusId     = statusId;
-            ViewBag.TotalCount   = list.Count;
-            ViewBag.PendingCount = list.Count(w => w.StatusId == 3 || w.StatusId == null);
-            ViewBag.ApprovedCount= list.Count(w => w.StatusId == 6);
-            ViewBag.RejectedCount= list.Count(w => w.StatusId == 7);
+            ViewBag.TotalCount   = all.Count;
+            ViewBag.PendingCount = all.Count(isPending);
+            ViewBag.ApprovedCount= all.Count(w => w.StatusId == 6);
+            ViewBag.RejectedCount= all.Count(w => w.StatusId == 7);
             ViewBag.TotalAmount  = list.Sum(w => w.Amount);
 
             return View(list);

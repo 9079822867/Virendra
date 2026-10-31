@@ -1,0 +1,135 @@
+﻿@model VIRENDRA.Models.PaymentRequestListViewModel
+@{
+    ViewBag.Title = "My payment requests";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+    Func<string, string> tab = s => Url.Action("Index", new { fromDate = Model.FromDate.ToString("yyyy-MM-dd"), toDate = Model.ToDate.ToString("yyyy-MM-dd"), status = s });
+}
+
+<style>
+    .pr-tabs { display:flex; gap:6px; flex-wrap:wrap; }
+    .pr-tabs a { padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink-2); font-size:.8rem; font-weight:600; text-decoration:none; }
+    .pr-tabs a.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+    .pr-tabs a .n { opacity:.7; margin-left:4px; }
+    .pr-note { font-size:.74rem; color:var(--muted); max-width:260px; }
+</style>
+
+<div class="page-head">
+    <div>
+        <h4>My payment requests</h4>
+        <div class="text-muted small">Top-up requests you've sent and where they stand.</div>
+    </div>
+    <a href="@Url.Action("Create")" class="btn btn-dark"><i class="fas fa-plus me-1"></i>New request</a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible">
+        <i class="fas fa-circle-check me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="stat">
+            <div class="d-flex justify-content-between"><span class="stat-label">Waiting for approval</span><span class="stat-ic warn"><i class="fas fa-hourglass-half"></i></span></div>
+            <div class="stat-value">&#8377;@Model.PendingAmount.ToString("N2")</div>
+            <div class="stat-note">@Model.PendingCount request(s)</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat">
+            <div class="d-flex justify-content-between"><span class="stat-label">Credited</span><span class="stat-ic ok"><i class="fas fa-check"></i></span></div>
+            <div class="stat-value">&#8377;@Model.ApprovedAmount.ToString("N2")</div>
+            <div class="stat-note">@Model.ApprovedCount request(s) approved</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat">
+            <div class="d-flex justify-content-between"><span class="stat-label">Rejected</span><span class="stat-ic bad"><i class="fas fa-xmark"></i></span></div>
+            <div class="stat-value">@Model.RejectedCount</div>
+            <div class="stat-note">Check the admin's note on each</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
+        <div class="pr-tabs">
+            <a href="@tab(null)" class="@(string.IsNullOrEmpty(Model.Status) ? "on" : "")">All</a>
+            <a href="@tab("Pending")" class="@(Model.Status == "Pending" ? "on" : "")">Pending<span class="n">@Model.PendingCount</span></a>
+            <a href="@tab("Approved")" class="@(Model.Status == "Approved" ? "on" : "")">Approved<span class="n">@Model.ApprovedCount</span></a>
+            <a href="@tab("Rejected")" class="@(Model.Status == "Rejected" ? "on" : "")">Rejected<span class="n">@Model.RejectedCount</span></a>
+        </div>
+        <form method="get" action="@Url.Action("Index")" class="d-flex gap-2 align-items-center flex-wrap">
+            <input type="hidden" name="status" value="@Model.Status" />
+            <input type="date" name="fromDate" class="form-control form-control-sm" value="@Model.FromDate.ToString("yyyy-MM-dd")" style="width:auto;" />
+            <span class="text-muted small">to</span>
+            <input type="date" name="toDate" class="form-control form-control-sm" value="@Model.ToDate.ToString("yyyy-MM-dd")" style="width:auto;" />
+            <button type="submit" class="btn btn-sm btn-dark">Show</button>
+        </form>
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>
+            No requests in this period.
+            <div class="mt-2"><a href="@Url.Action("Create")">Send your first request</a></div>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Request</th>
+                        <th class="text-end">Amount</th>
+                        <th>Paid into</th>
+                        <th>Mode &amp; UTR</th>
+                        <th>Paid on</th>
+                        <th>Status</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Items)
+                    {
+                        string cls = r.Status == "Approved" ? "status-success" : r.Status == "Rejected" ? "status-failed" : "status-pending";
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">#@r.Id</div>
+                                <small class="text-muted">@r.AddedDate.ToString("dd MMM, hh:mm tt")</small>
+                            </td>
+                            <td class="text-end fw-bold">&#8377;@r.Amount.ToString("N2")</td>
+                            <td>@(r.BankName ?? "—")</td>
+                            <td>
+                                <div class="small text-muted">@(r.TransferType ?? "—")</div>
+                                <code class="small">@r.Chequeno</code>
+                            </td>
+                            <td class="text-nowrap">@(r.PaymentDate?.ToString("dd MMM yyyy") ?? "—")</td>
+                            <td>
+                                <span class="status-badge @cls">@r.Status</span>
+                                @if (r.Status != "Pending" && r.UpdatedDate.HasValue)
+                                {
+                                    <div><small class="text-muted">@r.UpdatedDate.Value.ToString("dd MMM, hh:mm tt")</small></div>
+                                }
+                            </td>
+                            <td class="pr-note">
+                                @if (!string.IsNullOrWhiteSpace(r.Comment) && r.Status != "Pending")
+                                {
+                                    <div><i class="fas fa-user-shield me-1"></i>@r.Comment</div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(r.PaymentRemark))
+                                {
+                                    <div class="text-muted">You: @r.PaymentRemark</div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

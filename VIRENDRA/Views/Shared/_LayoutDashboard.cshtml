@@ -121,6 +121,19 @@
             });
         }
 
+        if (isApiUser || isRetailer)
+        {
+            menu.Add(new NavGroup
+            {
+                Title = "Money", Icon = "fa-wallet",
+                Items =
+                {
+                    item("Request Top-up", "fa-circle-plus", "Create", "PaymentRequest", on("PaymentRequest", "Create")),
+                    item("My Requests", "fa-list-check", "Index", "PaymentRequest", on("PaymentRequest", "Index"))
+                }
+            });
+        }
+
         if (isSuperAdmin || isApiUser)
         {
             menu.Add(new NavGroup
