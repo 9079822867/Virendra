@@ -90,7 +90,7 @@ namespace VIRENDRA.Models
         public long    TxnId           { get; set; }
 
         // ── API URL template + call metadata (placeholder replacement needed) ─
-        public string  ApiUrl          { get; set; }  // raw [MMM]/[AAA]… template
+        public string  ApiUrl          { get; set; }  // raw {{mobile}}/{{amount}}… template (see ApiTokens)
         public string  Method          { get; set; }  // GET | POST
         public string  ContentType     { get; set; }
         public string  ResType         { get; set; }

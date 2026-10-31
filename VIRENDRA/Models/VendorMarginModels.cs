@@ -15,9 +15,9 @@ namespace VIRENDRA.Models
         public string OperatorType { get; set; }   // OperatorType.TypeName — display only
 
         // ── OperatorCode columns ─────────────────────────────────────────────
-        public string OpCode       { get; set; }   // Vendor Op-Code  [OOO]
-        public string ExtraUrl     { get; set; }   // Extra Url       [EEE]
-        public string ExtraData    { get; set; }   // Extra Params    [DDD]
+        public string OpCode       { get; set; }   // Vendor Op-Code  {{operator}}
+        public string ExtraUrl     { get; set; }   // Extra Url       {{extra_url}}
+        public string ExtraData    { get; set; }   // Extra Params    {{extra_data}}
 
         // ── PackageComm columns ──────────────────────────────────────────────
         public decimal CommAmt     { get; set; }   // commission value

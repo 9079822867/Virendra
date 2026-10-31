@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using VIRENDRA.Data;
 using VIRENDRA.Models;
+using VIRENDRA.Services;
 
 namespace VIRENDRA.Controllers
 {
@@ -612,23 +613,24 @@ namespace VIRENDRA.Controllers
             string rnd = new Random().Next(100000, 999999).ToString(CultureInfo.InvariantCulture);
             string dt  = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
 
-            return template
-                .Replace("[UUU]",  cr.ApiUserId    ?? string.Empty)   // API user ID
-                .Replace("[PPP]",  cr.ApiPassword  ?? string.Empty)   // API password
-                .Replace("[RRR]",  cr.ApiOptional  ?? string.Empty)   // remark/optional
-                .Replace("[MMM]",  rm.MobileNo     ?? string.Empty)   // mobile number
-                .Replace("[HHH]",  rm.MobileNo     ?? string.Empty)   // account (bill pay)
-                .Replace("[AAA]",  rm.Amount.ToString("0.##", CultureInfo.InvariantCulture))
-                .Replace("[OOO]",  cr.OpCode       ?? string.Empty)   // operator code
-                .Replace("[CCC]",  rm.CircleCode   ?? string.Empty)   // circle code
-                .Replace("[VVV]",  rm.RefTxnId     ?? string.Empty)   // user txn id
-                .Replace("[TTT]",  rm.RefTxnId     ?? string.Empty)
-                .Replace("[NNN]",  string.Empty)
-                .Replace("[EEE]",  cr.ExtraUrl     ?? string.Empty)   // extra url
-                .Replace("[DDD]",  cr.ExtraUrlData ?? string.Empty)   // extra data
-                .Replace("[COMM1]",cr.Comm1.ToString("0.##", CultureInfo.InvariantCulture))
-                .Replace("[FFFT]", dt)
-                .Replace("[FFFR]", rnd);
+            return ApiTokens.Fill(template, new Dictionary<string, string>
+            {
+                [ApiTokens.UserId]     = cr.ApiUserId,
+                [ApiTokens.Password]   = cr.ApiPassword,
+                [ApiTokens.ApiKey]     = cr.ApiOptional,
+                [ApiTokens.Mobile]     = rm.MobileNo,
+                [ApiTokens.Account]    = rm.MobileNo,      // account (bill pay)
+                [ApiTokens.Amount]     = rm.Amount.ToString("0.##", CultureInfo.InvariantCulture),
+                [ApiTokens.Operator]   = cr.OpCode,
+                [ApiTokens.Circle]     = rm.CircleCode,
+                [ApiTokens.TxnId]      = rm.RefTxnId,      // user txn id
+                [ApiTokens.RefId]      = rm.RefTxnId,
+                [ApiTokens.ExtraUrl]   = cr.ExtraUrl,
+                [ApiTokens.ExtraData]  = cr.ExtraUrlData,
+                [ApiTokens.Commission] = cr.Comm1.ToString("0.##", CultureInfo.InvariantCulture),
+                [ApiTokens.Timestamp]  = dt,
+                [ApiTokens.Random]     = rnd
+            });
         }
 
         // ── HTTP call ────────────────────────────────────────────────────────

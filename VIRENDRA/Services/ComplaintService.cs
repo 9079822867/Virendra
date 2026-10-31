@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net;
@@ -143,16 +144,17 @@ namespace VIRENDRA.Services
         private static string Fill(string template, ComplaintApiUrl api, ComplaintRecharge rec,
             string ourRef, string remark)
         {
-            if (string.IsNullOrEmpty(template)) return string.Empty;
-            return template
-                .Replace("[UUU]",         api.ApiUserId   ?? "")
-                .Replace("[PPP]",         api.ApiPassword ?? "")
-                .Replace("[RRR]",         api.Remark      ?? "")
-                .Replace("[MMM]",         rec.CustomerNo  ?? "")
-                .Replace("[TTT]",         ourRef)
-                .Replace("[VVV]",         ourRef)
-                .Replace("[OPTXN]",       rec.ApiTxnId    ?? "")
-                .Replace("[Description]", remark          ?? "");
+            return ApiTokens.Fill(template, new Dictionary<string, string>
+            {
+                [ApiTokens.UserId]      = api.ApiUserId,
+                [ApiTokens.Password]    = api.ApiPassword,
+                [ApiTokens.ApiKey]      = api.Remark,
+                [ApiTokens.Mobile]      = rec.CustomerNo,
+                [ApiTokens.RefId]       = ourRef,
+                [ApiTokens.TxnId]       = ourRef,
+                [ApiTokens.VendorTxnId] = rec.ApiTxnId,
+                [ApiTokens.Remark]      = remark
+            });
         }
 
         private static string Trim500(string s) => s.Length > 500 ? s.Substring(0, 500) : s;

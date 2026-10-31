@@ -1,4 +1,5 @@
 @model VIRENDRA.Models.ApiSource
+@using VIRENDRA.Services
 
 @{
     var responseTypeOptions = new[]
@@ -9,316 +10,351 @@
         "Plain Text (text/plain)"
     };
 
-    var urlIcons = new Dictionary<string, string>
+    // Short labels + one-line purpose for each endpoint tab
+    var endpointInfo = new Dictionary<string, string[]>
     {
-        { "RechargeRequest",  "fa-bolt" },
-        { "BalanceCheck",     "fa-wallet" },
-        { "StatusCheck",      "fa-search" },
-        { "CallBack",         "fa-reply" },
-        { "Validation",       "fa-shield-alt" },
-        { "ComplainRequest",  "fa-exclamation-circle" }
+        { "RechargeRequest", new[] { "Recharge",  "fa-bolt",               "Sends the recharge to the vendor." } },
+        { "BalanceCheck",    new[] { "Balance",   "fa-wallet",             "Reads your balance with the vendor." } },
+        { "StatusCheck",     new[] { "Status",    "fa-magnifying-glass",   "Asks the vendor for a recharge's final status." } },
+        { "CallBack",        new[] { "Callback",  "fa-reply",              "Vendor calls this when a pending recharge settles." } },
+        { "Validation",      new[] { "Validate",  "fa-shield-halved",      "Checks number / operator before recharging." } },
+        { "ComplainRequest", new[] { "Complaint", "fa-flag",               "Forwards a customer complaint to the vendor." } }
     };
 
-    var urlColors = new Dictionary<string, string>
-    {
-        { "RechargeRequest",  "#4CAF50" },
-        { "BalanceCheck",     "#2196F3" },
-        { "StatusCheck",      "#FF9800" },
-        { "CallBack",         "#9C27B0" },
-        { "Validation",       "#F44336" },
-        { "ComplainRequest",  "#607D8B" }
-    };
+    var groups = ApiTokens.All.GroupBy(t => t.Group).ToList();
 }
 
-<!-- ===== PLACEHOLDER LEGEND ===== -->
-<div class="card border-0 mb-4" style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:12px;">
-    <div class="card-body py-3 px-4">
-        <div class="d-flex align-items-center mb-2">
-            <span class="badge bg-warning text-dark me-2 px-2 py-1" style="font-size:.75rem;border-radius:6px;">
-                <i class="fas fa-info-circle me-1"></i>PLACEHOLDER GUIDE
-            </span>
-            <small class="text-white-50">Use these tokens in your API URLs</small>
-        </div>
-        <div class="row g-2" style="font-size:.78rem;">
-            <div class="col-md-6">
-                <div class="d-flex flex-wrap gap-2">
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[UUU]</code> API User ID</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[PPP]</code> API Password</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[RRR]</code> Token / Remark</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#adf;border:1px solid #ffffff25;font-weight:500;"><code>[MMM]</code> Mobile No</span>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="d-flex flex-wrap gap-2">
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[OOO]</code> Operator Code</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[CCC]</code> Circle Code</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[AAA]</code> Amount</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[TTT]</code> Ref Txn No</span>
-                    <span class="badge rounded-pill" style="background:#ffffff18;color:#ffd;border:1px solid #ffffff25;font-weight:500;"><code>[VVV]</code> Vendor Txn No</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+    .vx { --vx-ink:#1f2937; --vx-muted:#6b7280; --vx-line:#e5e7eb; --vx-soft:#f8fafc; --vx-accent:#0f766e; --vx-accent-soft:#ccfbf1; --vx-warn:#b45309; }
+    .vx .vx-section { background:#fff; border:1px solid var(--vx-line); border-radius:10px; margin-bottom:16px; }
+    .vx .vx-section-head { display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--vx-line); }
+    .vx .vx-step { width:26px; height:26px; border-radius:50%; background:var(--vx-ink); color:#fff; font-size:.75rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .vx .vx-section-head h6 { margin:0; font-weight:700; color:var(--vx-ink); font-size:.95rem; }
+    .vx .vx-section-head small { color:var(--vx-muted); }
+    .vx .vx-section-body { padding:18px; }
+    .vx label.form-label { font-size:.8rem; font-weight:600; color:var(--vx-ink); margin-bottom:4px; }
+    .vx .vx-hint { font-size:.72rem; color:var(--vx-muted); }
+    .vx .vx-tok { font-family:SFMono-Regular,Consolas,monospace; font-size:.7rem; color:var(--vx-accent); background:var(--vx-accent-soft); border-radius:4px; padding:1px 5px; }
+    .vx .vx-switch { display:flex; align-items:center; justify-content:space-between; border:1px solid var(--vx-line); border-radius:8px; padding:10px 12px; height:100%; }
+    .vx .vx-switch .form-check-input { width:2.4em; height:1.25em; cursor:pointer; margin:0; }
+    .vx .vx-switch .form-check-input:checked { background-color:var(--vx-accent); border-color:var(--vx-accent); }
 
-<!-- ===== MAIN CONTENT ROW ===== -->
-<div class="row g-4">
+    /* endpoint tabs */
+    .vx .vx-tabs { display:flex; gap:6px; flex-wrap:wrap; padding:12px 18px 0; border-bottom:1px solid var(--vx-line); }
+    .vx .vx-tab { border:1px solid transparent; border-bottom:none; background:none; padding:8px 12px; font-size:.8rem; font-weight:600; color:var(--vx-muted); border-radius:8px 8px 0 0; display:flex; align-items:center; gap:6px; margin-bottom:-1px; }
+    .vx .vx-tab.active { color:var(--vx-ink); background:#fff; border-color:var(--vx-line); }
+    .vx .vx-dot { width:7px; height:7px; border-radius:50%; background:#d1d5db; }
+    .vx .vx-dot.on { background:#16a34a; }
+    .vx .vx-seg { display:inline-flex; border:1px solid var(--vx-line); border-radius:8px; overflow:hidden; }
+    .vx .vx-seg button { border:0; background:#fff; padding:5px 14px; font-size:.78rem; font-weight:600; color:var(--vx-muted); }
+    .vx .vx-seg button.on { background:var(--vx-ink); color:#fff; }
+    .vx textarea.vx-code { font-family:SFMono-Regular,Consolas,monospace; font-size:.8rem; }
+    .vx .vx-preview { background:var(--vx-soft); border:1px dashed var(--vx-line); border-radius:8px; padding:8px 10px; font-family:SFMono-Regular,Consolas,monospace; font-size:.74rem; color:var(--vx-ink); word-break:break-all; min-height:34px; }
+    .vx .vx-preview mark { background:var(--vx-accent-soft); color:var(--vx-accent); padding:0 2px; border-radius:3px; }
+    .vx .vx-preview .vx-unknown { background:#fee2e2; color:#b91c1c; }
+    .vx .vx-legacy { display:none; font-size:.72rem; color:var(--vx-warn); }
 
-    <!-- ===== LEFT PANEL: API Source Info ===== -->
-    <div class="col-xl-3 col-lg-4">
-        <div class="card h-100 border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">
-            <!-- Card Header -->
-            <div class="card-header border-0 py-3 px-4" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
-                         style="width:38px;height:38px;background:rgba(255,255,255,.2);">
-                        <i class="fas fa-plug text-white"></i>
-                    </div>
-                    <div>
-                        <h6 class="mb-0 text-white fw-bold">API Source Info</h6>
-                        <small class="text-white-50">Connection credentials</small>
-                    </div>
-                </div>
-            </div>
+    /* token panel */
+    .vx .vx-side { position:sticky; top:80px; }
+    .vx .vx-chip { display:flex; width:100%; align-items:center; justify-content:space-between; gap:8px; border:1px solid var(--vx-line); background:#fff; border-radius:7px; padding:5px 8px; margin-bottom:5px; text-align:left; }
+    .vx .vx-chip:hover { border-color:var(--vx-accent); background:var(--vx-soft); }
+    .vx .vx-chip span { font-size:.74rem; color:var(--vx-muted); }
+    .vx .vx-group { font-size:.68rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--vx-muted); margin:12px 0 6px; }
+    .vx .vx-target { font-size:.72rem; color:var(--vx-muted); }
+</style>
 
-            <div class="card-body px-4 py-3">
-                <!-- API Name -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
-                        <i class="fas fa-tag text-primary me-1"></i>API Name <span class="text-danger">*</span>
-                    </label>
-                    @Html.TextBoxFor(m => m.ApiName, new { @class = "form-control form-control-sm", placeholder = "e.g. Airtel API" })
-                    @Html.ValidationMessageFor(m => m.ApiName, "", new { @class = "text-danger", style = "font-size:.78rem;" })
-                </div>
+<div class="vx row g-3">
 
-                <!-- API User ID -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
-                        <i class="fas fa-user text-success me-1"></i>API User ID
-                        <span class="badge bg-light text-secondary border ms-1" style="font-size:.7rem;">[UUU]</span>
-                    </label>
-                    @Html.TextBoxFor(m => m.ApiUserId, new { @class = "form-control form-control-sm", placeholder = "API user ID" })
-                </div>
-
-                <!-- API Password -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
-                        <i class="fas fa-key text-warning me-1"></i>API Password
-                        <span class="badge bg-light text-secondary border ms-1" style="font-size:.7rem;">[PPP]</span>
-                    </label>
-                    <div class="input-group input-group-sm">
-                        @Html.PasswordFor(m => m.ApiPassword, new { @class = "form-control", placeholder = "API password", id = "apiPasswordField" })
-                        <button type="button" class="btn btn-outline-secondary" onclick="togglePwd()" title="Show/Hide">
-                            <i class="fas fa-eye" id="eyeIcon"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Remark -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
-                        <i class="fas fa-comment text-info me-1"></i>Remark
-                        <span class="badge bg-light text-secondary border ms-1" style="font-size:.7rem;">[RRR]</span>
-                    </label>
-                    @Html.TextBoxFor(m => m.Remark, new { @class = "form-control form-control-sm", placeholder = "Optional remark / token" })
-                </div>
-
-                <!-- Divider -->
-                <hr class="my-3" style="border-color:#eee;" />
-
-                <!-- Auto Status Check -->
-                <div class="mb-3">
-                    <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background:#f8f9fa;border:1px solid #e9ecef;">
-                        <div>
-                            <i class="fas fa-sync-alt text-primary me-1" style="font-size:.8rem;"></i>
-                            <span style="font-size:.82rem;font-weight:600;">Auto Status Check</span>
-                        </div>
-                        <div class="form-check form-switch mb-0">
-                            @Html.CheckBoxFor(m => m.IsAutoStatusCheck, new { @class = "form-check-input", style = "width:42px;height:22px;cursor:pointer;" })
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Check Time -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold text-dark mb-1" style="font-size:.82rem;">
-                        <i class="fas fa-clock text-secondary me-1"></i>Status Check Interval (min)
-                    </label>
-                    <div class="input-group input-group-sm">
-                        @Html.TextBoxFor(m => m.StatusCheckTime, new { @class = "form-control", type = "number", min = "0", placeholder = "0" })
-                        <span class="input-group-text text-muted" style="font-size:.78rem;">min</span>
-                    </div>
-                </div>
-
-                <!-- Is Active -->
-                <div class="mb-2">
-                    <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background:#f8f9fa;border:1px solid #e9ecef;">
-                        <div>
-                            <i class="fas fa-toggle-on text-success me-1" style="font-size:.8rem;"></i>
-                            <span style="font-size:.82rem;font-weight:600;">Active Status</span>
-                        </div>
-                        <div class="form-check form-switch mb-0">
-                            @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input", style = "width:42px;height:22px;cursor:pointer;" })
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== RIGHT PANEL: API URLs ===== -->
     <div class="col-xl-9 col-lg-8">
-        <div class="card border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">
-            <!-- Card Header -->
-            <div class="card-header border-0 py-3 px-4" style="background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
-                         style="width:38px;height:38px;background:rgba(255,255,255,.2);">
-                        <i class="fas fa-link text-white"></i>
+
+        <!-- 1. Connection -->
+        <div class="vx-section">
+            <div class="vx-section-head">
+                <span class="vx-step">1</span>
+                <div>
+                    <h6>Connection</h6>
+                    <small>Login details the vendor gave you</small>
+                </div>
+            </div>
+            <div class="vx-section-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="ApiName">Vendor name <span class="text-danger">*</span></label>
+                        @Html.TextBoxFor(m => m.ApiName, new { @class = "form-control", placeholder = "e.g. Sunrise Recharge" })
+                        @Html.ValidationMessageFor(m => m.ApiName, "", new { @class = "text-danger small" })
                     </div>
-                    <div>
-                        <h6 class="mb-0 text-white fw-bold">API Endpoint URLs</h6>
-                        <small class="text-white-50">Configure each endpoint method &amp; response format</small>
+                    <div class="col-md-6">
+                        <label class="form-label" for="ApiUserId">User ID <span class="vx-tok">{{user_id}}</span></label>
+                        @Html.TextBoxFor(m => m.ApiUserId, new { @class = "form-control", placeholder = "Vendor user ID", autocomplete = "off" })
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="apiPasswordField">Password <span class="vx-tok">{{password}}</span></label>
+                        <div class="input-group">
+                            @Html.PasswordFor(m => m.ApiPassword, new { @class = "form-control", placeholder = "Vendor password", id = "apiPasswordField", autocomplete = "new-password" })
+                            <button type="button" class="btn btn-outline-secondary" id="vxPwdToggle" title="Show / hide">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="Remark">API key / token <span class="vx-tok">{{api_key}}</span></label>
+                        @Html.TextBoxFor(m => m.Remark, new { @class = "form-control", placeholder = "Optional", autocomplete = "off" })
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-md-4">
+                        <div class="vx-switch">
+                            <div>
+                                <div class="fw-semibold small">Active</div>
+                                <div class="vx-hint">Route recharges to this vendor</div>
+                            </div>
+                            <div class="form-check form-switch m-0">@Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input" })</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="vx-switch">
+                            <div>
+                                <div class="fw-semibold small">Auto status check</div>
+                                <div class="vx-hint">Poll pending recharges</div>
+                            </div>
+                            <div class="form-check form-switch m-0">@Html.CheckBoxFor(m => m.IsAutoStatusCheck, new { @class = "form-check-input" })</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="StatusCheckTime">Check every</label>
+                        <div class="input-group">
+                            @Html.TextBoxFor(m => m.StatusCheckTime, new { @class = "form-control", type = "number", min = "0", placeholder = "0" })
+                            <span class="input-group-text">min</span>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="card-body p-0">
-                <!-- URL rows as accordion-style cards -->
-                <div class="p-3" id="urlAccordion">
-                    @{ int idx = 0; }
-                    @foreach (var u in Model.ApiUrls)
-                    {
-                        var icon  = urlIcons.ContainsKey(u.UrlType)  ? urlIcons[u.UrlType]  : "fa-link";
-                        var color = urlColors.ContainsKey(u.UrlType) ? urlColors[u.UrlType] : "#607D8B";
-                        var colId = "urlRow_" + idx;
+        <!-- 2. Endpoints -->
+        <div class="vx-section">
+            <div class="vx-section-head">
+                <span class="vx-step">2</span>
+                <div>
+                    <h6>Endpoints</h6>
+                    <small>One URL per action. Leave an endpoint empty if the vendor doesn't offer it.</small>
+                </div>
+            </div>
 
-                        <div class="mb-2 border rounded-3 overflow-hidden" style="border-color:#e0e0e0!important;">
-                            <!-- Row Header (clickable) -->
-                            <div class="d-flex align-items-center px-3 py-2"
-                                 style="background:#fafafa;cursor:pointer;user-select:none;"
-                                 data-bs-toggle="collapse" data-bs-target="#@colId" aria-expanded="@(idx == 0 ? "true" : "false")">
-                                <span class="d-flex align-items-center justify-content-center me-3 rounded-circle"
-                                      style="width:32px;height:32px;background:@color;flex-shrink:0;">
-                                    <i class="fas @icon text-white" style="font-size:.75rem;"></i>
-                                </span>
-                                <div class="flex-grow-1">
-                                    <span class="fw-semibold text-dark" style="font-size:.85rem;">@u.UrlType</span>
-                                    @if (!string.IsNullOrEmpty(u.URL))
+            <div class="vx-tabs" role="tablist">
+                @for (int i = 0; i < Model.ApiUrls.Count; i++)
+                {
+                    var u    = Model.ApiUrls[i];
+                    var info = endpointInfo.ContainsKey(u.UrlType) ? endpointInfo[u.UrlType] : new[] { u.UrlType, "fa-link", "" };
+                    <button type="button" class="vx-tab @(i == 0 ? "active" : "")" data-bs-toggle="tab" data-bs-target="#vxEp@(i)" role="tab">
+                        <i class="fas @info[1]"></i>@info[0]
+                        <span class="vx-dot @(string.IsNullOrWhiteSpace(u.URL) ? "" : "on")" data-dot="@i"></span>
+                    </button>
+                }
+            </div>
+
+            <div class="tab-content">
+                @for (int i = 0; i < Model.ApiUrls.Count; i++)
+                {
+                    var u      = Model.ApiUrls[i];
+                    var info   = endpointInfo.ContainsKey(u.UrlType) ? endpointInfo[u.UrlType] : new[] { u.UrlType, "fa-link", "" };
+                    var method = string.IsNullOrEmpty(u.Method) ? "GET" : u.Method;
+
+                    <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="vxEp@(i)" role="tabpanel" data-ep="@i">
+                        <input type="hidden" name="urlType" value="@u.UrlType" />
+                        <input type="hidden" name="method" value="@method" class="vx-method" />
+                        <div class="vx-section-body">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                                <div class="vx-hint"><strong class="text-dark">@u.UrlType</strong> &middot; @info[2]</div>
+                                <div class="vx-seg" data-seg="@i">
+                                    <button type="button" class="@(method == "GET" ? "on" : "")" data-m="GET">GET</button>
+                                    <button type="button" class="@(method == "POST" ? "on" : "")" data-m="POST">POST</button>
+                                </div>
+                            </div>
+
+                            <label class="form-label">URL</label>
+                            <textarea name="url" class="form-control vx-code vx-field" rows="2" data-ep="@i"
+                                      placeholder="https://vendor.example/api/recharge?user={{user_id}}&key={{api_key}}&mobile={{mobile}}&op={{operator}}&amount={{amount}}&ref={{ref_id}}">@u.URL</textarea>
+                            <div class="vx-legacy mt-1" data-legacy-for="url">
+                                Uses old-style tokens like [MMM]. They still work.
+                                <a href="#" class="vx-convert">Convert to new tokens</a>
+                            </div>
+
+                            <div class="vx-post mt-3" style="@(method == "POST" ? "" : "display:none;")">
+                                <label class="form-label">POST body</label>
+                                <textarea name="postParameter" class="form-control vx-code vx-field" rows="3" data-ep="@i"
+                                          placeholder='mobile={{mobile}}&amount={{amount}}   or   {"mobile":"{{mobile}}","amount":"{{amount}}"}'>@u.PostData</textarea>
+                                <div class="vx-legacy mt-1" data-legacy-for="body">
+                                    Uses old-style tokens like [MMM]. They still work.
+                                    <a href="#" class="vx-convert">Convert to new tokens</a>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mt-1 align-items-end">
+                                <div class="col-md-5">
+                                    <label class="form-label">Vendor replies in</label>
+                                    <select name="responseType" class="form-select">
+                                        @foreach (var rt in responseTypeOptions)
+                                        {
+                                            <option value="@rt" @(u.ResType == rt ? "selected" : "")>@rt</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-7 text-md-end">
+                                    @if (u.Id > 0)
                                     {
-                                        <div class="text-muted text-truncate" style="font-size:.72rem;max-width:500px;">@u.URL</div>
+                                        <a href="@Url.Action("ResponseSetting", "Vendor", new { id = u.Id })" class="btn btn-outline-dark btn-sm">
+                                            <i class="fas fa-sliders me-1"></i>Response rules
+                                        </a>
+                                        <div class="vx-hint mt-1">How to read status and txn ids from the reply. Save first.</div>
                                     }
                                     else
                                     {
-                                        <div class="text-muted" style="font-size:.72rem;font-style:italic;">Not configured</div>
+                                        <div class="vx-hint">Response rules open after the vendor is saved.</div>
                                     }
                                 </div>
-                                <span class="badge ms-2"
-                                      style="background:@color;color:@color;border:1px solid @(color)40;font-size:.7rem;">
-                                    @(string.IsNullOrEmpty(u.URL) ? "empty" : u.Method)
-                                </span>
-                                <i class="fas fa-chevron-down ms-3 text-muted" style="font-size:.7rem;transition:.2s;"></i>
                             </div>
 
-                            <!-- Collapsible Body -->
-                            <div id="@colId" class="collapse @(idx == 0 ? "show" : "")">
-                                <input type="hidden" name="urlType" value="@u.UrlType" />
-                                <div class="p-3 border-top" style="background:#fff;">
-                                    <div class="row g-3">
-                                        <!-- URL field -->
-                                        <div class="col-12">
-                                            <label class="form-label fw-semibold text-dark mb-1" style="font-size:.8rem;">
-                                                <i class="fas fa-globe me-1" style="color:@color;"></i>Endpoint URL
-                                            </label>
-                                            <textarea name="url" class="form-control form-control-sm font-monospace" rows="2"
-                                                      placeholder="https://api.example.com/endpoint?uid=[UUU]&pwd=[PPP]&mob=[MMM]&op=[OOO]&amt=[AAA]&ref=[TTT]">@u.URL</textarea>
-                                        </div>
-                                        <!-- Method + Response Type -->
-                                        <div class="col-sm-4">
-                                            <label class="form-label fw-semibold text-dark mb-1" style="font-size:.8rem;">
-                                                <i class="fas fa-exchange-alt me-1 text-secondary"></i>HTTP Method
-                                            </label>
-                                            <select name="method" class="form-select form-select-sm">
-                                                <option value="GET"  @(u.Method == "GET"  ? "selected" : "")>GET</option>
-                                                <option value="POST" @(u.Method == "POST" ? "selected" : "")>POST</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-sm-8">
-                                            <label class="form-label fw-semibold text-dark mb-1" style="font-size:.8rem;">
-                                                <i class="fas fa-file-code me-1 text-secondary"></i>Response Type
-                                            </label>
-                                            <select name="responseType" class="form-select form-select-sm">
-                                                @foreach (var rt in responseTypeOptions)
-                                                {
-                                                    <option value="@rt" @(u.ResType == rt ? "selected" : "")>@rt</option>
-                                                }
-                                            </select>
-                                        </div>
-                                        <!-- Post Data -->
-                                        <div class="col-12">
-                                            <label class="form-label fw-semibold text-dark mb-1" style="font-size:.8rem;">
-                                                <i class="fas fa-paper-plane me-1 text-secondary"></i>POST Body / Parameters
-                                                <small class="text-muted ms-1">(only for POST method)</small>
-                                            </label>
-                                            <textarea name="postParameter" class="form-control form-control-sm font-monospace" rows="2"
-                                                      placeholder="uid=[UUU]&pwd=[PPP]&mobile=[MMM]&amount=[AAA]">@u.PostData</textarea>
-                                        </div>
-                                        <!-- Response parsing rules (TagValue) for this URL -->
-                                        <div class="col-12 d-flex align-items-center gap-2">
-                                            @if (u.Id > 0)
-                                            {
-                                                <a href="@Url.Action("ResponseSetting", "Vendor", new { id = u.Id })" class="btn btn-sm btn-primary px-3">
-                                                    <i class="fas fa-sliders-h me-1"></i>Setting
-                                                </a>
-                                                <small class="text-muted">How to read status and txn ids from this URL's response. Save changes above first.</small>
-                                            }
-                                            else
-                                            {
-                                                <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Save the API source first to set up its response.</small>
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <label class="form-label mt-3">Preview with sample data</label>
+                            <div class="vx-preview" data-preview="@i"></div>
                         </div>
-                        idx++;
-                    }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Token panel -->
+    <div class="col-xl-3 col-lg-4">
+        <div class="vx-section vx-side">
+            <div class="vx-section-head">
+                <i class="fas fa-code text-muted"></i>
+                <div>
+                    <h6>Tokens</h6>
+                    <small>Click to insert at the cursor</small>
                 </div>
+            </div>
+            <div class="vx-section-body pt-2">
+                <div class="vx-target" id="vxTarget">Click inside a URL or body field first.</div>
+                @foreach (var g in groups)
+                {
+                    <div class="vx-group">@g.Key</div>
+                    foreach (var t in g)
+                    {
+                        <button type="button" class="vx-chip" data-token="@t.Text" title="Old form @t.Legacy also works">
+                            <code class="vx-tok">@t.Text</code><span>@t.Label</span>
+                        </button>
+                    }
+                }
             </div>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        // Toggle password visibility
-        function togglePwd() {
-            var f = document.getElementById('apiPasswordField');
-            var e = document.getElementById('eyeIcon');
-            if (f.type === 'password') {
-                f.type = 'text';
-                e.classList.replace('fa-eye', 'fa-eye-slash');
-            } else {
-                f.type = 'password';
-                e.classList.replace('fa-eye-slash', 'fa-eye');
+<script>
+    (function () {
+        var tokens = @Html.Raw(Json.Encode(ApiTokens.All.Select(t => new { t.Key, t.Legacy, t.Text })));
+        var sample = {
+            user_id: 'demo_user', password: '••••', api_key: 'k3y', mobile: '9876543210', account: '9876543210',
+            operator: 'AT', circle: 'RJ', amount: '199', ref_id: 'R2610311200', txn_id: 'R2610311200',
+            vendor_txn_id: 'V889201', extra_url: '', extra_data: '', commission: '2.5',
+            timestamp: '20261031120000', random: '482913', remark: 'Not credited'
+        };
+        var legacyRe = new RegExp(tokens.map(function (t) { return t.Legacy.replace(/[\[\]]/g, '\\$&'); }).join('|'), 'g');
+        var anyLegacy = /\[[A-Z0-9]{3,5}\]|\[Description\]/;
+        var lastField = null;
+
+        function esc(s) { return s.replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+        function preview(ep) {
+            var pane = document.querySelector('.tab-pane[data-ep="' + ep + '"]');
+            var url  = pane.querySelector('textarea[name="url"]').value.trim();
+            var body = pane.querySelector('textarea[name="postParameter"]').value.trim();
+            var isPost = pane.querySelector('.vx-method').value === 'POST';
+            var out = pane.querySelector('[data-preview]');
+
+            if (!url) { out.innerHTML = '<span class="text-muted">No URL yet</span>'; }
+            else {
+                var text = url + (isPost && body ? '\n\nBODY: ' + body : '');
+                out.innerHTML = esc(text)
+                    .replace(/\{\{(\w+)\}\}/g, function (m, k) {
+                        return k in sample ? '<mark>' + esc(sample[k] || '(empty)') + '</mark>' : '<mark class="vx-unknown">' + m + '</mark>';
+                    })
+                    .replace(legacyRe, function (m) {
+                        var t = tokens.filter(function (x) { return x.Legacy === m; })[0];
+                        return '<mark>' + esc(sample[t.Key] || '(empty)') + '</mark>';
+                    })
+                    .replace(/\n/g, '<br>');
             }
+
+            document.querySelector('[data-dot="' + ep + '"]').classList.toggle('on', !!url);
+            pane.querySelectorAll('.vx-field').forEach(function (f) {
+                var note = f.parentNode.querySelector('.vx-legacy');
+                if (note) note.style.display = anyLegacy.test(f.value) ? 'block' : 'none';
+            });
         }
 
-        // Rotate chevron on collapse
-        document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function (el) {
-            var target = el.getAttribute('data-bs-target');
-            var colEl = document.querySelector(target);
-            if (!colEl) return;
-            colEl.addEventListener('show.bs.collapse', function () {
-                el.querySelector('.fa-chevron-down').style.transform = 'rotate(180deg)';
+        document.querySelectorAll('.vx-field').forEach(function (f) {
+            f.addEventListener('focus', function () {
+                lastField = f;
+                document.getElementById('vxTarget').textContent =
+                    'Inserting into: ' + (f.name === 'url' ? 'URL' : 'POST body') + ' (' + f.closest('.tab-pane').querySelector('input[name="urlType"]').value + ')';
             });
-            colEl.addEventListener('hide.bs.collapse', function () {
-                el.querySelector('.fa-chevron-down').style.transform = 'rotate(0deg)';
-            });
-            // Set initial state
-            if (colEl.classList.contains('show')) {
-                el.querySelector('.fa-chevron-down').style.transform = 'rotate(180deg)';
-            }
+            f.addEventListener('input', function () { preview(f.getAttribute('data-ep')); });
         });
-    </script>
-}
+
+        document.querySelectorAll('.vx-chip').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+                var f = lastField || document.querySelector('.tab-pane.active textarea[name="url"]');
+                var tok = chip.getAttribute('data-token');
+                var s = f.selectionStart || 0, e = f.selectionEnd || 0;
+                f.value = f.value.slice(0, s) + tok + f.value.slice(e);
+                f.focus();
+                f.selectionStart = f.selectionEnd = s + tok.length;
+                preview(f.getAttribute('data-ep'));
+            });
+        });
+
+        document.querySelectorAll('.vx-convert').forEach(function (a) {
+            a.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                var f = a.closest('div').parentNode.querySelector('.vx-field');
+                f.value = f.value.replace(legacyRe, function (m) {
+                    return tokens.filter(function (x) { return x.Legacy === m; })[0].Text;
+                });
+                preview(f.getAttribute('data-ep'));
+            });
+        });
+
+        document.querySelectorAll('.vx-seg').forEach(function (seg) {
+            seg.querySelectorAll('button').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    var pane = seg.closest('.tab-pane');
+                    seg.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); });
+                    pane.querySelector('.vx-method').value = b.getAttribute('data-m');
+                    pane.querySelector('.vx-post').style.display = b.getAttribute('data-m') === 'POST' ? '' : 'none';
+                    preview(pane.getAttribute('data-ep'));
+                });
+            });
+        });
+
+        document.querySelectorAll('.vx-tab').forEach(function (t) {
+            t.addEventListener('shown.bs.tab', function () {
+                document.querySelectorAll('.vx-tab').forEach(function (x) { x.classList.toggle('active', x === t); });
+                lastField = null;
+                document.getElementById('vxTarget').textContent = 'Click inside a URL or body field first.';
+            });
+        });
+
+        var pwdBtn = document.getElementById('vxPwdToggle');
+        pwdBtn.addEventListener('click', function () {
+            var f = document.getElementById('apiPasswordField');
+            var show = f.type === 'password';
+            f.type = show ? 'text' : 'password';
+            pwdBtn.querySelector('i').className = show ? 'fas fa-eye-slash' : 'fas fa-eye';
+        });
+
+        document.querySelectorAll('.tab-pane[data-ep]').forEach(function (p) { preview(p.getAttribute('data-ep')); });
+    })();
+</script>

@@ -578,27 +578,24 @@ namespace VIRENDRA.Services
             string randomKey  = new Random().Next(100000, 999999).ToString(CultureInfo.InvariantCulture);
             string dateTime   = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
 
-            return template
-                .Replace("[UUU]",   cr.ApiUserId    ?? "")
-                .Replace("[PPP]",   cr.ApiPassword  ?? "")
-                .Replace("[RRR]",   cr.ApiOptional  ?? "")
-                .Replace("[MMM]",   model.MobileNo  ?? "")
-                .Replace("[HHH]",   model.MobileNo  ?? "")   // account (BillPay)
-                .Replace("[NNN]",   "")
-                .Replace("[VVV]",   model.OurTxnId  ?? "")
-                .Replace("[TTT]",   model.OurTxnId  ?? "")
-                .Replace("[OOO]",   opCode          ?? "")
-                .Replace("[CCC]",   circleCode      ?? "")
-                .Replace("[AAA]",   model.Amount.ToString("0.##", CultureInfo.InvariantCulture))
-                .Replace("[EEE]",   cr.ExtraUrl     ?? "")
-                .Replace("[DDD]",   cr.ExtraUrlData ?? "")
-                .Replace("[FFF1]",  "")
-                .Replace("[FFF2]",  "")
-                .Replace("[FFF3]",  "")
-                .Replace("[FFF4]",  "")
-                .Replace("[FFFT]",  dateTime)
-                .Replace("[FFFR]",  randomKey)
-                .Replace("[COMM1]", cr.Comm1.ToString("0.##", CultureInfo.InvariantCulture));
+            return ApiTokens.Fill(template, new Dictionary<string, string>
+            {
+                [ApiTokens.UserId]     = cr.ApiUserId,
+                [ApiTokens.Password]   = cr.ApiPassword,
+                [ApiTokens.ApiKey]     = cr.ApiOptional,
+                [ApiTokens.Mobile]     = model.MobileNo,
+                [ApiTokens.Account]    = model.MobileNo,   // account (BillPay)
+                [ApiTokens.TxnId]      = model.OurTxnId,
+                [ApiTokens.RefId]      = model.OurTxnId,
+                [ApiTokens.Operator]   = opCode,
+                [ApiTokens.Circle]     = circleCode,
+                [ApiTokens.Amount]     = model.Amount.ToString("0.##", CultureInfo.InvariantCulture),
+                [ApiTokens.ExtraUrl]   = cr.ExtraUrl,
+                [ApiTokens.ExtraData]  = cr.ExtraUrlData,
+                [ApiTokens.Timestamp]  = dateTime,
+                [ApiTokens.Random]     = randomKey,
+                [ApiTokens.Commission] = cr.Comm1.ToString("0.##", CultureInfo.InvariantCulture)
+            });
         }
 
         private static string MakeHttpCall(string url, string method, string postData, string contentType)

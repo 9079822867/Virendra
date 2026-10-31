@@ -234,6 +234,7 @@
     <Compile Include="Models\ApiWalletModels.cs" />
     <Compile Include="Models\SwitchModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\ApiTokens.cs" />
     <Compile Include="Services\RechargeService.cs" />
     <Compile Include="Services\ComplaintService.cs" />
     <Compile Include="Services\KycService.cs" />
@@ -391,6 +392,7 @@
     <Content Include="Views\Vendor\Edit.cshtml" />
     <Content Include="Views\Vendor\Index.cshtml" />
     <Content Include="Views\Vendor\_VendorForm.cshtml" />
+    <Content Include="Views\Vendor\_VendorSaveBar.cshtml" />
     <Content Include="Views\Wallet\AddMoney.cshtml" />
     <Content Include="Views\Wallet\Edit.cshtml" />
     <Content Include="Views\Wallet\Index.cshtml" />
