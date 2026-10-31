@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
@@ -160,6 +160,7 @@
     <Compile Include="Controllers\ApiSettingsController.cs" />
     <Compile Include="Controllers\AuthController.cs" />
     <Compile Include="Controllers\CallbackController.cs" />
+    <Compile Include="Controllers\ApiWalletController.cs" />
     <Compile Include="Controllers\SwitchController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\MobileController.cs" />
@@ -196,6 +197,7 @@
     <Compile Include="Data\WalletRepository.cs" />
     <Compile Include="Data\IVendorRepository.cs" />
     <Compile Include="Data\VendorRepository.cs" />
+    <Compile Include="Data\ApiWalletRepository.cs" />
     <Compile Include="Data\SwitchRepository.cs" />
     <Compile Include="Data\ITransactionRepository.cs" />
     <Compile Include="Data\TransactionRepository.cs" />
@@ -229,6 +231,7 @@
     <Compile Include="Models\VendorMarginModels.cs" />
     <Compile Include="Models\WalletTransaction.cs" />
     <Compile Include="Models\Vendor.cs" />
+    <Compile Include="Models\ApiWalletModels.cs" />
     <Compile Include="Models\SwitchModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\RechargeService.cs" />
@@ -356,6 +359,7 @@
     <Content Include="Views\Reports\OperatorwiseReport.cshtml" />
     <Content Include="Views\Transaction\Index.cshtml" />
     <Content Include="Views\Transaction\Details.cshtml" />
+    <Content Include="Views\ApiWallet\Index.cshtml" />
     <Content Include="Views\Transaction\RechargeHistory.cshtml" />
     <Content Include="Views\Transaction\ComplaintReport.cshtml" />
     <Content Include="Views\Setting\UserProfile.cshtml" />

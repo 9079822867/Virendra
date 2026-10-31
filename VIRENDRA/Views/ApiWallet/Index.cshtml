@@ -1,0 +1,273 @@
+@model VIRENDRA.Models.ApiWalletViewModel
+@using VIRENDRA.Models
+@{
+    ViewBag.Title = "Vendor Wallet";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+    var apiList      = ViewBag.ApiList as List<SelectListItem> ?? new List<SelectListItem>();
+    var userList     = ViewBag.UserList as List<SelectListItem> ?? new List<SelectListItem>();
+    var txnTypeList  = ViewBag.TxnTypeList as List<SelectListItem> ?? new List<SelectListItem>();
+    var amtTypeList  = ViewBag.AmtTypeList as List<SelectListItem> ?? new List<SelectListItem>();
+    var trTypeList   = ViewBag.TrTypeList as List<LookupItem> ?? new List<LookupItem>();
+    var bankAccounts = ViewBag.BankAccounts as List<LookupItem> ?? new List<LookupItem>();
+    string stamp = DateTime.Now.ToString("yyyyMMddHHmmssfff");
+}
+
+<div class="history-page">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+        <h4 class="mb-sm-0 font-size-18">Vendor Wallet Transactions</h4>
+        <div class="page-title-right d-flex align-items-center gap-3">
+            <button type="button" class="btn btn-sm btn-history-search" data-bs-toggle="modal" data-bs-target="#addApiWalletModal">
+                <i class="fas fa-plus me-1"></i>Add Wallet
+            </button>
+            <ol class="breadcrumb m-0">
+                <li class="breadcrumb-item"><a href="javascript:void(0);">Administration</a></li>
+                <li class="breadcrumb-item active">Vendor Wallet</li>
+            </ol>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-3" style="border-radius:10px;">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible mb-3" style="border-radius:10px;">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form class="history-filter" method="get" action="@Url.Action("Index", "ApiWallet")">
+        <div class="row g-3 align-items-center">
+            <div class="col-lg-2 col-md-4">
+                <input type="date" name="fromDate" class="form-control" value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <input type="date" name="toDate" class="form-control" value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <input type="number" name="recId" class="form-control" value="@Model.RecId" placeholder="Recharge Id" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <input type="number" name="txnId" class="form-control" value="@Model.TxnId" placeholder="Transaction Id" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <select name="apiId" class="form-select">
+                    <option value="">All Vendors</option>
+                    @foreach (var a in apiList)
+                    {
+                        <option value="@a.Value" @(a.Selected ? "selected" : "")>@a.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <select name="userId" class="form-select">
+                    <option value="">All Users</option>
+                    @foreach (var u in userList)
+                    {
+                        <option value="@u.Value" @(u.Selected ? "selected" : "")>@u.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <select name="txnTypeId" class="form-select">
+                    <option value="">All Txn Types</option>
+                    @foreach (var t in txnTypeList)
+                    {
+                        <option value="@t.Value" @(t.Selected ? "selected" : "")>@t.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <select name="amtTypeId" class="form-select">
+                    <option value="">All Amount Types</option>
+                    @foreach (var a in amtTypeList)
+                    {
+                        <option value="@a.Value" @(a.Selected ? "selected" : "")>@a.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <input type="text" name="remark" class="form-control" value="@Model.Remark" placeholder="Remark / Ref no" />
+            </div>
+            <div class="col-lg-1 col-md-3">
+                <button type="submit" class="btn btn-history-search w-100">Search</button>
+            </div>
+            <div class="col-lg-1 col-md-3">
+                <a href="@Url.Action("Index", "ApiWallet")" class="btn btn-history-reset w-100">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <hr class="history-divider" />
+
+    <div class="table-responsive history-table-wrap">
+        <table class="table history-table mb-0">
+            <thead>
+                <tr>
+                    <th>ApiTxnId</th>
+                    <th>Vendor</th>
+                    <th>TxnDate</th>
+                    <th>RecId</th>
+                    <th>RefTxnId</th>
+                    <th class="text-end">OP_Bal</th>
+                    <th class="text-end">CR_Amt</th>
+                    <th class="text-end">Ins_Amt</th>
+                    <th class="text-end">DB_Amt</th>
+                    <th class="text-end">CL_Bal</th>
+                    <th>TxnType</th>
+                    <th>AmtType</th>
+                    <th>Remark</th>
+                    <th class="text-end">V_Balc</th>
+                    <th class="text-end">Bal_Diff</th>
+                    <th>User</th>
+                    <th>AddedBy</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr><td colspan="17" class="text-center text-muted py-4">No vendor wallet entries for this filter.</td></tr>
+                }
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.VendorName</td>
+                        <td class="text-nowrap">@item.TxnDate.ToString("dd MMM yyyy hh:mm tt")</td>
+                        <td>@item.RecId</td>
+                        <td>@item.RefTxnId</td>
+                        <td class="text-end">@item.OP_Bal.ToString("0.00")</td>
+                        <td class="text-end text-success">@item.CR_Amt.ToString("0.00")</td>
+                        <td class="text-end text-success">@item.Ins_Amt.ToString("0.00")</td>
+                        <td class="text-end text-danger">@item.DB_Amt.ToString("0.00")</td>
+                        <td class="text-end fw-semibold">@item.CL_Bal.ToString("0.00")</td>
+                        <td>@item.TxnType</td>
+                        <td>@item.AmtType</td>
+                        <td>@item.Remark</td>
+                        <td class="text-end">@item.ApiClBal.ToString("0.00")</td>
+                        <td class="text-end @(item.ClBalDiff != 0 ? "text-danger" : "")">@item.ClBalDiff.ToString("0.00")</td>
+                        <td>@item.UserName</td>
+                        <td>@item.AddedBy</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="6" class="text-success fw-semibold">Row Count @Model.TotalCount</td>
+                    <td class="text-end text-success">&#8377; @Model.TotalCredit.ToString("0.00")</td>
+                    <td class="text-end text-success">&#8377; @Model.TotalIncentive.ToString("0.00")</td>
+                    <td class="text-end text-danger">&#8377; @Model.TotalDebit.ToString("0.00")</td>
+                    <td colspan="8"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="addApiWalletModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="post" action="@Url.Action("AddEdit", "ApiWallet")" id="addApiWalletForm">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <h5 class="modal-title">Add Api Wallet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label" for="awApiId">Vendor <span class="text-danger">*</span></label>
+                    <select name="ApiId" id="awApiId" class="form-select" required>
+                        <option value="">Select a Api</option>
+                        @foreach (var a in apiList)
+                        {
+                            <option value="@a.Value">@a.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="awTrType">Transfer Type <span class="text-danger">*</span></label>
+                        <select name="TrTypeId" id="awTrType" class="form-select" required>
+                            @foreach (var t in trTypeList)
+                            {
+                                <option value="@t.Id" @(t.Name == "IMPS" ? "selected" : "")>@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="awBank">Bank Account <span class="text-danger">*</span></label>
+                        <select name="BankAccountId" id="awBank" class="form-select" required>
+                            @foreach (var b in bankAccounts)
+                            {
+                                <option value="@b.Id">@b.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="awCurBal">Current Bal</label>
+                    <input type="text" id="awCurBal" class="form-control" placeholder="Api Balance" readonly />
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="awSent">Sent (INR)</label>
+                        <input type="number" name="SentAmount" id="awSent" class="form-control" value="0" min="0" step="0.01" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="awRecv">Received (INR)</label>
+                        <input type="number" name="ReceivedAmount" id="awRecv" class="form-control" value="0" min="0" step="0.01" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="awIns">Incentive (INR)</label>
+                        <input type="number" name="IncentiveAmount" id="awIns" class="form-control" value="0" min="0" step="0.01" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="awCheque">Cheque/Ref No <span class="text-danger">*</span></label>
+                    <input type="text" name="ChequeNo" id="awCheque" class="form-control" value="@stamp" maxlength="50" required />
+                </div>
+                <div class="mb-0">
+                    <label class="form-label" for="awRemark">Remark</label>
+                    <input type="text" name="Remark" id="awRemark" class="form-control" value="@stamp" maxlength="60" />
+                </div>
+                <div class="form-text">Sent adds to the vendor balance, Received takes it back, Incentive is vendor bonus.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var balUrl = '@Url.Action("GetApiWalletBalance", "ApiWallet")';
+            var curBal = document.getElementById('awCurBal');
+
+            document.getElementById('awApiId').addEventListener('change', function () {
+                curBal.value = '';
+                if (!this.value) return;
+                fetch(balUrl + '?apiId=' + encodeURIComponent(this.value), { credentials: 'same-origin' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (bal) { curBal.value = Number(bal).toFixed(2); })
+                    .catch(function () { curBal.value = 'N/A'; });
+            });
+
+            document.getElementById('addApiWalletForm').addEventListener('submit', function (e) {
+                var total = ['awSent', 'awRecv', 'awIns'].reduce(function (s, id) {
+                    return s + (parseFloat(document.getElementById(id).value) || 0);
+                }, 0);
+                if (total <= 0) { e.preventDefault(); alert('Enter Sent, Received or Incentive amount.'); return; }
+                if (!confirm('Save this vendor wallet entry?')) e.preventDefault();
+            });
+        })();
+    </script>
+}
+
+@Html.Partial("~/Views/Transaction/_HistoryStyles.cshtml")

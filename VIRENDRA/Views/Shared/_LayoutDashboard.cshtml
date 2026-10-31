@@ -288,7 +288,7 @@
                     @*<%-- Administration \u2014 SuperAdmin + Admin --%>*@
                     @if (isSuperAdmin || isAdmin)
                     {
-                        bool adminActive = anyActive(new[] { "User", "Package", "Operator", "Vendor", "BankAccount", "Services", "CommonRouting", "Switch", "KycAdmin" });
+                        bool adminActive = anyActive(new[] { "User", "Package", "Operator", "Vendor", "ApiWallet", "BankAccount", "Services", "CommonRouting", "Switch", "KycAdmin" });
                         <li class="nav-item dropdown @(adminActive ? "active" : "")">
                             <a class="nav-link dropdown-toggle @(adminActive ? "active" : "")"
                                href="#" id="ddAdmin" role="button"
@@ -333,6 +333,12 @@
                                     <a class="dropdown-item @(currentController=="BankAccount" ? "active" : "")"
                                        href="@Url.Action("Index","BankAccount")">
                                         <i class="fas fa-university"></i> Bank Accounts
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item @(currentController=="ApiWallet" ? "active" : "")"
+                                       href="@Url.Action("Index","ApiWallet")">
+                                        <i class="fas fa-wallet"></i> Vendor Wallet
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>

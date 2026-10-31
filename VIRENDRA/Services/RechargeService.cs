@@ -291,7 +291,7 @@ namespace VIRENDRA.Services
                     {
                         Success   = true,
                         Status    = "Success",
-                        Message   = "Recharge successful. " + fResp.Message,
+                        Message   = "Recharge successful. ",
                         ApiTxnId  = fResp.ApiTxnId,
                         RecId     = helper.RecId,
                         UserTxnId = model.RefTxnId
@@ -317,10 +317,10 @@ namespace VIRENDRA.Services
                     catch { /* non-critical */ }
                 }
 
-                return Fail("Recharge failed. " + lastMsg + " Amount refunded to wallet.", helper.RecId, model.RefTxnId);
+                return Fail("Recharge failed. Amount refunded to wallet.", helper.RecId, model.RefTxnId);
             }
 
-            return Fail("Recharge failed. " + lastMsg, 0, model.RefTxnId);
+            return Fail("Recharge failed. ", 0, model.RefTxnId);
         }
 
         // Shared with MobileController (API recharges)
