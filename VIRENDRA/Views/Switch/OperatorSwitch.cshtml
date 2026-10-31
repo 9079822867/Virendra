@@ -71,10 +71,10 @@
                                         <input type="hidden" name="opId" value="@o.OpId" />
                                         <button type="submit" class="btn btn-sm btn-success">Save</button>
                                     </form>
-                                    <a href="@Url.Action("CircleSwitch", new { id = o.OpId })" class="btn btn-sm btn-outline-primary">
+                                    @*<a href="@Url.Action("CircleSwitch", new { id = o.OpId })" class="btn btn-sm btn-outline-primary">
                                         Circles @(o.CircleRoutes > 0 ? "(" + o.CircleRoutes + ")" : "")
                                     </a>
-                                    <a href="@Url.Action("Validation", new { id = o.OpId })" class="btn btn-sm btn-outline-secondary">Validation</a>
+                                    <a href="@Url.Action("Validation", new { id = o.OpId })" class="btn btn-sm btn-outline-secondary">Validation</a>*@
                                 </td>
                             </tr>
                         }

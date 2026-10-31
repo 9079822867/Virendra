@@ -2,217 +2,270 @@
 @{
     ViewBag.Title = "Common Route Settings";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
-    int total   = Model.Count();
-    int active  = Model.Count(r => r.IsActive);
-    int inactive = total - active;
+    int total     = Model.Count();
+    int active    = Model.Count(r => r.IsActive);
+    int inactive  = total - active;
+    int operators = Model.Select(r => r.OpId).Distinct().Count();
 }
+
+<style>
+    .rt-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+    .rt-eyebrow { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-ink); }
+    .rt-title { font-size: 1.45rem; font-weight: 800; margin: 2px 0 4px; }
+    .rt-sub { color: var(--muted); font-size: .84rem; margin: 0; }
+
+    .rt-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .rt-stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+    .rt-stat .stat-value { font-size: 1.3rem; margin-top: 0; line-height: 1.1; }
+    .rt-meter { height: 4px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 6px; }
+    .rt-meter > span { display: block; height: 100%; background: var(--ok); }
+
+    .rt-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .rt-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+    .rt-search { position: relative; flex: 1 1 260px; max-width: 360px; }
+    .rt-search i { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: .8rem; }
+    .rt-search input { padding-left: 32px; font-size: .84rem; }
+    .rt-seg { display: inline-flex; background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 3px; }
+    .rt-seg button { border: 0; background: none; color: var(--muted); font-size: .78rem; font-weight: 600; padding: 5px 12px; border-radius: 6px; }
+    .rt-seg button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(15,23,42,.12); }
+
+    #routeTable { font-size: .83rem; margin: 0 !important; }
+    #routeTable thead th { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; background: var(--soft); border-bottom: 1px solid var(--line); white-space: nowrap; padding: .65rem .8rem; }
+    #routeTable td { padding: .7rem .8rem; border-color: var(--line); vertical-align: middle; }
+    #routeTable tr.is-off td { opacity: .55; }
+    #routeTable tr.is-off td:first-child, #routeTable tr.is-off td:last-child { opacity: 1; }
+
+    .rt-op { font-weight: 700; color: var(--ink); }
+    .rt-meta { font-size: .72rem; color: var(--muted); }
+    .rt-chip { display: inline-block; font-size: .7rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--soft); border: 1px solid var(--line); color: var(--ink-2); }
+    .rt-chip.amt { background: var(--info-soft); border-color: transparent; color: var(--info); }
+    .rt-amt { font-family: var(--mono); font-size: .76rem; color: var(--ink-2); display: block; margin-top: 3px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rt-prio { display: inline-grid; place-items: center; min-width: 28px; height: 28px; border-radius: 8px; background: var(--fill); color: var(--on-fill); font-weight: 800; font-size: .78rem; }
+
+    .rt-chain { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .rt-node { font-size: .74rem; font-weight: 700; padding: 3px 9px; border-radius: 6px; }
+    .rt-node.p { background: var(--accent-soft); color: var(--accent-ink); }
+    .rt-node.f { background: var(--soft); color: var(--ink-2); border: 1px dashed var(--line-2); }
+    .rt-chain .fa-arrow-right { font-size: .65rem; color: var(--muted); }
+
+    .rt-switch { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
+    .rt-switch .form-check-input { width: 36px; height: 20px; margin: 0; cursor: pointer; float: none; }
+    .rt-switch .form-check-input:checked { background-color: var(--ok); border-color: var(--ok); }
+    .rt-dot { font-size: .72rem; font-weight: 700; }
+    .rt-dot.on { color: var(--ok); }
+    .rt-dot.off { color: var(--bad); }
+
+    .rt-act { display: inline-flex; gap: 4px; }
+    .rt-act .btn { width: 30px; height: 30px; padding: 0; display: grid; place-items: center; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: .75rem; }
+    .rt-act .btn:hover { color: var(--accent-ink); border-color: var(--accent); }
+    .rt-act .btn.del:hover { color: var(--bad); border-color: var(--bad); }
+
+    .rt-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 14px; border-top: 1px solid var(--line); font-size: .8rem; color: var(--muted); }
+    .rt-foot .dataTables_info { padding: 0 !important; }
+    .rt-foot .pagination { margin: 0; }
+
+    .rt-empty { padding: 48px 16px; text-align: center; color: var(--muted); }
+    .rt-empty i { font-size: 1.8rem; color: var(--line-2); margin-bottom: 10px; }
+
+    @@media (max-width: 767.98px) {
+        .rt-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .rt-search { max-width: none; }
+    }
+</style>
 
 <div class="container-fluid">
 
-    <!-- Page Title -->
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <!-- Header -->
+    <div class="rt-head">
         <div>
-            <h4 class="mb-1 fw-bold text-dark">
-                <i class="fas fa-route text-primary me-2"></i>Common Route Settings
-            </h4>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0" style="font-size:.82rem;">
-                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard","Home")">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Route Settings</li>
-                </ol>
-            </nav>
+            <div class="rt-eyebrow"><i class="fas fa-route me-1"></i>Routing</div>
+            <h1 class="rt-title">Common Route Settings</h1>
+            <p class="rt-sub">Decide which vendor handles each operator, circle and amount &mdash; lower priority runs first.</p>
         </div>
-        <a href="@Url.Action("Create")" class="btn btn-success px-3 fw-semibold">
-            <i class="fas fa-plus me-1"></i>Add Route
+        <a href="@Url.Action("Create")" class="btn btn-primary px-3 fw-semibold">
+            <i class="fas fa-plus me-1"></i>New Route
         </a>
     </div>
 
     <!-- Alerts -->
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible mb-3" style="border-radius:10px;">
+        <div class="alert alert-success alert-dismissible mb-3">
             <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger alert-dismissible mb-3" style="border-radius:10px;">
+        <div class="alert alert-danger alert-dismissible mb-3">
             <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
     <!-- Stats -->
-    <div class="row g-3 mb-4">
-        <div class="col-sm-4">
-            <div class="card border-0 shadow-sm" style="border-radius:12px;border-left:4px solid #667eea!important;">
-                <div class="card-body d-flex align-items-center gap-3 py-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center"
-                         style="width:44px;height:44px;background:#667eea15;flex-shrink:0;">
-                        <i class="fas fa-route" style="color:#667eea;font-size:1rem;"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted" style="font-size:.73rem;">Total Routes</div>
-                        <div class="fw-bold fs-5 text-dark">@total</div>
-                    </div>
-                </div>
+    <div class="rt-stats">
+        <div class="rt-stat">
+            <div class="stat-ic"><i class="fas fa-route"></i></div>
+            <div>
+                <div class="stat-label">Total Routes</div>
+                <div class="stat-value">@total</div>
             </div>
         </div>
-        <div class="col-sm-4">
-            <div class="card border-0 shadow-sm" style="border-radius:12px;border-left:4px solid #4CAF50!important;">
-                <div class="card-body d-flex align-items-center gap-3 py-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center"
-                         style="width:44px;height:44px;background:#4CAF5015;flex-shrink:0;">
-                        <i class="fas fa-toggle-on" style="color:#4CAF50;font-size:1rem;"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted" style="font-size:.73rem;">Active</div>
-                        <div class="fw-bold fs-5 text-dark">@active</div>
-                    </div>
-                </div>
+        <div class="rt-stat">
+            <div class="stat-ic ok"><i class="fas fa-bolt"></i></div>
+            <div class="flex-grow-1">
+                <div class="stat-label">Active</div>
+                <div class="stat-value" id="statActive">@active</div>
+                <div class="rt-meter"><span id="activeMeter" style="width:@(total == 0 ? 0 : active * 100 / total)%;"></span></div>
             </div>
         </div>
-        <div class="col-sm-4">
-            <div class="card border-0 shadow-sm" style="border-radius:12px;border-left:4px solid #F44336!important;">
-                <div class="card-body d-flex align-items-center gap-3 py-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center"
-                         style="width:44px;height:44px;background:#F4433615;flex-shrink:0;">
-                        <i class="fas fa-toggle-off" style="color:#F44336;font-size:1rem;"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted" style="font-size:.73rem;">Inactive</div>
-                        <div class="fw-bold fs-5 text-dark">@inactive</div>
-                    </div>
-                </div>
+        <div class="rt-stat">
+            <div class="stat-ic bad"><i class="fas fa-pause"></i></div>
+            <div>
+                <div class="stat-label">Paused</div>
+                <div class="stat-value" id="statInactive">@inactive</div>
+            </div>
+        </div>
+        <div class="rt-stat">
+            <div class="stat-ic info"><i class="fas fa-sim-card"></i></div>
+            <div>
+                <div class="stat-label">Operators</div>
+                <div class="stat-value">@operators</div>
             </div>
         </div>
     </div>
 
-    <!-- Table Card -->
-    <div class="card border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">
-        <div class="card-header border-0 py-3 px-4"
-             style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
-            <div class="d-flex align-items-center">
-                <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
-                     style="width:36px;height:36px;background:rgba(255,255,255,.2);">
-                    <i class="fas fa-table text-white" style="font-size:.85rem;"></i>
-                </div>
-                <h6 class="mb-0 text-white fw-bold">Route List</h6>
+    <!-- Routes -->
+    <div class="rt-panel">
+        <div class="rt-toolbar">
+            <div class="rt-search">
+                <i class="fas fa-search"></i>
+                <input type="search" id="rtSearch" class="form-control" placeholder="Search operator, vendor, circle, amount..." />
+            </div>
+            <div class="rt-seg" id="rtStatus">
+                <button type="button" class="on" data-f="all">All</button>
+                <button type="button" data-f="1">Active</button>
+                <button type="button" data-f="0">Paused</button>
             </div>
         </div>
-        <div class="card-body p-0">
+
+        @if (total == 0)
+        {
+            <div class="rt-empty">
+                <i class="fas fa-route d-block"></i>
+                <div class="fw-semibold mb-1" style="color:var(--ink);">No routes yet</div>
+                <div class="mb-3" style="font-size:.84rem;">Create your first route to start sending recharges to a vendor.</div>
+                <a href="@Url.Action("Create")" class="btn btn-primary btn-sm px-3"><i class="fas fa-plus me-1"></i>New Route</a>
+            </div>
+        }
+        else
+        {
             <div class="table-responsive">
-                <table id="routeTable" class="table table-hover align-middle mb-0" style="font-size:.83rem;">
-                    <thead class="table-light">
+                <table id="routeTable" class="table table-hover align-middle w-100">
+                    <thead>
                         <tr>
-                            <th class="ps-3" style="width:90px;">Actions</th>
-                            <th style="width:80px;" class="text-center">Status</th>
-                            <th>Users</th>
+                            <th class="ps-3">Status</th>
                             <th>Operator</th>
-                            <th>Circle</th>
+                            <th>Users</th>
                             <th>Vendor</th>
-                            <th>Filter Type</th>
-                            <th>Filter Amount(s)</th>
-                            <th>RO%</th>
-                            <th>Priority</th>
+                            <th>Filter</th>
+                            <th class="text-center">Priority</th>
+                            <th>Route</th>
                             <th>Block UIDs</th>
-                            <th style="background:var(--warn-soft) !important;">OP1</th>
-                            <th>OP2</th>
-                            <th>Wait (min)</th>
-                            <th>Updated On</th>
+                            <th>Updated</th>
+                            <th class="text-end pe-3"></th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var r in Model)
                         {
-                            <tr id="row-@r.Id">
+                            DateTime? changed = r.UpdatedDate ?? (r.AddedDate != default(DateTime) ? r.AddedDate : (DateTime?)null);
+                            <tr id="row-@r.Id" data-active="@(r.IsActive ? "1" : "0")" class="@(r.IsActive ? "" : "is-off")">
                                 <td class="ps-3">
-                                    <div class="d-flex gap-1">
-                                        <a href="@Url.Action("Edit", new { id = r.Id })"
-                                           class="btn btn-sm btn-outline-info py-1 px-2" title="Edit">
-                                            <i class="fas fa-pencil-alt" style="font-size:.7rem;"></i>
-                                        </a>
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-danger py-1 px-2"
-                                                title="Delete"
-                                                onclick="confirmDelete(@r.Id, '@(r.OperatorName ?? r.OpId.ToString())', '@r.AmountFilter')">
-                                            <i class="fas fa-trash" style="font-size:.7rem;"></i>
-                                        </button>
-                                    </div>
+                                    <label class="form-check form-switch rt-switch">
+                                        <input class="form-check-input toggle-active" type="checkbox" data-id="@r.Id" @(r.IsActive ? "checked" : "") />
+                                        <span class="rt-dot status-label @(r.IsActive ? "on" : "off")">@(r.IsActive ? "ON" : "OFF")</span>
+                                    </label>
                                 </td>
-                                <td class="text-center">
-                                    <div class="form-check form-switch d-inline-flex align-items-center gap-1 mb-0">
-                                        <input class="form-check-input toggle-active" type="checkbox"
-                                               data-id="@r.Id"
-                                               style="width:38px;height:20px;cursor:pointer;"
-                                               @(r.IsActive ? "checked" : "") />
-                                        <span class="status-label fw-semibold @(r.IsActive ? "text-success" : "text-danger")"
-                                              style="font-size:.7rem;min-width:26px;">
-                                            @(r.IsActive ? "ON" : "OFF")
-                                        </span>
-                                    </div>
+                                <td>
+                                    <div class="rt-op">@(r.OperatorName ?? "—")</div>
+                                    <div class="rt-meta"><i class="fas fa-map-marker-alt me-1"></i>@(r.CircleFilter ?? "All circles")</div>
                                 </td>
                                 <td>@(r.UserFilter ?? "All")</td>
+                                <td><span class="fw-semibold text-accent">@(r.VendorName ?? "—")</span></td>
                                 <td>
-                                    <span class="badge bg-light text-dark border" style="font-size:.73rem;">
-                                        @(r.OperatorName ?? "\u2014")
+                                    <span class="rt-chip @(r.FTypeId == 2 ? "amt" : "")">@r.FilterTypeName</span>
+                                    @if (!string.IsNullOrEmpty(r.AmountFilter))
+                                    {
+                                        <span class="rt-amt" title="@r.AmountFilter">@r.AmountFilter</span>
+                                    }
+                                </td>
+                                <td class="text-center" data-order="@r.Priority"><span class="rt-prio">@r.Priority</span></td>
+                                <td>
+                                    <span class="rt-chain">
+                                        <span class="rt-node p" title="Primary (OP1)">@(r.RouteOP1 ?? "—")</span>
+                                        @if (!string.IsNullOrEmpty(r.RouteOP2))
+                                        {
+                                            <i class="fas fa-arrow-right"></i>
+                                            <span class="rt-node f" title="Fallback (OP2)">@r.RouteOP2</span>
+                                        }
                                     </span>
                                 </td>
-                                <td>@(r.CircleFilter ?? "All")</td>
-                                <td class="fw-semibold text-primary">@(r.VendorName ?? "\u2014")</td>
-                                <td>
-                                    <span class="badge @(r.FTypeId == 2 ? "bg-info text-dark" : "bg-secondary")"
-                                          style="font-size:.72rem;">@r.FilterTypeName</span>
+                                <td><span class="rt-meta">@(r.BlockUser ?? "—")</span></td>
+                                <td data-order="@(changed.HasValue ? changed.Value.Ticks : 0)">
+                                    @if (changed.HasValue)
+                                    {
+                                        <div style="font-size:.78rem;">@changed.Value.ToString("dd MMM yy")</div>
+                                        <div class="rt-meta">@changed.Value.ToString("HH:mm")</div>
+                                    }
+                                    else
+                                    {
+                                        <span class="rt-meta">&mdash;</span>
+                                    }
                                 </td>
-                                <td><code class="text-dark">@(r.AmountFilter ?? "\u2014")</code></td>
-                                <td>@(r.MinRO.HasValue ? r.MinRO.Value.ToString("0.000") : "0.000")</td>
-                                <td class="text-center">
-                                    <span class="badge bg-light text-dark border fw-bold">@r.Priority</span>
-                                </td>
-                                <td>@(r.BlockUser ?? "\u2014")</td>
-                                <td style="background:var(--warn-soft);">
-                                    <strong class="text-warning-emphasis">@(r.RouteOP1 ?? "\u2014")</strong>
-                                </td>
-                                <td>@(r.RouteOP2 ?? "\u2014")</td>
-                                <td>@(r.WaitMinute.HasValue ? r.WaitMinute.ToString() : "0")</td>
-                                <td class="text-muted" style="font-size:.75rem;">
-                                    @(r.UpdatedDate.HasValue ? r.UpdatedDate.Value.ToString("dd MMM yy HH:mm") : (r.AddedDate != default(DateTime) ? r.AddedDate.ToString("dd MMM yy HH:mm") : "\u2014"))
+                                <td class="text-end pe-3">
+                                    <div class="rt-act">
+                                        <a href="@Url.Action("Edit", new { id = r.Id })" class="btn" title="Edit">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </a>
+                                        <button type="button" class="btn del btn-delete" title="Delete"
+                                                data-id="@r.Id"
+                                                data-op="@(r.OperatorName ?? r.OpId.ToString())"
+                                                data-amt="@r.AmountFilter">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
-        </div>
+        }
     </div>
 </div>
 
 <!-- Delete Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius:12px;overflow:hidden;">
-            <div class="modal-header border-0"
-                 style="background:linear-gradient(135deg,#F44336,#c62828);">
-                <h5 class="modal-title text-white fw-bold">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+        <div class="modal-content">
+            <div class="modal-body p-4 text-center">
+                <div class="stat-ic bad mx-auto mb-3" style="width:48px;height:48px;border-radius:12px;font-size:1.1rem;">
+                    <i class="fas fa-trash"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Delete this route?</h5>
+                <p class="mb-1" style="font-size:.88rem;">Operator: <strong id="delOp"></strong></p>
+                <p class="mb-3" style="font-size:.88rem;">Amount filter: <code id="delAmt"></code></p>
+                <p class="text-muted small mb-0">This cannot be undone.</p>
             </div>
-            <div class="modal-body px-4 pt-4">
-                <p class="mb-1">Delete route for operator: <strong id="delOp"></strong></p>
-                <p class="mb-3">Amount filter: <code id="delAmt"></code></p>
-                <p class="text-muted small mb-0"><i class="fas fa-info-circle me-1"></i>This cannot be undone.</p>
-            </div>
-            <div class="modal-footer border-0">
-                @using (Html.BeginForm("Delete", "CommonRouting", FormMethod.Post, new { id = "deleteForm" }))
+            <div class="modal-footer justify-content-center">
+                @using (Html.BeginForm("Delete", "CommonRouting", FormMethod.Post, new { id = "deleteForm", @class = "d-flex gap-2" }))
                 {
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" id="deleteId" />
                     <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger px-4">
-                        <i class="fas fa-trash me-1"></i>Delete
-                    </button>
+                    <button type="submit" class="btn btn-danger px-4">Delete</button>
                 }
             </div>
         </div>
@@ -225,32 +278,58 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(function () {
-            $('#routeTable').DataTable({
+            var statusFilter = 'all';
+            var total = @total;
+
+            if (!$('#routeTable').length) return;
+
+            $.fn.dataTable.ext.search.push(function (settings, data, idx) {
+                if (settings.nTable.id !== 'routeTable' || statusFilter === 'all') return true;
+                return $(settings.aoData[idx].nTr).attr('data-active') === statusFilter;
+            });
+
+            var table = $('#routeTable').DataTable({
                 pageLength: 50,
-                order: [[10, 'asc']],  // sort by Priority
-                columnDefs: [{ orderable: false, targets: [0, 1] }]
+                order: [[5, 'asc']],  // Priority
+                columnDefs: [{ orderable: false, targets: [0, 9] }],
+                dom: 't<"rt-foot"ip>',
+                language: { info: 'Showing _START_–_END_ of _TOTAL_ routes', infoEmpty: 'No matching routes', zeroRecords: 'No routes match your search' }
+            });
+
+            $('#rtSearch').on('input', function () { table.search(this.value).draw(); });
+
+            $('#rtStatus').on('click', 'button', function () {
+                $(this).addClass('on').siblings().removeClass('on');
+                statusFilter = String($(this).data('f'));
+                table.draw();
             });
 
             $(document).on('change', '.toggle-active', function () {
-                var id      = $(this).data('id');
-                var active  = $(this).is(':checked');
-                var label   = $(this).siblings('.status-label');
+                var box    = $(this);
+                var id     = box.data('id');
+                var active = box.is(':checked');
+                var label  = box.siblings('.status-label');
+                var row    = box.closest('tr');
 
                 $.post('@Url.Action("ToggleActive")', { id: id, isActive: active }, function (res) {
-                    if (res.success) {
-                        label.text(active ? 'ON' : 'OFF')
-                             .removeClass('text-success text-danger')
-                             .addClass(active ? 'text-success' : 'text-danger');
-                    }
-                });
+                    if (!res.success) { box.prop('checked', !active); return; }
+                    label.text(active ? 'ON' : 'OFF').toggleClass('on', active).toggleClass('off', !active);
+                    row.attr('data-active', active ? '1' : '0').toggleClass('is-off', !active);
+
+                    var on = table.rows().nodes().to$().filter('[data-active="1"]').length;
+                    $('#statActive').text(on);
+                    $('#statInactive').text(total - on);
+                    $('#activeMeter').css('width', (total ? on * 100 / total : 0) + '%');
+                }).fail(function () { box.prop('checked', !active); });
+            });
+
+            $(document).on('click', '.btn-delete', function () {
+                var b = $(this);
+                $('#deleteId').val(b.data('id'));
+                $('#delOp').text(b.data('op'));
+                $('#delAmt').text(b.data('amt') || '—');
+                new bootstrap.Modal(document.getElementById('deleteModal')).show();
             });
         });
-
-        function confirmDelete(id, op, amt) {
-            document.getElementById('deleteId').value  = id;
-            document.getElementById('delOp').textContent  = op;
-            document.getElementById('delAmt').textContent = amt;
-            new bootstrap.Modal(document.getElementById('deleteModal')).show();
-        }
     </script>
 }

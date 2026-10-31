@@ -406,6 +406,13 @@
     <Content Include="Views\CommonRouting\Edit.cshtml" />
     <Content Include="Views\CommonRouting\Index.cshtml" />
     <Content Include="Views\CommonRouting\_RouteForm.cshtml" />
+    <Content Include="Views\Switch\BlockRoute.cshtml" />
+    <Content Include="Views\Switch\CircleSwitch.cshtml" />
+    <Content Include="Views\Switch\OperatorSwitch.cshtml" />
+    <Content Include="Views\Switch\ReplaceSwitch.cshtml" />
+    <Content Include="Views\Switch\StopRouteMsg.cshtml" />
+    <Content Include="Views\Switch\Validation.cshtml" />
+    <Content Include="Views\Switch\_SwitchNav.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

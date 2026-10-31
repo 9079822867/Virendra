@@ -56,7 +56,7 @@ namespace VIRENDRA.Data
         public List<LookupItem> GetSwitchTypes()
         {
             using (var c = new SqlConnection(_conn))
-                return c.Query<LookupItem>("SELECT Id, TypeName AS Name FROM SwitchType ORDER BY Id").ToList();
+                return c.Query<LookupItem>("SELECT Id, TypeName AS Name FROM SwitchType with (nolock) where StatusId = 1 ORDER BY Id").ToList();
         }
 
         // ── Operator switch ─────────────────────────────────────────────────
