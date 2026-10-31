@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -25,8 +25,9 @@ namespace VIRENDRA.Services
     {
         private readonly IRechargeRepository _repo;
 
-        // MediumId for recharges coming from the MVC web panel
-        private const int MEDIUM_WEB = 1;
+        // Recharge.MediumId: where the request came from
+        public const int MEDIUM_WEB = 1;
+        public const int MEDIUM_API = 2;
 
         public RechargeService(IRechargeRepository repo)
         {
@@ -35,7 +36,8 @@ namespace VIRENDRA.Services
 
         #region Recharge Request
 
-        public RechargeResult ProcessRecharge(RechargeRequestModel req, int userId, int addedById)
+        /// <summary>The one recharge pipeline: web panel, mobile app and reseller API all call this.</summary>
+        public RechargeResult ProcessRecharge(RechargeRequestModel req, int userId, int addedById, int mediumId = MEDIUM_WEB)
         {
             if (string.IsNullOrWhiteSpace(req.UserTxnId))
                 req.UserTxnId = DateTime.Now.ToString("yyyyMMddHHmmssfff");
@@ -110,7 +112,9 @@ namespace VIRENDRA.Services
                 return Fail("Route not available. Please contact admin.", 0, model.RefTxnId);
 
             // ── 3. Route-by-route processing ────────────────────────────────
-            return RechargeProcessCall(model, helper);
+            var result = RechargeProcessCall(model, helper, mediumId);
+            result.DebitAmount = helper.RecId > 0 ? helper.DebitAmount : 0m;
+            return result;
         }
 
         private List<ApiPriorityDto> BuildRouteList(RechargeModel model, RechargeHelperDto helper,
@@ -168,7 +172,7 @@ namespace VIRENDRA.Services
 
         #region Recharge Process Call
 
-        private RechargeResult RechargeProcessCall(RechargeModel model, RechargeHelperDto helper)
+        private RechargeResult RechargeProcessCall(RechargeModel model, RechargeHelperDto helper, int mediumId)
         {
             bool   anyRefund  = false;
             string lastMsg    = string.Empty;
@@ -190,7 +194,7 @@ namespace VIRENDRA.Services
                         model.UserId, model.MobileNo, model.Amount, helper.DebitAmount,
                         model.OpId ?? 0, model.CircleId ?? 0, route.ApiId,
                         model.RefTxnId, model.OurTxnId, model.IpAddress,
-                        helper.SwitchId, helper.RecId, MEDIUM_WEB, route.CircleFilter);
+                        helper.SwitchId, helper.RecId, mediumId, route.CircleFilter);
                 }
                 catch (Exception ex)
                 {
@@ -243,13 +247,11 @@ namespace VIRENDRA.Services
                 if (string.IsNullOrEmpty(cr.OpCode) && string.IsNullOrEmpty(route.RouteOP1))
                 {
                     lastMsg = "Operator code not set for API " + route.ApiId;
-                    MarkRouteFailed(helper, model, lastMsg, ref anyRefund);
                     continue;
                 }
                 if (string.IsNullOrEmpty(cr.ApiUrl))
                 {
                     lastMsg = "API URL not set for API " + route.ApiId;
-                    MarkRouteFailed(helper, model, lastMsg, ref anyRefund);
                     continue;
                 }
 
@@ -271,9 +273,9 @@ namespace VIRENDRA.Services
 
                 if (fResp.StatusId == RechargeStatusCodes.FAILED)
                 {
+                    // Not marked Failed here: the SP would refund now and the next route re-uses the same
+                    // debit, making a later success free. The recharge is failed (and refunded) once below.
                     lastMsg = fResp.Message;
-                    UpdateStatus(helper, model, RechargeStatusCodes.FAILED, fResp.ApiTxnId,
-                        statusMsg, "Response", ref anyRefund, fResp.OperatorTxnId);
 
                     // Switch > Stop Route Message: this failure must not be retried on another vendor
                     if (IsStopRouteMessage(apiRes, route.ApiId, model.OpId ?? 0))
@@ -289,19 +291,22 @@ namespace VIRENDRA.Services
 
                     return new RechargeResult
                     {
-                        Success   = true,
-                        Status    = "Success",
-                        Message   = "Recharge successful. ",
-                        ApiTxnId  = fResp.ApiTxnId,
-                        RecId     = helper.RecId,
-                        UserTxnId = model.RefTxnId
+                        Success     = true,
+                        Status      = "Success",
+                        Message     = "Recharge successful. ",
+                        ApiTxnId    = fResp.ApiTxnId,
+                        OperatorRef = fResp.OperatorTxnId,
+                        RecId       = helper.RecId,
+                        UserTxnId   = model.RefTxnId
                     };
                 }
 
                 // Process (or response not matched by any tag) → keep debit
                 UpdateStatus(helper, model, RechargeStatusCodes.PENDING, fResp.ApiTxnId,
                     statusMsg, "StatusWithCheck", ref anyRefund, fResp.OperatorTxnId);
-                return Pending(helper, model, fResp.ApiTxnId, "Recharge is processing. " + fResp.Message);
+                var pending = Pending(helper, model, fResp.ApiTxnId, "Recharge is processing. " + fResp.Message);
+                pending.OperatorRef = fResp.OperatorTxnId;
+                return pending;
             }
 
             // ── All APIs failed / stopped → final Failed + refund ───────────
@@ -336,13 +341,6 @@ namespace VIRENDRA.Services
             catch { return false; }
         }
 
-        private void MarkRouteFailed(RechargeHelperDto helper, RechargeModel model, string msg, ref bool anyRefund)
-        {
-            if (helper.RecId > 0)
-                UpdateStatus(helper, model, RechargeStatusCodes.FAILED, string.Empty,
-                    "p" + helper.CurrentPriorityId + "-v" + helper.CurrentApiId + "-" + msg,
-                    "Response", ref anyRefund);
-        }
 
         private void UpdateStatus(RechargeHelperDto helper, RechargeModel model, int statusId,
             string apiTxnId, string statusMsg, string updateType, ref bool anyRefund, string optTxnId = null)
@@ -660,6 +658,8 @@ namespace VIRENDRA.Services
         {
             var req = System.Web.HttpContext.Current?.Request;
             if (req == null) return string.Empty;
+            string cf = req.Headers["CF-Connecting-IP"];
+            if (!string.IsNullOrWhiteSpace(cf)) return cf.Trim();
             string fwd = req.ServerVariables["HTTP_X_FORWARDED_FOR"];
             return !string.IsNullOrWhiteSpace(fwd) ? fwd.Split(',')[0].Trim() : req.UserHostAddress ?? string.Empty;
         }

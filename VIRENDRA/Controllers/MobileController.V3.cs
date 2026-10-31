@@ -86,26 +86,9 @@ namespace VIRENDRA.Controllers
                 try { ci = _rcRepo.GetCircleByCode(circle.Trim()); } catch { }
             }
 
-            var rm = new RechargeModel
-            {
-                UserId     = user.Id,
-                Username   = user.Username,
-                ApiToken   = user.TokenAPI,
-                MobileNo   = mobileNo,
-                Amount     = amount,
-                OpId       = op.Id,
-                OpCode     = op.OperatorCode,
-                CircleId   = ci?.Id,
-                CircleCode = ci?.CircleCode ?? (circle ?? string.Empty).Trim(),
-                RefTxnId   = clientRef,
-                OurTxnId   = MakeTxnId(),
-                IpAddress  = ClientIp()
-            };
-
-            // Same pipeline as /api/recharge (validation SP → routing → vendor call)
-            JObject r = JObject.FromObject(RechargeRequest(rm));
-            string code    = (string)r["status"] ?? "0";
-            string message = (string)r["message"] ?? string.Empty;
+            // RechargeService: the same pipeline as the web panel and the mobile app
+            var r = ProcessApiRecharge(user, mobileNo, op, ci, amount, clientRef);
+            string message = r.Message ?? string.Empty;
 
             var row = FindUserRecharge(user.Id, clientRef);
             if (row == null)
@@ -117,8 +100,8 @@ namespace VIRENDRA.Controllers
                               lowBal ? "INSUFFICIENT_BALANCE" : "REJECTED");
             }
 
-            string status = code == "1" ? "Success" : code == "3" ? "Processing" : ApiV3.RechargeStatus(row.StatusId);
-            string operatorRef = FirstNonEmpty((string)r["operator_reference"], row.OptTxnId, row.ApiTxnId);
+            string status = r.Success ? "Success" : r.IsPending ? "Processing" : ApiV3.RechargeStatus(row.StatusId);
+            string operatorRef = FirstNonEmpty(r.OperatorRef, row.OptTxnId, row.ApiTxnId, r.ApiTxnId);
 
             return V3Json(new
             {

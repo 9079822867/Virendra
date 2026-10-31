@@ -163,6 +163,11 @@ namespace VIRENDRA.Data
                     new { RecId=recId, StatusMsg=statusMsg, StatusId=RC_FAILED });
         }
 
+        /// <summary>
+        /// Safety-net refund for a failed recharge. Credits only what is still owed for the recharge
+        /// (its debits minus its credits in TxnLedger), so it can never refund twice — e.g. when
+        /// usp_UpdateRechargeStatus already refunded. User.UserBal is set by the TxnLedger trigger.
+        /// </summary>
         public void InsertRefundLedger(long recId, int userId, string refTxnId,
             decimal opBal, decimal amount, int addedById)
         {
@@ -173,24 +178,31 @@ namespace VIRENDRA.Data
                 {
                     try
                     {
-                        decimal currentBal = c.ExecuteScalar<decimal>(
-                            "SELECT ISNULL(UserBal, 0) FROM [User] WHERE Id = @Id",
-                            new { Id = userId }, txn);
+                        // Lock this recharge's ledger rows so two refunds can't race
+                        decimal owed = c.ExecuteScalar<decimal?>(@"
+                            SELECT SUM(ISNULL(DB_Amt, 0)) - SUM(ISNULL(CR_Amt, 0))
+                            FROM TxnLedger WITH (UPDLOCK, HOLDLOCK)
+                            WHERE RecId = @RecId AND UserId = @UserId",
+                            new { RecId = recId, UserId = userId }, txn) ?? 0m;
+
+                        decimal refund = Math.Min(amount, owed);
+                        if (refund <= 0)
+                        {
+                            txn.Commit();
+                            return;   // already refunded (or nothing was debited)
+                        }
 
                         c.Execute(@"
                             INSERT INTO TxnLedger
                                 (RecId, UserId, RefTxnId, TxnDate, OP_Bal, CR_Amt, DB_Amt,
                                  TxnTypeId, AmtTypeId, Remark, AddedById)
                             VALUES
-                                (@RecId, @UserId, @RefTxnId, GETDATE(), @OpBal, @CrAmt, 0,
+                                (@RecId, @UserId, @RefTxnId, GETDATE(), 0, @CrAmt, 0,   -- OP_Bal: set by tr_TxnLedger_Compute_OPBal
                                  4, 1, @Remark, @AddedById)",
                             new { RecId=recId, UserId=userId, RefTxnId="REF-"+refTxnId,
-                                  OpBal=currentBal, CrAmt=amount,
+                                  CrAmt=refund,
                                   Remark="Refund - Recharge Failed - " + refTxnId,
                                   AddedById=addedById }, txn);
-
-                        c.Execute("UPDATE [User] SET UserBal = UserBal + @Amount WHERE Id = @UserId",
-                            new { Amount=amount, UserId=userId }, txn);
 
                         txn.Commit();
                     }
@@ -202,7 +214,6 @@ namespace VIRENDRA.Data
                 }
             }
         }
-
         public void InsertCommissionLedger(long recId, int userId, string refTxnId,
             decimal opBal, decimal commAmount, int addedById)
         {
@@ -229,8 +240,8 @@ namespace VIRENDRA.Data
                                   Remark="Commission Credit - " + refTxnId,
                                   AddedById=addedById }, txn);
 
-                        c.Execute("UPDATE [User] SET UserBal = UserBal + @Amount WHERE Id = @UserId",
-                            new { Amount=commAmount, UserId=userId }, txn);
+                        // User.UserBal is set by tr_TxnLedger_Compute_OPBal
+
 
                         txn.Commit();
                     }

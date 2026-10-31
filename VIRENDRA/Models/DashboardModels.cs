@@ -282,5 +282,7 @@ namespace VIRENDRA.Models
         public string ApiTxnId   { get; set; }
         public long   RecId      { get; set; }
         public string UserTxnId  { get; set; }
+        public string OperatorRef { get; set; }   // operator's reference (vendor reply)
+        public decimal DebitAmount { get; set; }  // amount taken from the wallet
     }
 }
