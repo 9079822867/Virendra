@@ -279,11 +279,11 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold">
                             <i class="fas fa-network-wired text-muted me-1"></i>
-                            IP Address <span class="text-danger">*</span>
+                            Server IP addresses <span class="text-danger">*</span>
                         </label>
                         @Html.TextBoxFor(m => m.IpAddress,
-                            new { @class = "form-control", required = "required", placeholder = "e.g. 103.21.55.100" })
-                        <div class="form-text">Only API requests from this IP will be allowed.</div>
+                            new { @class = "form-control font-monospace", required = "required", maxlength = "50", placeholder = "e.g. 103.21.55.100, 106.219.174.123" })
+                        <div class="form-text">Only API requests from these IPs are allowed. Separate several with a comma (up to about 3), or enter <code>*</code> to allow any IP.</div>
                     </div>
 
                     <div class="mb-3">

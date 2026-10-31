@@ -1,4 +1,4 @@
-@model VIRENDRA.Models.User
+﻿@model VIRENDRA.Models.User
 
 @{
     ViewBag.Title = "Create User";
@@ -65,7 +65,8 @@
                     </div>
                     <div class="col-md-6">
                         @Html.LabelFor(model => model.LoginIP, "API IP Address", new { @class = "form-label" })
-                        @Html.TextBoxFor(model => model.LoginIP, new { @class = "form-control" })
+                        @Html.TextBoxFor(model => model.LoginIP, new { @class = "form-control font-monospace", maxlength = "50", placeholder = "Comma-separated IPs, or * for any IP" })
+                        @Html.ValidationMessageFor(model => model.LoginIP, "", new { @class = "text-danger" })
                     </div>
                     <div class="col-md-6">
                         @Html.LabelFor(model => model.UserPin, "User PIN", new { @class = "form-label" })

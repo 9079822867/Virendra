@@ -51,11 +51,12 @@ namespace VIRENDRA.Controllers
                 Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                 return Json(new { success = false, message = "Login required." });
             }
-
-            if (string.IsNullOrWhiteSpace(model.IpAddress) || !IPAddress.TryParse(model.IpAddress.Trim(), out _))
+            // One or more server IPs, separated by commas or spaces
+            string ipError = IpWhitelist.Normalize(model.IpAddress, out string ipList);
+            if (ipError != null)
             {
                 Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                return Json(new { success = false, message = "Enter a valid IP address." });
+                return Json(new { success = false, message = ipError });
             }
 
             if (!string.IsNullOrWhiteSpace(model.CallbackUrl) &&
@@ -72,7 +73,7 @@ namespace VIRENDRA.Controllers
 
             _userRepository.UpdateApiSettings(
                 user.Id,
-                model.IpAddress.Trim(),
+                ipList,
                 (model.CallbackUrl ?? string.Empty).Trim(),
                 token);
 
@@ -83,7 +84,7 @@ namespace VIRENDRA.Controllers
                 data = new
                 {
                     userId = user.Id,
-                    ipAddress = model.IpAddress.Trim(),
+                    ipAddress = ipList,
                     token,
                     callbackUrl = (model.CallbackUrl ?? string.Empty).Trim(),
                     isVerified = true

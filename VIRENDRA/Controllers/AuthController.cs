@@ -68,9 +68,7 @@ namespace VIRENDRA.Controllers
                     // Reset retry count on successful login
                     _userRepository.UpdateRetryCount(user.Id, 0);
 
-                    // Update login IP
-                    string clientIP = Request.UserHostAddress;
-                    _userRepository.UpdateLoginIP(user.Id, clientIP);
+                    // User.LoginIP is the API IP whitelist (API Keys page) — a web sign-in must not overwrite it
 
                     // Set authentication cookie
                     FormsAuthentication.SetAuthCookie(user.Username, model.RememberMe);

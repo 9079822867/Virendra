@@ -512,11 +512,8 @@ namespace VIRENDRA.Controllers
             catch { return true; }
         }
 
-        private bool IpOk(User user)
-        {
-            if (string.IsNullOrWhiteSpace(user.LoginIP)) return true;
-            return string.Equals(user.LoginIP.Trim(), ClientIp(), StringComparison.OrdinalIgnoreCase);
-        }
+        // User.LoginIP may hold several IPs ("1.2.3.4,5.6.7.8"); empty = any IP
+        private bool IpOk(User user) => Infrastructure.IpWhitelist.Allows(user.LoginIP, ClientIp());
 
         // ── Request key-value reader ─────────────────────────────────────────
         private IDictionary<string, string> ReadKV()
@@ -563,6 +560,11 @@ namespace VIRENDRA.Controllers
         {
             HttpRequest req = HttpContext.Current?.Request;
             if (req == null) return string.Empty;
+
+            // Behind Cloudflare the socket address is a Cloudflare edge; CF-Connecting-IP is the caller
+            string cf = req.Headers["CF-Connecting-IP"];
+            if (!string.IsNullOrWhiteSpace(cf)) return cf.Trim();
+
             string fwd = req.Headers["X-Forwarded-For"];
             return !string.IsNullOrWhiteSpace(fwd)
                 ? fwd.Split(',')[0].Trim()

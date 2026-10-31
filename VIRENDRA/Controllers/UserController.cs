@@ -74,6 +74,7 @@ namespace VIRENDRA.Controllers
 
             ValidateParent(user.ParentID, null);
             ValidateRole(user.RoleId);
+            user.LoginIP = CleanIpList(user.LoginIP);
 
             if (!string.IsNullOrWhiteSpace(user.Username) &&
                 _userRepository.GetUserByUsername(user.Username.Trim()) != null)
@@ -157,6 +158,7 @@ namespace VIRENDRA.Controllers
                 ModelState.AddModelError("RoleId", "Role is required.");
             }
             ValidateRole(model.RoleId);
+            model.LoginIP = CleanIpList(model.LoginIP);
 
             // Keeping the existing parent is always allowed, even if it is no longer eligible.
             if (model.ParentID != user.ParentID)
@@ -282,6 +284,15 @@ namespace VIRENDRA.Controllers
         }
 
         private ActionResult Forbidden() => View("Unauthorized");
+
+        // API IP whitelist: empty = any IP; otherwise valid IPs, comma-separated
+        private string CleanIpList(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return null;
+            string error = IpWhitelist.Normalize(input, out string list);
+            if (error != null) ModelState.AddModelError("LoginIP", error);
+            return error == null ? list : input;
+        }
 
         // ParentID is optional; when given it must be an active, non-deleted
         // SuperAdmin / Admin / API User, and never the user being edited.

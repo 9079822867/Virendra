@@ -380,7 +380,7 @@
                 @if (maskedKey != null)
                 {
                     <span><i class="fas fa-key text-accent me-1"></i>Your key: <code>@maskedKey</code></span>
-                    <span><i class="fas fa-network-wired text-muted me-1"></i>Allowed IP: <code>@(string.IsNullOrWhiteSpace(me.LoginIP) ? "any (none registered)" : me.LoginIP)</code></span>
+                    <span><i class="fas fa-network-wired text-muted me-1"></i>Allowed IP: <code>@(string.IsNullOrWhiteSpace(me.LoginIP) || me.LoginIP.Trim() == "*" ? "any IP" : me.LoginIP)</code></span>
                     <span><i class="fas fa-reply text-muted me-1"></i>Callback: <code>@(string.IsNullOrWhiteSpace(me.CallbackURL) ? "not set" : me.CallbackURL)</code></span>
                 }
                 else
