@@ -95,9 +95,13 @@ namespace VIRENDRA.Data
                 return c.QueryFirstOrDefault<ComplaintInfo>(@"
                     SELECT cp.Id, ISNULL(cp.RecId, 0) AS RecId, ISNULL(cp.StatusId, 0) AS StatusId, cp.Remark,
                            r.UserId AS RechargeUserId, r.StatusId AS RechargeStatus,
-                           r.CustomerNo, r.Amount
+                           r.CustomerNo, r.Amount, cp.ComplaintDate,
+                           r.OurRefTxnId, r.UserTxnId, r.OptTxnId, r.ApiTxnId,
+                           o.OpCode AS OperatorCode, u.ComplainCallbackURL AS CallbackUrl
                     FROM Complaint cp
-                    INNER JOIN Recharge r ON r.Id = cp.RecId
+                    INNER JOIN Recharge r  ON r.Id = cp.RecId
+                    LEFT JOIN [Operator] o ON o.Id = r.OpId
+                    LEFT JOIN [User]     u ON u.Id = r.UserId
                     WHERE cp.Id = @Id",
                     new { Id = complaintId });
         }

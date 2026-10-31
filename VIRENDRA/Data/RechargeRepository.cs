@@ -714,10 +714,12 @@ namespace VIRENDRA.Data
                     SELECT TOP 1
                         r.Id AS RecId, r.UserId, r.ApiId, r.OpId, r.StatusId, r.Amount,
                         r.CustomerNo, r.UserTxnId, r.OurRefTxnId, r.ApiTxnId, r.OptTxnId,
-                        o.Name AS OperatorName, u.CallbackURL AS UserCallbackUrl
+                        o.Name AS OperatorName, o.OpCode AS OperatorCode, ci.CircleCode,
+                        u.CallbackURL AS UserCallbackUrl
                     FROM Recharge r
-                    LEFT JOIN [Operator] o ON o.Id = r.OpId
-                    LEFT JOIN [User]     u ON u.Id = r.UserId
+                    LEFT JOIN [Operator] o  ON o.Id  = r.OpId
+                    LEFT JOIN Circle     ci ON ci.Id = r.CircleId
+                    LEFT JOIN [User]     u  ON u.Id  = r.UserId
                     WHERE r.ApiId = @ApiId
                       AND (   (@Ref    IS NOT NULL AND (r.OurRefTxnId = @Ref OR r.UserTxnId = @Ref))
                            OR (@ApiTxn IS NOT NULL AND r.ApiTxnId = @ApiTxn))

@@ -142,6 +142,8 @@ namespace VIRENDRA.Data
         public string  ApiTxnId        { get; set; }
         public string  OptTxnId        { get; set; }
         public string  OperatorName    { get; set; }
+        public string  OperatorCode    { get; set; }   // Operator.OpCode
+        public string  CircleCode      { get; set; }
         public string  UserCallbackUrl { get; set; }
     }
 

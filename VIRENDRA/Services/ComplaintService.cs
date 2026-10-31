@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -97,12 +97,34 @@ namespace VIRENDRA.Services
             _repo.ResolveComplaint(complaintId, newStatus,
                 comment.Length > 1000 ? comment.Substring(0, 1000) : comment, refunded, adminId);
 
+            if (isResolved)
+                SendComplaintWebhook(cp, refunded);
+
             string msg = "Complaint #" + complaintId + " marked " + ComplaintStatusCodes.Name(newStatus) + ".";
             if (refund)
                 msg += refunded
                     ? " Recharge set to Failed and ₹" + cp.Amount.ToString("0.00", CultureInfo.InvariantCulture) + " refunded."
                     : " Recharge set to Failed, but the SP did not report a refund — check the user's ledger.";
             return (true, msg);
+        }
+
+        // Complaint webhook: GET <User.ComplainCallbackURL>?event=COMPLAINT_RESOLVED|COMPLAINT_REFUND_APPROVED…
+        private static void SendComplaintWebhook(ComplaintInfo cp, bool refunded)
+        {
+            ApiV3.SendWebhook(cp.CallbackUrl, new Dictionary<string, string>
+            {
+                ["systemTxnId"]       = string.IsNullOrWhiteSpace(cp.OurRefTxnId) ? cp.RecId.ToString(CultureInfo.InvariantCulture) : cp.OurRefTxnId,
+                ["clientRef"]         = cp.UserTxnId,
+                ["amount"]            = cp.Amount.ToString("0.##", CultureInfo.InvariantCulture),
+                ["mobileno"]          = cp.CustomerNo,
+                ["operatorCode"]      = cp.OperatorCode,
+                ["event"]             = refunded ? "COMPLAINT_REFUND_APPROVED" : "COMPLAINT_RESOLVED",
+                ["attempt"]           = "1",
+                ["ticketId"]          = ApiV3.Ticket(cp.Id, cp.ComplaintDate),
+                ["status"]            = refunded ? "REFUND_APPROVED" : "RESOLVED_SUCCESSFUL",
+                ["reasonCode"]        = ApiV3.ParseRemark(cp.Remark).Reason,
+                ["providerReference"] = cp.OptTxnId ?? cp.ApiTxnId
+            }, cp.RechargeUserId, cp.RecId, cp.OurRefTxnId, "ComplaintCallback", cp.CustomerNo, cp.UserTxnId);
         }
 
         // ── Vendor forwarding ───────────────────────────────────────────────

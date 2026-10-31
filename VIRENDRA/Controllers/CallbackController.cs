@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -186,52 +186,24 @@ namespace VIRENDRA.Controllers
         }
 
         // ── Forward to the API user's callback URL (docs: ApiDocument/FilesCallbackInfo) ──
+        // Recharge webhook: GET <CallbackURL>?clientRef=…&providerReference=…&status=Success|Failed…
+        // Sent only for final states; a vendor "pending" callback changes nothing for the reseller.
         private static void QueueUserCallback(CallbackRecharge rc, int status, string opRef, string message)
         {
-            if (string.IsNullOrWhiteSpace(rc.UserCallbackUrl) ||
-                !Uri.TryCreate(rc.UserCallbackUrl.Trim(), UriKind.Absolute, out Uri target) ||
-                (target.Scheme != Uri.UriSchemeHttp && target.Scheme != Uri.UriSchemeHttps))
-                return;
+            if (status != RechargeStatusCodes.SUCCESS && status != RechargeStatusCodes.FAILED) return;
 
-            string now  = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-            string json = JsonConvert.SerializeObject(new
+            Services.ApiV3.SendWebhook(rc.UserCallbackUrl, new Dictionary<string, string>
             {
-                status             = status,
-                txn_id             = rc.UserTxnId,
-                api_txn_id         = rc.RecId,
-                message            = message,
-                operator_reference = opRef ?? string.Empty,
-                callback_timestamp = now,
-                data = new
-                {
-                    phone_number    = rc.CustomerNo,
-                    amount          = rc.Amount,
-                    @operator       = rc.OperatorName,
-                    completion_date = now
-                }
-            });
-
-            HostingEnvironment.QueueBackgroundWorkItem(async ct =>
-            {
-                string result;
-                try
-                {
-                    using (var http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) })
-                    {
-                        var resp = await http.PostAsync(target,
-                            new StringContent(json, Encoding.UTF8, "application/json"), ct);
-                        result = (int)resp.StatusCode + " " + Truncate(await resp.Content.ReadAsStringAsync(), 1000);
-                    }
-                }
-                catch (Exception ex) { result = "error: " + ex.GetBaseException().Message; }
-
-                try
-                {
-                    new RechargeRepository().InsertReqRes(rc.UserId, 0, rc.RecId, rc.OurRefTxnId,
-                        "UserCallback", target + " | " + json, result, rc.CustomerNo, rc.UserTxnId);
-                }
-                catch { /* best-effort */ }
-            });
+                ["clientRef"]         = rc.UserTxnId,
+                ["providerReference"] = opRef ?? string.Empty,
+                ["mobileno"]          = rc.CustomerNo,
+                ["operatorCode"]      = rc.OperatorCode,
+                ["circle"]            = rc.CircleCode,
+                ["amount"]            = rc.Amount.ToString("0.##", CultureInfo.InvariantCulture),
+                ["status"]            = status == RechargeStatusCodes.SUCCESS ? "Success" : "Failed",
+                ["message"]           = message,
+                ["system_id"]         = string.IsNullOrWhiteSpace(rc.OurRefTxnId) ? rc.RecId.ToString(CultureInfo.InvariantCulture) : rc.OurRefTxnId
+            }, rc.UserId, rc.RecId, rc.OurRefTxnId, "UserCallback", rc.CustomerNo, rc.UserTxnId);
         }
 
         // ── Field parsing: query string, form body or JSON body ─────────────

@@ -66,6 +66,15 @@ namespace VIRENDRA.Models
         public string CustomerNo     { get; set; }
         public decimal Amount        { get; set; }
         public string Remark         { get; set; }
+
+        // For the complaint webhook (User.ComplainCallbackURL)
+        public DateTime ComplaintDate { get; set; }
+        public string OurRefTxnId    { get; set; }
+        public string UserTxnId      { get; set; }
+        public string OptTxnId       { get; set; }
+        public string ApiTxnId       { get; set; }
+        public string OperatorCode   { get; set; }
+        public string CallbackUrl    { get; set; }
     }
 
     public class ComplaintReportItem

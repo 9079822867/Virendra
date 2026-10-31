@@ -22,7 +22,7 @@ using VIRENDRA.Services;
 namespace VIRENDRA.Controllers
 {
     [RoutePrefix("api")]
-    public class MobileController : ApiController
+    public partial class MobileController : ApiController   // v3 endpoints: MobileController.V3.cs
     {
         private readonly IUserRepository    _userRepo;
         private readonly IRechargeRepository _rcRepo;
@@ -819,8 +819,7 @@ namespace VIRENDRA.Controllers
                         FROM Recharge
                         WHERE UserId    = @UserId
                           AND UserTxnId = @TxnId
-                          AND CustomerNo = @Number
-                          AND (IsDeleted IS NULL OR IsDeleted = 0)
+                          AND CustomerNo = @Number   -- Recharge has no IsDeleted column
                         ORDER BY RequestTime DESC",
                         new { UserId=userId, TxnId=txnId, Number=number });
             }
@@ -829,11 +828,13 @@ namespace VIRENDRA.Controllers
 
         private static string StatusMsg(int statusId)
         {
+            // Recharge.StatusId (StatusType): 1 success, 2 failure, 3 pending, 4 refund, 5 hold
             switch (statusId)
             {
-                case 2: return "recharge_success";
-                case 3: return "recharge_failed";
+                case 1: return "recharge_success";
+                case 2: return "recharge_failed";
                 case 4: return "recharge_refund";
+                case 3:
                 case 5: return "recharge_pending";
                 default: return "recharge_processing";
             }

@@ -1,494 +1,573 @@
+﻿@functions {
+    public class Param { public string Name, In, Type, Desc, Example; public bool Required; }
+    public class Field { public string Name, Type, Desc, Example; }
+    public class Sample { public string Label, Json; }
+    public class Endpoint
+    {
+        public string Id, Group, Method, Path, Title, Desc, Url;
+        public bool Webhook;
+        public List<Param>  Params   = new List<Param>();
+        public List<Field>  Fields   = new List<Field>();
+        public List<Sample> Examples = new List<Sample>();
+    }
+
+    static Param P(string name, string inWhere, string type, bool required, string desc, string example = null)
+        => new Param { Name = name, In = inWhere, Type = type, Required = required, Desc = desc, Example = example };
+    static Field F(string name, string type, string desc, string example = null)
+        => new Field { Name = name, Type = type, Desc = desc, Example = example };
+    static Sample S(string label, string json) => new Sample { Label = label, Json = json };
+}
 @{
-    ViewBag.Title = "Developer Tool";
+    ViewBag.Title = "API documentation";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+
+    string b = (string)ViewBag.BaseUrl;
+    var ops = ViewBag.Operators as List<VIRENDRA.Models.Operator> ?? new List<VIRENDRA.Models.Operator>();
+    var circles = ViewBag.Circles as List<VIRENDRA.Models.Circle> ?? new List<VIRENDRA.Models.Circle>();
+    var me = ViewBag.Me as VIRENDRA.Models.User;
+
+    string sampleOp = ops.Select(o => o.OperatorCode).FirstOrDefault(c => !string.IsNullOrWhiteSpace(c)) ?? "JIO";
+    string sampleCircle = circles.Select(c => c.CircleCode).FirstOrDefault(c => !string.IsNullOrWhiteSpace(c)) ?? "RJ";
+    var key = P("key", "query", "string", false, "Your API key (use the x-api-key header instead when you can).", "YOUR_API_KEY");
+    var keyHeader = P("x-api-key", "header", "string", false, "Your API key. Recommended over the query parameter.", "YOUR_API_KEY");
+
+    var eps = new List<Endpoint>
+    {
+        // ── Recharge ─────────────────────────────────────────────────────
+        new Endpoint {
+            Id = "recharge", Group = "Recharge", Method = "GET", Path = "/transaction/recharge/", Title = "Create recharge",
+            Desc = "Starts a recharge. The reply is usually final (Success / Failed); when the operator is slow it is Processing — then wait for the recharge webhook or poll Check status.",
+            Url = b + "/transaction/recharge/?mobileno=9876543210&operatorCode=" + sampleOp + "&amount=199&circle=" + sampleCircle + "&clientRef=ORDER-12345&key=YOUR_API_KEY",
+            Params = {
+                P("mobileno", "query", "string", true, "Mobile / subscriber number, digits only.", "9876543210"),
+                P("operatorCode", "query", "string", true, "Operator code — see Operator codes.", sampleOp),
+                P("amount", "query", "number", true, "Recharge amount in Rupees.", "199"),
+                P("circle", "query", "string", false, "Circle code — see Circle codes. Optional but recommended.", sampleCircle),
+                P("type", "query", "string", false, "P2P or P2A. Accepted for compatibility; routing picks the vendor.", "P2P"),
+                P("clientRef", "query", "string", true, "Your unique reference for this recharge (max 50). Reusing it is rejected.", "ORDER-12345"),
+                key, keyHeader },
+            Fields = {
+                F("status", "string", "Processing · Success · Failed", "Success"),
+                F("txnId", "string", "Our transaction id (same as system_id).", "E261031145130254586"),
+                F("message", "string", "Operator reference on Success, otherwise a readable message.", "BR000D3H1YSO"),
+                F("clientRef", "string", "Your reference, echoed back.", "ORDER-12345"),
+                F("system_id", "string", "Our transaction id — use it for status and disputes.", "E261031145130254586"),
+                F("remark", "string | null", "Extra note from the provider, if any.", "null"),
+                F("req_time", "string", "Request time, ISO 8601 UTC.", "2026-10-31T09:21:30.000Z"),
+                F("number", "string", "Number recharged.", "9876543210"),
+                F("amount", "number", "Amount in Rupees.", "199"),
+                F("reason", "string", "Only on early failures: INSUFFICIENT_BALANCE, DUPLICATE_CLIENT_REF, INVALID_OPERATOR, INVALID_AMOUNT, INVALID_MOBILENO, MISSING_CLIENT_REF, REJECTED.", "INSUFFICIENT_BALANCE") },
+            Examples = {
+                S("Success", @"{
+  ""status"": ""Success"",
+  ""txnId"": ""E261031145130254586"",
+  ""message"": ""BR000D3H1YSO"",
+  ""clientRef"": ""ORDER-12345"",
+  ""system_id"": ""E261031145130254586"",
+  ""remark"": null,
+  ""req_time"": ""2026-10-31T09:21:30.000Z"",
+  ""number"": ""9876543210"",
+  ""amount"": 199
+}"),
+                S("Processing", @"{
+  ""status"": ""Processing"",
+  ""txnId"": ""E261031145130254586"",
+  ""message"": ""Processing your request."",
+  ""clientRef"": ""ORDER-12345"",
+  ""system_id"": ""E261031145130254586"",
+  ""remark"": null,
+  ""req_time"": ""2026-10-31T09:21:30.000Z"",
+  ""number"": ""9876543210"",
+  ""amount"": 199
+}"),
+                S("Failed", @"{
+  ""status"": ""Failed"",
+  ""txnId"": ""E261031145130254586"",
+  ""message"": ""Recharge failed. Amount refunded to wallet."",
+  ""clientRef"": ""ORDER-12345"",
+  ""system_id"": ""E261031145130254586"",
+  ""remark"": null,
+  ""req_time"": ""2026-10-31T09:21:30.000Z"",
+  ""number"": ""9876543210"",
+  ""amount"": 199
+}"),
+                S("Insufficient balance", @"{
+  ""status"": ""Failed"",
+  ""txid"": null,
+  ""message"": ""Insufficient balance. Available: 120"",
+  ""remark"": null,
+  ""clientRef"": ""ORDER-12345"",
+  ""req_time"": ""2026-10-31T09:21:30.000Z"",
+  ""number"": ""9876543210"",
+  ""amount"": 199,
+  ""reason"": ""INSUFFICIENT_BALANCE"",
+  ""request_ip"": ""203.0.113.10""
+}") } },
+
+        new Endpoint {
+            Id = "status", Group = "Recharge", Method = "GET", Path = "/transaction/recharge/:id", Title = "Check status",
+            Desc = "Latest state of one of your recharges. :id can be our system_id, your clientRef or the numeric recharge id.",
+            Url = b + "/transaction/recharge/ORDER-12345?key=YOUR_API_KEY",
+            Params = { P(":id", "path", "string", true, "system_id, clientRef or recharge id.", "ORDER-12345"), key, keyHeader },
+            Fields = {
+                F("status", "string", "Success · Failed · Processing", "Success"),
+                F("txnId", "string | null", "Operator reference.", "BR000D2NLALC"),
+                F("message", "string", "Operator reference on Success, otherwise a readable message.", "BR000D2NLALC"),
+                F("clientRef", "string", "Your original reference.", "ORDER-12345"),
+                F("number", "string", "Number recharged.", "9876543210"),
+                F("operator", "string", "Operator name.", "JIO"),
+                F("circle", "string | null", "Circle name.", "Rajasthan"),
+                F("amounts", "number", "Recharge amount in Rupees.", "199"),
+                F("commission", "number | null", "Gross commission in paise.", "580"),
+                F("margin", "number | null", "Net margin in Rupees (negative = surcharge).", "5.8") },
+            Examples = {
+                S("Success", @"{
+  ""status"": ""Success"",
+  ""txnId"": ""BR000D2NLALC"",
+  ""message"": ""BR000D2NLALC"",
+  ""remark"": null,
+  ""clientRef"": ""ORDER-12345"",
+  ""req_time"": ""2026-10-31T09:21:30.000Z"",
+  ""number"": ""9876543210"",
+  ""operator"": ""JIO"",
+  ""circle"": ""Rajasthan"",
+  ""amounts"": 199,
+  ""commission"": 580,
+  ""margin"": 5.8
+}"),
+                S("Not found (HTTP 404)", @"{
+  ""status"": ""Failed"",
+  ""txnId"": null,
+  ""message"": ""Transaction not found with this #ORDER-12345 request id or client ref."",
+  ""remark"": null,
+  ""clientRef"": null,
+  ""req_time"": ""2026-10-31T09:21:30.000Z"",
+  ""number"": null,
+  ""amount"": null
+}") } },
+
+
+        // ── Wallet ───────────────────────────────────────────────────────
+        new Endpoint {
+            Id = "wallets", Group = "Wallet", Method = "GET", Path = "/user/api/wallets", Title = "Wallet balance",
+            Desc = "Your live wallet balance.",
+            Url = b + "/user/api/wallets?type=RECHARGE&key=YOUR_API_KEY",
+            Params = { P("type", "query", "string", false, "Only this wallet. Today there is one: RECHARGE.", "RECHARGE"), key, keyHeader },
+            Fields = {
+                F("wallets", "object", "Map of wallet type → wallet."),
+                F("wallets.RECHARGE.balance", "number", "Balance in INR.", "1305.00"),
+                F("wallets.RECHARGE.status", "string", "ACTIVE or BLOCKED.", "ACTIVE"),
+                F("wallets.RECHARGE.currency", "string", "Always INR.", "INR"),
+                F("count", "number", "Number of wallets returned.", "1") },
+            Examples = { S("200 OK", @"{
+  ""wallets"": {
+    ""RECHARGE"": {
+      ""id"": ""5"",
+      ""type"": ""RECHARGE"",
+      ""balance"": 1305.00,
+      ""status"": ""ACTIVE"",
+      ""currency"": ""INR"",
+      ""updatedAt"": ""2026-10-31T09:21:30.000Z"",
+      ""createdAt"": ""2026-05-23T06:10:00.000Z""
+    }
+  },
+  ""count"": 1
+}") } },
+
+        // ── Disputes ─────────────────────────────────────────────────────
+        new Endpoint {
+            Id = "dispute-raise", Group = "Disputes", Method = "GET", Path = "/report/api/complaints/raise", Title = "Raise a dispute",
+            Desc = "Opens a complaint on a successful recharge (one per recharge). It is also forwarded to the vendor.",
+            Url = b + "/report/api/complaints/raise?txnId=ORDER-12345&reasonCode=NOT_CREDITED&subject=Recharge%20not%20received&askedAmount=199&key=YOUR_API_KEY",
+            Params = {
+                P("txnId", "query", "string", true, "system_id, clientRef or recharge id.", "ORDER-12345"),
+                P("reasonCode", "query", "string", false, "NOT_CREDITED · DUPLICATE_DEBIT · WRONG_AMOUNT · SERVICE_NOT_WORKING · OTHER (default).", "NOT_CREDITED"),
+                P("subject", "query", "string", false, "Short title, max 200 characters.", "Recharge not received"),
+                P("description", "query", "string", false, "Details, max 2000 characters."),
+                P("askedAmount", "query", "number", false, "Refund you are asking for, in Rupees.", "199"),
+                key, keyHeader },
+            Fields = {
+                F("message", "string", "Result.", "Complaint created successfully"),
+                F("ticketId", "string", "Ticket id to track it.", "TKT-20261031-0042"),
+                F("complaintId", "string", "Internal complaint id.", "42"),
+                F("status", "string", "Always OPEN at first.", "OPEN"),
+                F("reasonCode", "string", "Reason, echoed back.", "NOT_CREDITED") },
+            Examples = {
+                S("201 Created", @"{
+  ""message"": ""Complaint created successfully"",
+  ""ticketId"": ""TKT-20261031-0042"",
+  ""complaintId"": ""42"",
+  ""status"": ""OPEN"",
+  ""reasonCode"": ""NOT_CREDITED"",
+  ""txnId"": ""E261031145130254586"",
+  ""clientRef"": ""ORDER-12345"",
+  ""createdAt"": ""2026-10-31T09:30:00.000Z""
+}"),
+                S("Already raised (HTTP 409)", @"{ ""message"": ""A complaint already exists for this transaction."" }"),
+                S("Not a successful recharge (HTTP 400)", @"{ ""message"": ""Complaints can be raised only for successful recharges."" }") } },
+
+        new Endpoint {
+            Id = "dispute-status", Group = "Disputes", Method = "GET", Path = "/report/api/complaints/:id", Title = "Dispute status",
+            Desc = "One complaint by ticket id (TKT-…) or complaint id.",
+            Url = b + "/report/api/complaints/TKT-20261031-0042?key=YOUR_API_KEY",
+            Params = { P(":id", "path", "string", true, "Ticket id or complaint id.", "TKT-20261031-0042"), key, keyHeader },
+            Fields = {
+                F("data._id", "string", "Complaint id.", "42"),
+                F("data.ticketId", "string", "Ticket id.", "TKT-20261031-0042"),
+                F("data.status", "string", "OPEN · IN_PROGRESS · RESOLVED · CANCELLED", "OPEN"),
+                F("data.reasonCode", "string", "Reason code.", "NOT_CREDITED"),
+                F("data.subject", "string", "Subject.", "Recharge not received"),
+                F("data.description", "string | null", "Details."),
+                F("data.askedAmount", "number", "Refund asked (else the recharge amount).", "199"),
+                F("data.txnId", "string", "Our system_id of the recharge.", "E261031145130254586") },
+            Examples = {
+                S("200 OK", @"{
+  ""data"": {
+    ""_id"": ""42"",
+    ""ticketId"": ""TKT-20261031-0042"",
+    ""status"": ""OPEN"",
+    ""reasonCode"": ""NOT_CREDITED"",
+    ""subject"": ""Recharge not received"",
+    ""description"": ""Amount debited but recharge not received"",
+    ""askedAmount"": 199,
+    ""txnId"": ""E261031145130254586"",
+    ""createdAt"": ""2026-10-31T09:30:00.000Z"",
+    ""updatedAt"": ""2026-10-31T09:30:00.000Z""
+  }
+}"),
+                S("Not found (HTTP 404)", @"{ ""message"": ""Complaint not found"" }") } },
+
+
+        new Endpoint {
+            Id = "dispute-list", Group = "Disputes", Method = "GET", Path = "/report/api/complaints", Title = "List disputes",
+            Desc = "Your complaints, newest first, page by page.",
+            Url = b + "/report/api/complaints?status=OPEN&page=1&limit=20&key=YOUR_API_KEY",
+            Params = {
+                P("status", "query", "string", false, "OPEN · IN_PROGRESS · RESOLVED, comma-separated.", "OPEN"),
+                P("page", "query", "number", false, "Page, default 1.", "1"),
+                P("limit", "query", "number", false, "Per page, default 20, max 50.", "20"),
+                key, keyHeader },
+            Fields = {
+                F("data[]", "array", "Complaints (same fields as Dispute status, without description)."),
+                F("pagination.total", "number", "Matching complaints.", "1"),
+                F("pagination.page", "number", "Current page.", "1"),
+                F("pagination.pages", "number", "Total pages.", "1") },
+            Examples = { S("200 OK", @"{
+  ""data"": [
+    {
+      ""_id"": ""42"",
+      ""ticketId"": ""TKT-20261031-0042"",
+      ""status"": ""OPEN"",
+      ""reasonCode"": ""NOT_CREDITED"",
+      ""subject"": ""Recharge not received"",
+      ""askedAmount"": 199,
+      ""txnId"": ""E261031145130254586"",
+      ""createdAt"": ""2026-10-31T09:30:00.000Z""
+    }
+  ],
+  ""pagination"": { ""total"": 1, ""page"": 1, ""pages"": 1, ""limit"": 20 }
+}") } },
+
+        // ── Webhooks ─────────────────────────────────────────────────────
+        new Endpoint {
+            Id = "webhook-recharge", Group = "Webhooks", Method = "GET", Path = "YOUR_CALLBACK_URL", Title = "Recharge callback", Webhook = true,
+            Desc = "When a Processing recharge becomes Success or Failed, we call your Callback URL (set it under Developer → API Keys) with these query parameters. Reply with HTTP 200.",
+            Url = "https://your-site.example/callback?clientRef=ORDER-12345&providerReference=BR000D3H1YSO&mobileno=9876543210&operatorCode=" + sampleOp + "&circle=" + sampleCircle + "&amount=199&status=Success&message=Recharge+Successfully&system_id=E261031145130254586",
+            Params = {
+                P("clientRef", "query", "string", false, "Your reference."),
+                P("providerReference", "query", "string", false, "Operator reference."),
+                P("mobileno", "query", "string", false, "Number recharged."),
+                P("operatorCode", "query", "string", false, "Operator code."),
+                P("circle", "query", "string", false, "Circle code."),
+                P("amount", "query", "number", false, "Amount in Rupees."),
+                P("status", "query", "string", false, "Success or Failed."),
+                P("message", "query", "string", false, "Final message."),
+                P("system_id", "query", "string", false, "Our transaction id — use it for status or disputes.") } },
+
+        new Endpoint {
+            Id = "webhook-complaint", Group = "Webhooks", Method = "GET", Path = "YOUR_COMPLAINT_CALLBACK_URL", Title = "Complaint callback", Webhook = true,
+            Desc = "When we resolve one of your complaints we call your Complaint Callback URL (ask your admin to set it) with these query parameters.",
+            Url = "https://your-site.example/complaint-callback?systemTxnId=E261031145130254586&clientRef=ORDER-12345&amount=199&mobileno=9876543210&operatorCode=" + sampleOp + "&event=COMPLAINT_RESOLVED&attempt=1&ticketId=TKT-20261031-0042&status=RESOLVED_SUCCESSFUL&reasonCode=NOT_CREDITED&providerReference=BR000D3H1YSO",
+            Params = {
+                P("systemTxnId", "query", "string", false, "Our system_id of the recharge."),
+                P("clientRef", "query", "string", false, "Your reference."),
+                P("amount", "query", "number", false, "Recharge amount in Rupees."),
+                P("mobileno", "query", "string", false, "Number."),
+                P("operatorCode", "query", "string", false, "Operator code."),
+                P("event", "query", "string", false, "COMPLAINT_RESOLVED or COMPLAINT_REFUND_APPROVED."),
+                P("attempt", "query", "number", false, "Delivery attempt, starts at 1."),
+                P("ticketId", "query", "string", false, "Ticket id."),
+                P("status", "query", "string", false, "RESOLVED_SUCCESSFUL or REFUND_APPROVED (amount credited back to your wallet)."),
+                P("reasonCode", "query", "string", false, "Reason you raised it with."),
+                P("providerReference", "query", "string", false, "Operator reference of the recharge.") } },
+    };
+
+    var groups = eps.GroupBy(e => e.Group).ToList();
+    string maskedKey = me == null || string.IsNullOrEmpty(me.TokenAPI) ? null
+                     : me.TokenAPI.Substring(0, 4) + new string('•', 8) + me.TokenAPI.Substring(me.TokenAPI.Length - 4);
 }
 
-<div class="page-content">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0 font-size-18">Developer Tool</h4>
-                    <div class="page-title-right">
-                        <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a href="javascript:void(0);">Developer Tools</a></li>
-                            <li class="breadcrumb-item active">Developer Tool</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        </div>
+<style>
+    .doc { display:grid; grid-template-columns: 220px minmax(0,1fr); gap:24px; align-items:start; }
+    .doc-nav { position:sticky; top:84px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:10px; max-height:calc(100vh - 110px); overflow:auto; }
+    .doc-nav .lbl { font-size:.66rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding:10px 8px 4px; }
+    .doc-nav a { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:7px; color:var(--ink-2); text-decoration:none; font-size:.82rem; }
+    .doc-nav a:hover { background:var(--soft); color:var(--ink); }
+    .doc-nav a.on { background:var(--accent-soft); color:var(--accent-ink); font-weight:600; }
+    .verb { font-family:var(--mono); font-size:.62rem; font-weight:700; padding:1px 5px; border-radius:4px; background:var(--ok-soft); color:var(--ok); }
+    .verb.hook { background:#ede9fe; color:#6d28d9; }
 
-        <ul class="nav nav-tabs nav-tabs-custom card-header-tabs border mt-4" role="tablist">
-            <li class="nav-item" role="presentation">
-                <a class="nav-link active" href="#introduction" data-bs-toggle="tab" role="tab" aria-controls="introduction" aria-selected="true">
-                    <span data-key="t-introduction">Introduction</span>
-                </a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" href="#rechargeapi" data-bs-toggle="tab" role="tab" aria-controls="rechargeapi" aria-selected="false">
-                    <span data-key="t-rechargeapi">Recharge API</span>
-                </a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" href="#operatorcode" data-bs-toggle="tab" role="tab" id="operatoritem" aria-controls="operatorcode" aria-selected="false">
-                    <span data-key="t-operatorcode">Operator Code</span>
-                </a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" href="#circlecode" data-bs-toggle="tab" role="tab" aria-controls="circlecode" aria-selected="false">
-                    <span data-key="t-circlecode">Circle Code</span>
-                </a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" href="#balance" data-bs-toggle="tab" role="tab" aria-controls="balance" aria-selected="false">
-                    <span data-key="t-balance">Balance</span>
-                </a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" href="#status_tab" data-bs-toggle="tab" role="tab" aria-controls="status_tab" aria-selected="false">
-                    <span data-key="t-status">Status</span>
-                </a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" href="#complaint_tab" data-bs-toggle="tab" role="tab" aria-controls="complaint_tab" aria-selected="false">
-                    <span data-key="t-complaint">Complaint</span>
-                </a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" href="#callback_info" data-bs-toggle="tab" role="tab" aria-controls="callback_info" aria-selected="false">
-                    <span data-key="t-callback">Files.CallbackInfo</span>
-                </a>
-            </li>
-        </ul>
+    .doc-sec { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:22px 24px; margin-bottom:18px; scroll-margin-top:84px; }
+    .doc-sec h2 { font-size:1.15rem; font-weight:800; margin:0 0 6px; }
+    .doc-sec .lead { color:var(--muted); font-size:.88rem; margin-bottom:14px; }
+    .doc-sec h6 { font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:18px 0 8px; }
+    .path { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:.88rem; margin-bottom:8px; }
+    .url { position:relative; background:var(--side-bg); color:#e2e8f0; border-radius:8px; padding:12px 44px 12px 14px; font-family:var(--mono); font-size:.78rem; word-break:break-all; }
+    .url .cp { position:absolute; top:8px; right:8px; border:0; background:#1e293b; color:#cbd5e1; border-radius:6px; width:28px; height:28px; }
+    .url .cp:hover { color:#fff; }
+    .doc-sec table { font-size:.82rem; }
+    .doc-sec td code, .doc-sec th code { font-size:.78rem; }
+    .req { font-size:.66rem; font-weight:700; color:var(--bad); text-transform:uppercase; margin-left:4px; }
+    .opt { font-size:.66rem; color:var(--muted); margin-left:4px; }
+    .eg { color:var(--muted); font-size:.74rem; }
+    .eg code { color:var(--ink-2); }
+    pre.json { background:var(--soft); border:1px solid var(--line); border-radius:8px; padding:12px 14px; font-family:var(--mono); font-size:.76rem; margin:0; max-height:420px; overflow:auto; }
+    .ex-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+    .ex-tabs button { border:1px solid var(--line); background:#fff; border-radius:999px; padding:3px 11px; font-size:.74rem; font-weight:600; color:var(--ink-2); }
+    .ex-tabs button.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+    .keybox { display:flex; gap:12px; flex-wrap:wrap; align-items:center; background:var(--soft); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:.84rem; }
+    @@media (max-width: 991.98px) { .doc { grid-template-columns:1fr; } .doc-nav { position:static; max-height:none; } }
+</style>
 
-        <div class="tab-content">
-            <div class="tab-pane fade active show" id="introduction" role="tabpanel">
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="fw-bold font-size-15">How API works?</h5>
-                        <p class="text-muted">The API works on HTTP-POST/HTTP-GET METHOD, and the URL to be used is</p>
+<div class="page-head">
+    <div>
+        <h4>Reseller API</h4>
+        <div class="text-muted small">Recharge, wallet and disputes over simple GET calls, with webhooks for final results.</div>
+    </div>
+    <a href="@Url.Action("Index","ApiSettings")" class="btn btn-dark"><i class="fas fa-key me-1"></i>API keys &amp; callback</a>
+</div>
 
-                        <h5 class="fw-bold font-size-15">Sample URL</h5>
-                        <p class="text-muted">
-                            Whenever you submit or enquire any request through our API's the system immediately gives you the response in JSON format.
-                        </p>
+<div class="doc">
+    <nav class="doc-nav" id="docNav">
+        <div class="lbl">Start</div>
+        <a href="#intro">Introduction</a>
+        <a href="#errors">Errors &amp; codes</a>
+        @foreach (var g in groups)
+        {
+            <div class="lbl">@g.Key</div>
+            foreach (var e in g)
+            {
+                <a href="#@e.Id"><span class="verb @(e.Webhook ? "hook" : "")">@(e.Webhook ? "HOOK" : e.Method)</span>@e.Title</a>
+            }
+        }
+        <div class="lbl">Reference</div>
+        <a href="#operators">Operator codes</a>
+        <a href="#circles">Circle codes</a>
+        <a href="#legacy">Older endpoints</a>
+    </nav>
 
-                        <h5 class="fw-bold font-size-15">Sample Response</h5>
-                        <pre class="bg-light p-3 border rounded"><code>{
-    "status": 1,
-    "api_txn_id": 2023,
-    "message": "recharge success",
-    "operator_reference": "op_ref1373"
-}</code></pre>
+    <div>
+        <section class="doc-sec" id="intro">
+            <h2>Introduction</h2>
+            <p class="lead">Every call is an HTTPS GET to the base URL below. Answers are JSON. Times are ISO 8601 in UTC; amounts are in Rupees, except <code>commission</code> in Check status, which is in paise.</p>
 
-                        <h5 class="fw-bold font-size-15">Available API's</h5>
-                        <ul class="list-unstyled mb-0 text-muted">
-                            <li>API for Mobile,DTH &amp; Data Card Recharge</li>
-                            <li>API for Paying Post Paid Bills</li>
-                            <li>API for Paying Electricity, Gas &amp; Insurance Bills</li>
-                            <li>API for Checking Account Balance</li>
-                            <li>API for Checking Recharge Status</li>
-                        </ul>
-                    </div>
-                </div>
+            <h6>Base URL</h6>
+            <div class="url"><span>@b</span><button type="button" class="cp" data-copy="@b" title="Copy"><i class="far fa-copy"></i></button></div>
+
+            <h6>Authentication</h6>
+            <p class="mb-2" style="font-size:.88rem;">Send your API key in the <code>x-api-key</code> header (recommended) or as <code>?key=</code>. Calls are accepted only from the server IP you registered, and only after your KYC is approved.</p>
+            <div class="keybox">
+                @if (maskedKey != null)
+                {
+                    <span><i class="fas fa-key text-accent me-1"></i>Your key: <code>@maskedKey</code></span>
+                    <span><i class="fas fa-network-wired text-muted me-1"></i>Allowed IP: <code>@(string.IsNullOrWhiteSpace(me.LoginIP) ? "any (none registered)" : me.LoginIP)</code></span>
+                    <span><i class="fas fa-reply text-muted me-1"></i>Callback: <code>@(string.IsNullOrWhiteSpace(me.CallbackURL) ? "not set" : me.CallbackURL)</code></span>
+                }
+                else
+                {
+                    <span><i class="fas fa-circle-exclamation text-warning me-1"></i>You don't have an API key yet.</span>
+                }
+                <a href="@Url.Action("Index","ApiSettings")" class="ms-auto">Manage →</a>
             </div>
 
-            <div id="rechargeapi" class="tab-pane fade" role="tabpanel">
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="fw-bold font-size-15">Request URL</h5>
-                        <p><a style="color:blue">https://domain.com/api/recharge2?username=&token=&number=&operator_code=&circle_code=&amount=&txn_id=&optional1=&optional2=&optional3=</a></p>
+            <h6>Example</h6>
+            <pre class="json">curl -H "x-api-key: YOUR_API_KEY" "@b/user/api/wallets"</pre>
+        </section>
 
-                        <h5 class="fw-bold font-size-15 mt-2">Variables to be used for recharge request</h5>
-                        <div class="table-responsive mt-2 pb-4 text-muted">
-                            <table class="table table-bordered table-muted">
-                                <tbody>
-                                    <tr><td>username</td><td>Multi Recharge Account Mobile Number</td></tr>
-                                    <tr><td>token</td><td>Go to API Account and Register Server IP Address and Get token</td></tr>
-                                    <tr><td>number</td><td>Mobile/DTH/Electricity Number</td></tr>
-                                    <tr><td>operator_code</td><td>Operator Code (Provided API Document) / Operator Code tab</td></tr>
-                                    <tr><td>circle_code</td><td>Circle Code (Provided API Document) / Circle Code tab</td></tr>
-                                    <tr><td>amount</td><td>Recharge Amount</td></tr>
-                                    <tr><td>txn_id</td><td>Your Transaction ID</td></tr>
-                                    <tr><td>optional1</td><td>Required MSEDCL Electricity (BU), Insurance (DOB)</td></tr>
-                                    <tr><td>optional2</td><td>Required in Electricity Due date</td></tr>
-                                    <tr><td>optional3</td><td>Required in Electricity Customer Mobile</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+        <section class="doc-sec" id="errors">
+            <h2>Errors &amp; codes</h2>
+            <p class="lead">Recharge and status calls answer in the recharge shape (<code>status: "Failed"</code> plus a <code>message</code>). Other calls answer <code>{ "message": "…" }</code> on error.</p>
+            <table class="table">
+                <thead><tr><th>HTTP</th><th>When</th></tr></thead>
+                <tbody>
+                    <tr><td><code>200</code></td><td>Request handled — check <code>status</code> for the recharge result.</td></tr>
+                    <tr><td><code>201</code></td><td>Dispute created.</td></tr>
+                    <tr><td><code>400</code></td><td>A parameter is missing or invalid.</td></tr>
+                    <tr><td><code>401</code></td><td>API key missing or wrong.</td></tr>
+                    <tr><td><code>403</code></td><td>Account inactive, IP not allowed, or KYC pending.</td></tr>
+                    <tr><td><code>404</code></td><td>Recharge or complaint not found (only your own are visible).</td></tr>
+                    <tr><td><code>409</code></td><td>A complaint already exists for that recharge.</td></tr>
+                </tbody>
+            </table>
+        </section>
 
-                        <p class="text-muted">
-                            <span class="fw-bold font-size-18 text-dark">Sample Response -</span>
-                        </p>
-                        <pre class="bg-light p-3 border rounded"><code>{
-    "status": 1,
-    "api_txn_id": 2023,
-    "message": "recharge success",
-    "operator_reference": "op_ref1373"
-}</code></pre>
-
-                        <div class="table-responsive pb-4">
-                            <table class="table table-bordered">
-                                <tbody>
-                                    <tr><td>Status</td><td>1 - success, 2 - failure, 3 - pending, 4 - refund</td></tr>
-                                    <tr><td>api_txn_id</td><td>API Transaction ID</td></tr>
-                                    <tr><td>message</td><td>Message from API</td></tr>
-                                    <tr><td>operator_reference</td><td>Operator Reference</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+        @foreach (var e in eps)
+        {
+            <section class="doc-sec" id="@e.Id">
+                <div class="path">
+                    <span class="verb @(e.Webhook ? "hook" : "")">@(e.Webhook ? "WEBHOOK" : e.Method)</span>
+                    <span>@e.Path</span>
                 </div>
-            </div>
+                <h2>@e.Title</h2>
+                <p class="lead">@e.Desc</p>
 
-            <div id="operatorcode" class="tab-pane fade" role="tabpanel">
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="fw-bold font-size-15">Operator Code</h5>
-                        <div class="col-md-4">
-                            <form id="serviceForm" method="post">
-                                <select name="service_type" id="serviceType" class="form-control form-control-sm" onchange="selectType()">
-                                    <option value="">SELECT Service Type</option>
-                                    <option value="1">Mobile Prepaid</option>
-                                    <option value="2">Postpaid Bills</option>
-                                    <option value="4">All Dth Recharge</option>
-                                    <option value="5">LandLine Bill Payment</option>
-                                    <option value="6">Electricity Bill Payment</option>
-                                    <option value="7">GAS Payment</option>
-                                    <option value="8">Health Insurance</option>
-                                    <option value="9">Money Transfer</option>
-                                    <option value="10">LandLine</option>
-                                    <option value="11">Credit Card</option>
-                                    <option value="12">Loan Repayment</option>
-                                    <option value="13">Cable TV</option>
-                                    <option value="14">Water Bill Payment</option>
-                                    <option value="16">AEPS</option>
-                                    <option value="17">Bhara Gas Bill Payment</option>
-                                    <option value="18">Fastag</option>
-                                    <option value="19">OTT SERVICES</option>
-                                    <option value="20">UTILITIES PAYMENTS</option>
-                                    <option value="21">PAY-IN</option>
-                                    <option value="23">VIP NUMBERS</option>
-                                    <option value="24">Google Play</option>
-                                    <option value="27">Trafic Chalan</option>
-                                    <option value="28">Housing Society</option>
-                                    <option value="29">UPI GATEWAY</option>
-                                    <option value="30">Bank Transfer Request</option>
-                                    <option value="32">Clubs and Associations</option>
-                                    <option value="33">Donation</option>
-                                    <option value="34">Education Fees</option>
-                                    <option value="36">Hospital</option>
-                                    <option value="37">Hospital and Pathology</option>
-                                    <option value="38">Insurance</option>
-                                    <option value="39">Municipal Services</option>
-                                    <option value="40">Municipal Taxes</option>
-                                    <option value="41">NCMC</option>
-                                    <option value="42">Prepaid meter</option>
-                                    <option value="43">Recurring Deposit</option>
-                                    <option value="46">Rental</option>
-                                    <option value="47">Subscription</option>
-                                    <option value="49">NPS</option>
-                                    <option value="50">Life Insurance</option>
-                                </select>
-                            </form>
-                        </div>
-                        <div class="mt-4 table-responsive">
-                            <table class="table align-middle datatable dt-responsive table-check nowrap">
-                                <thead class="text-center">
+                <h6>@(e.Webhook ? "Callback URL" : "Request URL")</h6>
+                <div class="url"><span>@e.Url</span><button type="button" class="cp" data-copy="@e.Url" title="Copy"><i class="far fa-copy"></i></button></div>
+
+                @if (e.Params.Any())
+                {
+                    <h6>@(e.Webhook ? "Callback parameters" : "Parameters")</h6>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead><tr><th>Name</th>@if (!e.Webhook) {<th>In</th>}<th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                                @foreach (var p in e.Params)
+                                {
                                     <tr>
-                                        <th>#</th>
-                                        <th>Operator Name</th>
-                                        <th>Opeartor Code</th>
+                                        <td class="text-nowrap"><code>@p.Name</code>@if (!e.Webhook) {<span class="@(p.Required ? "req" : "opt")">@(p.Required ? "required" : "optional")</span>}</td>
+                                        @if (!e.Webhook) {<td>@p.In</td>}
+                                        <td class="text-nowrap">@p.Type</td>
+                                        <td>@p.Desc @if (p.Example != null) {<div class="eg">e.g. <code>@p.Example</code></div>}</td>
                                     </tr>
-                                </thead>
-                                <tbody id="servicebody" class="text-center"></tbody>
-                            </table>
-                        </div>
+                                }
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-            </div>
+                }
 
-            <div id="circlecode" class="tab-pane fade" role="tabpanel">
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="fw-bold font-size-15">Circle Code</h5>
-                        <div class="table-responsive mb-4 mt-3">
-                            <table class="table align-middle datatable dt-responsive table-check nowrap" style="border-collapse: collapse; border-spacing: 0 8px; width: 100%;">
-                                <thead class="text-center bg-primary text-white">
+                @if (e.Fields.Any())
+                {
+                    <h6>Response fields</h6>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                                @foreach (var f in e.Fields)
+                                {
                                     <tr>
-                                        <th scope="col">#</th>
-                                        <th scope="col">Circle</th>
-                                        <th scope="col">Code</th>
+                                        <td class="text-nowrap"><code>@f.Name</code></td>
+                                        <td class="text-nowrap">@f.Type</td>
+                                        <td>@f.Desc @if (f.Example != null) {<div class="eg">e.g. <code>@f.Example</code></div>}</td>
                                     </tr>
-                                </thead>
-                                <tbody class="text-center">
-                                    <tr><td>1</td><td>Andhra Pradesh</td><td>1</td></tr>
-                                    <tr><td>2</td><td>Assam</td><td>2</td></tr>
-                                    <tr><td>3</td><td>Bihar</td><td>3</td></tr>
-                                    <tr><td>4</td><td>Chennai</td><td>4</td></tr>
-                                    <tr><td>5</td><td>Delhi</td><td>5</td></tr>
-                                    <tr><td>6</td><td>Gujarat</td><td>6</td></tr>
-                                    <tr><td>7</td><td>Haryana</td><td>7</td></tr>
-                                    <tr><td>8</td><td>Himachal Pradesh</td><td>8</td></tr>
-                                    <tr><td>9</td><td>Jammu &amp; Kashmir</td><td>9</td></tr>
-                                    <tr><td>10</td><td>Karnataka</td><td>10</td></tr>
-                                    <tr><td>11</td><td>Kerala</td><td>11</td></tr>
-                                    <tr><td>12</td><td>Kolkata</td><td>12</td></tr>
-                                    <tr><td>13</td><td>Maharashtra</td><td>13</td></tr>
-                                    <tr><td>14</td><td>Madhya Pradesh Chhattisgarh</td><td>14</td></tr>
-                                    <tr><td>15</td><td>Mumbai</td><td>15</td></tr>
-                                    <tr><td>16</td><td>North East</td><td>16</td></tr>
-                                    <tr><td>17</td><td>Orissa</td><td>17</td></tr>
-                                    <tr><td>18</td><td>Punjab</td><td>18</td></tr>
-                                    <tr><td>19</td><td>Rajasthan</td><td>19</td></tr>
-                                    <tr><td>20</td><td>Tamil Nadu</td><td>20</td></tr>
-                                    <tr><td>21</td><td>Uttar Pradesh - East</td><td>21</td></tr>
-                                    <tr><td>22</td><td>Uttar Pradesh - West</td><td>22</td></tr>
-                                    <tr><td>23</td><td>West Bengal</td><td>23</td></tr>
-                                    <tr><td>24</td><td>Jharkhand</td><td>24</td></tr>
-                                    <tr><td>25</td><td>Default</td><td>25</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+                                }
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-            </div>
+                }
 
-            <div id="balance" class="tab-pane fade" role="tabpanel">
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="fw-bold font-size-15">Balance Check</h5>
-                        <div class="mt-2">
-                            <b class="text-info">Both HTTP GET OR POST method Use</b>
-                            <p><a style="color:blue" class="font">https://domain.com/api/balance?username=username&amp;token=token</a></p>
-                            <h5 class="font-size-15">Sample Response</h5>
-                            <pre class="bg-light p-3 border rounded"><code>Success Response -
-{
-    "status":"1",
-    "balance":"904.0000"
-}
-
-Failed Response -
-{
-    "status":"0",
-    "message":"Error Message"
-}</code></pre>
-                        </div>
+                @if (e.Examples.Any())
+                {
+                    <h6>Response examples</h6>
+                    <div class="ex-tabs">
+                        @for (int i = 0; i < e.Examples.Count; i++)
+                        {
+                            <button type="button" class="@(i == 0 ? "on" : "")" data-ex="@e.Id-@i">@e.Examples[i].Label</button>
+                        }
                     </div>
-                </div>
-            </div>
+                    for (int i = 0; i < e.Examples.Count; i++)
+                    {
+                        <pre class="json" id="@e.Id-@i" style="@(i == 0 ? "" : "display:none;")">@e.Examples[i].Json</pre>
+                    }
+                }
+            </section>
+        }
 
-            <div id="status_tab" class="tab-pane fade" role="tabpanel">
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="font-size-15">Recharge Status</h5>
-                        <p><a style="color:blue" class="font">https://domain.com/api/statusCheck?username=username&amp;token=token&amp;txn_id=txn_id&amp;number=number</a></p>
-                        <h5 class="font-size-15">Sample Response</h5>
-                        <pre class="bg-light p-3 border rounded"><code>{
-    "status":"1",
-    "amount":"10.0000",
-    "txn_id":"7845745",
-    "operator_reference":"op_ref1375",
-    "message":"recharge_success"
-}</code></pre>
-                    </div>
-                </div>
+        <section class="doc-sec" id="operators">
+            <h2>Operator codes</h2>
+            <p class="lead">Use the code in <code>operatorCode</code>.</p>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead><tr><th>Operator</th><th>Type</th><th>Code</th></tr></thead>
+                    <tbody>
+                        @if (!ops.Any())
+                        {
+                            <tr><td colspan="3" class="text-muted">No active operators.</td></tr>
+                        }
+                        @foreach (var o in ops.OrderBy(o => o.OpTypeId).ThenBy(o => o.Name))
+                        {
+                            <tr>
+                                <td>@o.Name</td>
+                                <td>@(o.OpTypeId == 1 ? "Prepaid" : o.OpTypeId == 2 ? "Postpaid" : o.OpTypeId == 3 ? "DTH" : "—")</td>
+                                <td><code>@o.OperatorCode</code></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
+        </section>
 
-            <div id="complaint_tab" class="tab-pane fade" role="tabpanel">
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="font-size-15">Register Complaint API</h5>
-                        <hr>
-                        <h5 class="font-size-15">API Endpoint</h5>
-                        <p><a style="color:blue" class="font">https://domain.com/api/complaint?username=username&amp;token=token&amp;txn_id=our_txn_id&amp;dispute_type=1</a></p>
-                        <h5 class="font-size-15">Request Method</h5>
-                        <p class="font-size-14 text-muted"><b>GET</b></p>
-                        <h5 class="font-size-15">Parameters</h5>
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Parameter</th>
-                                        <th>Type</th>
-                                        <th>Required</th>
-                                        <th>Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td>username</td><td>string</td><td>Yes</td><td>Username of the API consumer.</td></tr>
-                                    <tr><td>token</td><td>string</td><td>Yes</td><td>Authentication token for the API user.</td></tr>
-                                    <tr><td>txn_id</td><td>string</td><td>Yes</td><td>The unique transaction ID for which the complaint is being registered.</td></tr>
-                                    <tr>
-                                        <td>dispute_type</td>
-                                        <td>integer</td>
-                                        <td>Yes</td>
-                                        <td>
-                                            The type of dispute:
-                                            <ul class="mb-0">
-                                                <li><b>1</b>: Recharge</li>
-                                                <li><b>2</b>: Aeps</li>
-                                            </ul>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <h5 class="font-size-15">Sample Request</h5>
-                        <pre class="bg-light p-3 border rounded"><code>GET https://domain.com/api/complaint?username=username&amp;token=token&amp;txn_id=our_txn_id&amp;dispute_type=1</code></pre>
-                        <h5 class="font-size-15">Sample Response</h5>
-                        <pre class="bg-light p-3 border rounded"><code>{
-    "status": "1",
-    "message": "Complaint Registered Successfully.",
-    "complaint_no": "7845745"
-}</code></pre>
-                        <h5 class="font-size-15">Response Parameters</h5>
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Parameter</th>
-                                        <th>Type</th>
-                                        <th>Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td>status</td><td>string</td><td>Indicates the success or failure of the request (1 for success).</td></tr>
-                                    <tr><td>message</td><td>string</td><td>Descriptive message about the outcome of the request.</td></tr>
-                                    <tr><td>complaint_no</td><td>string</td><td>Unique complaint number assigned to the registered complaint.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <h5 class="font-size-15">Error Handling</h5>
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Error Code</th>
-                                        <th>Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td>400</td><td>Bad request - Missing or invalid parameters.</td></tr>
-                                    <tr><td>401</td><td>Unauthorized - Invalid or expired authentication token.</td></tr>
-                                    <tr><td>500</td><td>Internal server error - Unable to process the request.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <h5 class="font-size-15">Notes</h5>
-                        <p class="font-size-14 text-muted">Ensure that all required parameters are passed in the request. Use the response <code>complaint_no</code> for future references regarding the complaint.</p>
-                    </div>
-                </div>
+        <section class="doc-sec" id="circles">
+            <h2>Circle codes</h2>
+            <p class="lead">Use the code in <code>circle</code>.</p>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead><tr><th>Circle</th><th>Code</th></tr></thead>
+                    <tbody>
+                        @foreach (var c in circles)
+                        {
+                            <tr><td>@c.Name</td><td><code>@c.CircleCode</code></td></tr>
+                        }
+                    </tbody>
+                </table>
             </div>
+        </section>
 
-            <div id="callback_info" class="tab-pane fade" role="tabpanel">
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="font-size-15">Callback Information</h5>
-                        <hr>
-                        <h5 class="font-size-15">Method: POST</h5>
-                        <p class="font-size-14 text-muted">
-                            This document describes the callback mechanism used to notify users of transaction updates. The server sends a POST request to the user's specified URL containing transaction details.
-                        </p>
-                        <h5 class="font-size-15">Parameters</h5>
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Parameter</th>
-                                        <th>Type</th>
-                                        <th>Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td>txnid</td><td>string</td><td>Unique transaction ID generated by the system.</td></tr>
-                                    <tr>
-                                        <td>status</td>
-                                        <td>integer</td>
-                                        <td>
-                                            Status of the transaction:
-                                            <ul class="mb-0">
-                                                <li><b>1</b>: Success</li>
-                                                <li><b>2</b>: Failure</li>
-                                                <li><b>3</b>: Pending</li>
-                                            </ul>
-                                        </td>
-                                    </tr>
-                                    <tr><td>ErrorMessage</td><td>string</td><td>Descriptive message about the transaction's outcome.</td></tr>
-                                    <tr><td>OperatorRef</td><td>string</td><td>Reference ID provided by the operator for the transaction.</td></tr>
-                                    <tr><td>ApiTxnId</td><td>string</td><td>Unique transaction ID from the API for reconciliation.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <h5 class="font-size-15">Headers</h5>
-                        <p class="font-size-14 text-muted">Content-Type: <code>application/x-www-form-urlencoded</code></p>
-                        <h5 class="font-size-15">Request Example</h5>
-                        <pre class="bg-light p-3 border rounded"><code>POST /callback_endpoint HTTP/1.1
-Host: userdomain.com
-Content-Type: application/x-www-form-urlencoded
-
-txnid=00041248&amp;status=1&amp;ErrorMessage=Recharge%20Success&amp;OperatorRef=MH74154844214&amp;ApiTxnId=090000000423</code></pre>
-                        <h5 class="font-size-15">Response</h5>
-                        <p class="font-size-14 text-muted">The user's server should respond with a <code>200 OK</code> status code if the callback is successfully received and processed.</p>
-                        <h5 class="font-size-15">Error Handling</h5>
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Error Code</th>
-                                        <th>Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td>400</td><td>Bad request - Invalid or missing data.</td></tr>
-                                    <tr><td>500</td><td>Internal server error on the user's side.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <section class="doc-sec" id="legacy">
+            <h2>Older endpoints</h2>
+            <p class="lead">Integrations built on the first API keep working. New integrations should use the calls above.</p>
+            <table class="table">
+                <thead><tr><th>Call</th><th>Use instead</th></tr></thead>
+                <tbody>
+                    <tr><td><code>/api/recharge</code>, <code>/api/recharge2</code> (username + token)</td><td><a href="#recharge">Create recharge</a></td></tr>
+                    <tr><td><code>/api/status</code>, <code>/api/statusCheck</code></td><td><a href="#status">Check status</a></td></tr>
+                    <tr><td><code>/api/balance</code>, <code>/api/balanceCheck</code></td><td><a href="#wallets">Wallet balance</a></td></tr>
+                </tbody>
+            </table>
+        </section>
     </div>
 </div>
 
-<style>
-    .nav-tabs-custom {
-        gap: 0.25rem;
-        flex-wrap: wrap;
-    }
+@section Scripts {
+    <script>
+        (function () {
+            document.querySelectorAll('.cp').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    if (navigator.clipboard) navigator.clipboard.writeText(b.getAttribute('data-copy'));
+                    b.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(function () { b.innerHTML = '<i class="far fa-copy"></i>'; }, 1200);
+                });
+            });
 
-    .nav-tabs-custom .nav-link {
-        color: #495057;
-        border: 0;
-        border-radius: 4px 4px 0 0;
-        padding: 0.75rem 1rem;
-    }
+            document.querySelectorAll('.ex-tabs button').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var sec = btn.closest('.doc-sec');
+                    sec.querySelectorAll('.ex-tabs button').forEach(function (x) { x.classList.toggle('on', x === btn); });
+                    sec.querySelectorAll('pre.json[id]').forEach(function (p) { p.style.display = p.id === btn.getAttribute('data-ex') ? '' : 'none'; });
+                });
+            });
 
-    .nav-tabs-custom .nav-link.active {
-        color: #fff;
-        background-color: #0d6efd;
-    }
-
-    .tab-content pre {
-        white-space: pre-wrap;
-        overflow-x: auto;
-    }
-
-    .tab-content table th,
-    .tab-content table td {
-        vertical-align: middle;
-        white-space: nowrap;
-    }
-</style>
-
-<script>
-    function selectType() {
-        var serviceBody = document.getElementById('servicebody');
-
-        if (serviceBody) {
-            serviceBody.innerHTML = '';
-        }
-    }
-</script>
+            // highlight the section in view
+            var links = Array.prototype.slice.call(document.querySelectorAll('#docNav a'));
+            var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); }).filter(Boolean);
+            if ('IntersectionObserver' in window) {
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (en) {
+                        if (!en.isIntersecting) return;
+                        links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id); });
+                    });
+                }, { rootMargin: '-80px 0px -70% 0px' });
+                secs.forEach(function (s) { io.observe(s); });
+            }
+        })();
+    </script>
+}
