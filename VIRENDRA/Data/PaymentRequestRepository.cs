@@ -29,6 +29,7 @@ namespace VIRENDRA.Data
         }
 
         // Active company accounts only (same rule as Bank Accounts: BlockUser filled = Active)
+        // that someone can actually pay into — skips placeholder rows like "Admin / ADMIN".
         public List<DepositAccount> GetDepositAccounts()
         {
             using (var c = new SqlConnection(_conn))
@@ -36,6 +37,7 @@ namespace VIRENDRA.Data
                     SELECT Id, BankName, HolderName, AccountNo, IFSCCode, UpiAdress, BranchName
                     FROM BankAccount
                     WHERE ISNULL(BlockUser, '') <> '' AND UserId IS NULL AND ApiId IS NULL
+                      AND (AccountNo LIKE '%[0-9][0-9][0-9][0-9]%' OR UpiAdress LIKE '%_@_%')
                     ORDER BY BankName").ToList();
         }
 
