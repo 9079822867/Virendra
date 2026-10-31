@@ -653,7 +653,7 @@ namespace VIRENDRA.Services
         }
 
         private static string GetUniqueNumber()
-            => "E" + DateTime.Now.ToString("yyMMddHHmmss") +
+            => "R" + DateTime.Now.ToString("yyMMddHHmmss") +
                Guid.NewGuid().ToString("N").ToUpper().Substring(10, 6);
 
         private static string ClientIp()

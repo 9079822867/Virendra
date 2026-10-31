@@ -327,7 +327,7 @@ namespace VIRENDRA.Data
             // ── Input params (match SP signature exactly) ────────────────────
             p.Add("@UserId",    userId,               DbType.Int32);
             p.Add("@MobileNo",  mobileNo,             DbType.String);
-            p.Add("@Amount",    amount,               DbType.Decimal);
+            p.Add("@Amount",    amount,               DbType.Decimal, precision: 18, scale: 4);
             p.Add("@OpId",      opId,                 DbType.Int32);
             p.Add("@CircleId",  circleId,             DbType.Int32);
             p.Add("@RefTxnId",  refTxnId,             DbType.String);
@@ -345,8 +345,8 @@ namespace VIRENDRA.Data
             p.Add("@OpTypeId",         null, DbType.Int32,   ParameterDirection.Output);
             p.Add("@SerialCircleId",   null, DbType.Int32,   ParameterDirection.Output);
             p.Add("@SerialCircleCode", null, DbType.String,  ParameterDirection.Output, 10);
-            p.Add("@DebitAmount",      null, DbType.Decimal, ParameterDirection.Output,10);
-            p.Add("@CommAmount",       null, DbType.Decimal, ParameterDirection.Output);
+            p.Add("@DebitAmount",      null, DbType.Decimal, ParameterDirection.Output, precision: 18, scale: 4);
+            p.Add("@CommAmount",       null, DbType.Decimal, ParameterDirection.Output, precision: 18, scale: 4);
 
             using (var c = new SqlConnection(_conn))
                 c.Execute("SP_RechargeRequestValidation", p,
@@ -493,12 +493,12 @@ namespace VIRENDRA.Data
             p.Add("@UserId",        userId,                         DbType.Int32);
             p.Add("@IPAddress",     ipAddress ?? string.Empty,      DbType.String);
             p.Add("@CustomerNo",    customerNo,                     DbType.String);
-            p.Add("@Amount",        amount,                         DbType.Decimal);
+            p.Add("@Amount",        amount,                         DbType.Decimal, precision: 18, scale: 4);
             p.Add("@OpId",          opId,                           DbType.Int32);
             p.Add("@CircleId",      circleId,                       DbType.Int32);
             p.Add("@UserTxnId",     userTxnId,                      DbType.String);
             p.Add("@OurRef",        ourRef ?? userTxnId,            DbType.String);
-            p.Add("@DebitAmount",   debitAmount,                    DbType.Decimal);
+            p.Add("@DebitAmount",   debitAmount,                    DbType.Decimal, precision: 18, scale: 4);
             p.Add("@IsSwitch",      switchedRecId > 0 ? 1 : 0,     DbType.Boolean);
             p.Add("@SwitchedRecId", switchedRecId,                  DbType.Int64);
             p.Add("@MediumId",      mediumId,                       DbType.Int32);
@@ -506,6 +506,7 @@ namespace VIRENDRA.Data
             p.Add("@CircleFilter",  circleFilter,                   DbType.String);
 
             // ── Output parameters — all nullable to survive DBNull ────────────
+            // Decimal outputs need precision/scale: without them SqlClient uses scale 0 and drops the paise.
             p.Add("@ApiUrl",         null, DbType.String,  ParameterDirection.Output, 500);
             p.Add("@Method",         null, DbType.String,  ParameterDirection.Output, 50);
             p.Add("@ContentType",    null, DbType.String,  ParameterDirection.Output, 100);
@@ -524,9 +525,9 @@ namespace VIRENDRA.Data
             p.Add("@ErrorDesc",      null, DbType.String,  ParameterDirection.Output, 50);
             p.Add("@Log",            null, DbType.String,  ParameterDirection.Output, 250);
             p.Add("@ApiTypeId",      null, DbType.Int32,   ParameterDirection.Output);
-            p.Add("@ApiBal",         null, DbType.Decimal, ParameterDirection.Output);
-            p.Add("@LapuBal",        null, DbType.Decimal, ParameterDirection.Output);
-            p.Add("@Comm1",          null, DbType.Decimal, ParameterDirection.Output);
+            p.Add("@ApiBal",         null, DbType.Decimal, ParameterDirection.Output, precision: 18, scale: 4);
+            p.Add("@LapuBal",        null, DbType.Decimal, ParameterDirection.Output, precision: 18, scale: 4);
+            p.Add("@Comm1",          null, DbType.Decimal, ParameterDirection.Output, precision: 18, scale: 4);
             p.Add("@CircleCode",     null, DbType.String,  ParameterDirection.Output, 100);
             p.Add("@CircleExtraUrl", null, DbType.String,  ParameterDirection.Output, 100);
             p.Add("@CircleExtraData",null, DbType.String,  ParameterDirection.Output, 100);
