@@ -6,7 +6,8 @@ namespace VIRENDRA.Data
 {
     public interface ITransactionRepository
     {
-        DashboardStats GetDashboardStats(int userId);
+        // Balances are always userId's own; allUsers = recharge figures across every user (admins)
+        DashboardStats GetDashboardStats(int userId, bool allUsers = false);
 
         // userId null = all users (admins only)
         List<RechargeHistoryItem> GetRecentRecharges(int? userId, int top = 10);

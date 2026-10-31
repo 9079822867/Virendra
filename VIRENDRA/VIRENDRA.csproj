@@ -268,6 +268,7 @@
     <Content Include="Content\css\preloader.min.css" />
     <Content Include="Content\css\remixicon.css" />
     <Content Include="Content\css\style.css" />
+    <Content Include="Content\css\app-theme.css" />
     <Content Include="Content\css\swiper-bundle.min.css" />
     <Content Include="Content\img\cta-bg.jpg" />
     <Content Include="Content\img\hero-img.png" />

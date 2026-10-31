@@ -1,37 +1,40 @@
 @model VIRENDRA.Models.LoginModel
 
 @{
-    ViewBag.Title = "Login";
+    ViewBag.Title = "Sign in";
     Layout = "~/Views/Shared/_AuthLayout.cshtml";
 }
 
-<!-- Left panel -->
-<div class="auth-left">
-    <div class="brand-icon">
-        <i class="bi bi-lightning-charge-fill"></i>
+<aside class="auth-aside">
+    <div class="auth-brand">
+        <span class="app-brand-mark"><i class="bi bi-lightning-charge-fill"></i></span>
+        EXPRESS
     </div>
-    <h1>Recharge Software</h1>
-    <p>Your all-in-one platform for mobile recharge, DTH, bill payments and money transfer services.</p>
 
-    <ul class="feature-list">
-        <li><i class="bi bi-shield-check-fill"></i> Secure &amp; encrypted transactions</li>
-        <li><i class="bi bi-lightning-fill"></i> Instant recharge &amp; payments</li>
-        <li><i class="bi bi-graph-up-arrow"></i> Real-time reports &amp; analytics</li>
-        <li><i class="bi bi-headset"></i> 24 / 7 dedicated support</li>
-    </ul>
-</div>
+    <div class="auth-pitch">
+        <h1>Every recharge,<br><span>settled in seconds.</span></h1>
+        <p>Prepaid, postpaid and DTH from one console, with automatic vendor routing and a ledger you can trust.</p>
+        <div class="auth-points">
+            <div class="auth-point"><i class="bi bi-diagram-3"></i>Smart vendor routing</div>
+            <div class="auth-point"><i class="bi bi-journal-check"></i>Live wallet ledger</div>
+            <div class="auth-point"><i class="bi bi-plug"></i>Reseller API</div>
+            <div class="auth-point"><i class="bi bi-shield-lock"></i>KYC-verified users</div>
+        </div>
+    </div>
 
-<!-- Right panel -->
-<div class="auth-right">
-    <div class="login-box">
-        <p class="welcome">Welcome back</p>
-        <p class="sub">Sign in to your account to continue</p>
+    <div class="auth-legal">&copy; @DateTime.Now.Year Express Recharge</div>
+</aside>
 
-        @if (ViewData.ModelState[""] != null)
+<main class="auth-main">
+    <div class="auth-card">
+        <h2>Sign in</h2>
+        <p class="lede">Use the username and password your admin gave you.</p>
+
+        @if (ViewData.ModelState[""] != null && ViewData.ModelState[""].Errors.Count > 0)
         {
-            <div class="alert-error">
-                <i class="bi bi-exclamation-circle-fill"></i>
-                @Html.ValidationMessage("")
+            <div class="auth-err">
+                <i class="bi bi-exclamation-circle"></i>
+                <div>@Html.ValidationMessage("")</div>
             </div>
         }
 
@@ -39,58 +42,42 @@
         {
             @Html.AntiForgeryToken()
 
-            <!-- Username -->
-            <div class="field-wrap">
-                @Html.TextBoxFor(m => m.Username, new {
-                    placeholder = " ",
-                    autocomplete = "username",
-                    id = "Username"
-                })
-                <label for="Username"><i class="bi bi-person" style="margin-right:5px"></i>Username</label>
-                <i class="bi bi-person field-icon"></i>
-                @Html.ValidationMessageFor(m => m.Username, "", new { @class = "validation-msg" })
+            <div class="mb-3">
+                <label class="form-label" for="Username">Username</label>
+                @Html.TextBoxFor(m => m.Username, new { @class = "form-control", autocomplete = "username", autofocus = "autofocus", id = "Username" })
+                @Html.ValidationMessageFor(m => m.Username)
             </div>
 
-            <!-- Password -->
-            <div class="field-wrap">
-                @Html.PasswordFor(m => m.Password, new {
-                    placeholder = " ",
-                    autocomplete = "current-password",
-                    id = "Password"
-                })
-                <label for="Password"><i class="bi bi-lock" style="margin-right:5px"></i>Password</label>
-                <i class="bi bi-eye field-icon" id="togglePwd" title="Show / hide password"></i>
-                @Html.ValidationMessageFor(m => m.Password, "", new { @class = "validation-msg" })
+            <div class="mb-3">
+                <div class="d-flex justify-content-between">
+                    <label class="form-label" for="Password">Password</label>
+                    <span class="form-text m-0">Forgot it? Ask your admin.</span>
+                </div>
+                <div class="input-group">
+                    @Html.PasswordFor(m => m.Password, new { @class = "form-control", autocomplete = "current-password", id = "Password" })
+                    <button type="button" class="btn btn-outline-secondary" id="togglePwd" aria-label="Show password"><i class="bi bi-eye"></i></button>
+                </div>
+                @Html.ValidationMessageFor(m => m.Password)
             </div>
 
-            <!-- Remember me / Forgot -->
-            <div class="extras">
-                <label>
-                    @Html.CheckBoxFor(m => m.RememberMe)
-                    Remember me
-                </label>
-                <a href="#" class="forgot">Forgot password?</a>
+            <div class="form-check mb-4">
+                @Html.CheckBoxFor(m => m.RememberMe, new { @class = "form-check-input" })
+                <label class="form-check-label small" for="RememberMe">Keep me signed in on this device</label>
             </div>
 
-            <button type="submit" class="btn-login">
-                <i class="bi bi-box-arrow-in-right"></i> Sign In
-            </button>
+            <button type="submit" class="btn btn-dark w-100">Sign in <i class="bi bi-arrow-right ms-1"></i></button>
         }
-
-        <p class="bottom-note">
-            Don't have an account? <a href="mailto:support@rechargesoftware.com">Contact admin</a>
-        </p>
     </div>
-</div>
+</main>
 
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
     <script>
         document.getElementById('togglePwd').addEventListener('click', function () {
             var pwd = document.getElementById('Password');
-            var isText = pwd.type === 'text';
-            pwd.type = isText ? 'password' : 'text';
-            this.className = isText ? 'bi bi-eye field-icon' : 'bi bi-eye-slash field-icon';
+            var show = pwd.type === 'password';
+            pwd.type = show ? 'text' : 'password';
+            this.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
         });
     </script>
 }

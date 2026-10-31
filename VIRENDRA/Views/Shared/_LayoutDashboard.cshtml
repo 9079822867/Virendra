@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 @{
     var currentController = (ViewContext.RouteData.Values["controller"] ?? "").ToString();
     var currentAction = (ViewContext.RouteData.Values["action"] ?? "").ToString();
@@ -10,6 +10,7 @@
     bool isAdmin = roleId == 2;
     bool isApiUser = roleId == 3;
     bool isRetailer = roleId == 4;
+    bool isAdminRole = isSuperAdmin || isAdmin;
 
     string roleName = isSuperAdmin ? "Super Admin"
                     : isAdmin ? "Admin"
@@ -17,629 +18,211 @@
                     : "Retailer";
 
     // Non-admin users without approved KYC only see the KYC page (KycGateAttribute)
-    bool kycLocked = !(isSuperAdmin || isAdmin) && !(Session["KycApproved"] is bool kycOk && kycOk);
+    bool kycLocked = !isAdminRole && !(Session["KycApproved"] is bool kycOk && kycOk);
 
-    // Helper: is any of the listed controllers the current one?
-    Func<string[], bool> anyActive = controllers =>
-        System.Array.IndexOf(controllers, currentController) >= 0;
+    // Active-state helpers
+    Func<string, string, bool> on = (c, a) =>
+        string.Equals(currentController, c, StringComparison.OrdinalIgnoreCase) &&
+        (a == null || string.Equals(currentAction, a, StringComparison.OrdinalIgnoreCase));
+    Func<string[], bool> anyOn = cs => cs.Any(c => string.Equals(c, currentController, StringComparison.OrdinalIgnoreCase));
+
+    string initials = string.IsNullOrEmpty(uname) ? "U" : uname.Substring(0, 1).ToUpperInvariant();
 }
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>@(ViewBag.Title != null ? ViewBag.Title + " \u2014 " : "")Recharge Software</title>
+    <title>@(ViewBag.Title != null ? ViewBag.Title + " · " : "")Express Recharge</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Bootstrap CSS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
     <link href="~/Content/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Icon fonts (pages use all three sets) -->
     <link href="~/Content/css/bootstrap-icons.css" rel="stylesheet">
     <link href="~/Content/css/boxicons.min.css" rel="stylesheet">
-    <link href="~/Content/css/remixicon.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <!-- Template CSS -->
-    <link href="~/Content/css/style.css" rel="stylesheet">
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
-        }
-
-        /* ── Top Navbar ───────────────────────────────────────── */
-        .top-navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 2px 12px rgba(0,0,0,.18);
-            padding: 0;
-            position: sticky;
-            top: 0;
-            z-index: 1040;
-        }
-
-            /* Brand */
-            .top-navbar .navbar-brand {
-                font-size: 1.25rem;
-                font-weight: 800;
-                color: #fff !important;
-                letter-spacing: .5px;
-                padding: .75rem 1rem .75rem 0;
-                display: flex;
-                align-items: center;
-                gap: .45rem;
-            }
-
-            /* Hamburger */
-            .top-navbar .navbar-toggler {
-                border: none;
-                padding: .4rem .6rem;
-            }
-
-            .top-navbar .navbar-toggler-icon {
-                filter: invert(1);
-            }
-
-            /* Primary nav links */
-            .top-navbar .nav-link {
-                color: rgba(255,255,255,.88) !important;
-                font-size: .83rem;
-                font-weight: 500;
-                padding: .85rem .75rem !important;
-                border-bottom: 3px solid transparent;
-                transition: all .2s;
-                white-space: nowrap;
-            }
-
-                .top-navbar .nav-link:hover {
-                    color: #fff !important;
-                    border-bottom-color: rgba(255,255,255,.5);
-                }
-
-                .top-navbar .nav-link.active,
-                .top-navbar .nav-item.active > .nav-link {
-                    color: #fff !important;
-                    border-bottom-color: #fff;
-                    font-weight: 700;
-                }
-
-            /* Dropdown */
-            .top-navbar .dropdown-menu {
-                border: none;
-                box-shadow: 0 8px 32px rgba(0,0,0,.14);
-                border-radius: 10px;
-                overflow: hidden;
-                min-width: 200px;
-                margin-top: 0 !important;
-                padding: .4rem 0;
-            }
-
-            .top-navbar .dropdown-header {
-                font-size: .7rem;
-                font-weight: 700;
-                color: #9e9e9e;
-                text-transform: uppercase;
-                letter-spacing: .06em;
-                padding: .6rem 1rem .3rem;
-            }
-
-            .top-navbar .dropdown-item {
-                font-size: .83rem;
-                padding: .55rem 1.1rem;
-                color: #343a40;
-                display: flex;
-                align-items: center;
-                gap: .55rem;
-                transition: background .15s;
-            }
-
-                .top-navbar .dropdown-item i {
-                    width: 18px;
-                    text-align: center;
-                    color: #667eea;
-                    font-size: .85rem;
-                }
-
-                .top-navbar .dropdown-item:hover {
-                    background: #f0f2ff;
-                    color: #667eea;
-                }
-
-                .top-navbar .dropdown-item.active,
-                .top-navbar .dropdown-item:active {
-                    background: #667eea;
-                    color: #fff;
-                }
-
-                    .top-navbar .dropdown-item.active i {
-                        color: #fff;
-                    }
-
-            .top-navbar .dropdown-divider {
-                margin: .3rem 0;
-                border-color: #f0f0f0;
-            }
-
-        /* Right-side user pill */
-        .nav-user-pill {
-            background: rgba(255,255,255,.18);
-            border-radius: 30px;
-            padding: .35rem .9rem;
-            color: #fff;
-            font-size: .82rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: .4rem;
-            cursor: default;
-            white-space: nowrap;
-        }
-
-        .nav-balance {
-            color: rgba(255,255,255,.9);
-            font-size: .82rem;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
-        /* Main page area */
-        .page-wrapper {
-            min-height: calc(100vh - 52px);
-            padding: 1.75rem 1.75rem 2rem;
-            background: #f0f2f5;
-        }
-
-        /* Responsive: on mobile stack nav items */
-        @@media (max-width: 991.98px) {
-            .top-navbar .nav-link {
-                border-bottom: none;
-                border-left: 3px solid transparent;
-                padding: .6rem 1rem !important;
-            }
-
-                .top-navbar .nav-link.active,
-                .top-navbar .nav-item.active > .nav-link {
-                    border-left-color: #fff;
-                    border-bottom: none;
-                    background: rgba(255,255,255,.12);
-                }
-
-            .top-navbar .dropdown-menu {
-                border-radius: 0;
-                box-shadow: none;
-                background: rgba(255,255,255,.08);
-                padding: 0;
-            }
-
-            .top-navbar .dropdown-item {
-                color: rgba(255,255,255,.85);
-                background: transparent;
-            }
-
-                .top-navbar .dropdown-item:hover {
-                    background: rgba(255,255,255,.12);
-                    color: #fff;
-                }
-
-                .top-navbar .dropdown-item i {
-                    color: rgba(255,255,255,.7);
-                }
-
-            .top-navbar .dropdown-header {
-                color: rgba(255,255,255,.5);
-            }
-
-            .top-navbar .dropdown-divider {
-                border-color: rgba(255,255,255,.1);
-            }
-
-            .page-wrapper {
-                padding: 1rem;
-            }
-        }
-    </style>
+    <link href="~/Content/css/app-theme.css?v=1" rel="stylesheet">
 </head>
 <body>
+<div class="app" id="app">
 
-    <!-- ═══════════════════ TOP NAVBAR ═══════════════════ -->
-    <nav class="navbar navbar-expand-lg top-navbar">
-        <div class="container-fluid px-3">
+    <!-- ═══════════ Sidebar ═══════════ -->
+    <aside class="app-side" aria-label="Main menu">
+        <a class="app-brand" href="@Url.Action("Dashboard","Home")">
+            <span class="app-brand-mark"><i class="fas fa-bolt"></i></span>
+            <span>EXPRESS<small>Recharge console</small></span>
+        </a>
 
-            <!-- Brand / Logo -->
-            <a class="navbar-brand" href="@Url.Action("Dashboard","Home")">
-                <i class="fas fa-exchange-alt"></i>
-                EXPRESS
-            </a>
+        <nav class="app-nav">
+            @if (kycLocked)
+            {
+                <div class="app-nav-label">Get started</div>
+                <a class="app-link active" href="@Url.Action("Index","Kyc")"><i class="fas fa-id-card"></i>Complete KYC</a>
+            }
+            else
+            {
+                <a class="app-link @(on("Home", null) ? "active" : "")" href="@Url.Action("Dashboard","Home")"><i class="fas fa-gauge-high"></i>Dashboard</a>
 
-            <!-- Mobile toggler -->
-            <button class="navbar-toggler" type="button"
-                    data-bs-toggle="collapse" data-bs-target="#mainNavbar"
-                    aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                if (isRetailer)
+                {
+                    <a class="app-link @(on("Recharge", null) ? "active" : "")" href="@Url.Action("Index","Recharge")"><i class="fas fa-mobile-screen"></i>New Recharge</a>
+                }
 
-            <div class="collapse navbar-collapse" id="mainNavbar">
+                <div class="app-nav-label">Reports</div>
+                <a class="app-link @(on("Transaction","RechargeHistory") ? "active" : "")" href="@Url.Action("RechargeHistory","Transaction")"><i class="fas fa-clock-rotate-left"></i>Recharge History</a>
+                <a class="app-link @(on("Transaction","TransactionHistory") ? "active" : "")" href="@Url.Action("TransactionHistory","Transaction")"><i class="fas fa-receipt"></i>Ledger</a>
+                <a class="app-link @(on("Transaction","OutStandingReport") ? "active" : "")" href="@Url.Action("OutStandingReport","Transaction")"><i class="fas fa-scale-unbalanced"></i>Outstanding</a>
+                <a class="app-link @(on("Transaction","ComplaintReport") ? "active" : "")" href="@Url.Action("ComplaintReport","Transaction")"><i class="fas fa-flag"></i>Complaints</a>
+                if (isAdminRole)
+                {
+                    <a class="app-link @(on("Reports", null) ? "active" : "")" href="@Url.Action("OperatorwiseReport","Reports")"><i class="fas fa-chart-column"></i>Operator Summary</a>
+                }
 
-                <!-- ── Left nav links ──────────────────────────── -->
-                <ul class="navbar-nav me-auto align-items-lg-stretch">
+                if (isAdminRole)
+                {
+                    <div class="app-nav-label">Money</div>
+                    <a class="app-link @(on("Wallet","Index") ? "active" : "")" href="@Url.Action("Index","Wallet")"><i class="fas fa-inbox"></i>Payment Requests</a>
+                    <a class="app-link @(on("Wallet","AddMoney") ? "active" : "")" href="@Url.Action("AddMoney","Wallet")"><i class="fas fa-circle-plus"></i>Add Money</a>
+                    <a class="app-link @(on("ApiWallet", null) ? "active" : "")" href="@Url.Action("Index","ApiWallet")"><i class="fas fa-vault"></i>Vendor Wallet</a>
+                    <a class="app-link @(on("BankAccount", null) ? "active" : "")" href="@Url.Action("Index","BankAccount")"><i class="fas fa-building-columns"></i>Bank Accounts</a>
 
-                    @if (kycLocked)
-                    {
-                        <li class="nav-item active">
-                            <a class="nav-link active" href="@Url.Action("Index","Kyc")">
-                                <i class="fas fa-user-shield me-1"></i>KYC Verification
-                            </a>
-                        </li>
-                    }
-                    else
-                    {<text>
-                    @*<%-- Dashboard \u2014 all roles --%>*@
-                    <li class="nav-item @(currentController == "Home" ? "active" : "")">
-                        <a class="nav-link @(currentController == "Home" ? "active" : "")"
-                           href="@Url.Action("Dashboard","Home")">
-                            <i class="fas fa-home me-1"></i>Dashboard
-                        </a>
-                    </li>
+                    <div class="app-nav-label">Manage</div>
+                    <a class="app-link @(on("User", null) ? "active" : "")" href="@Url.Action("Index","User")"><i class="fas fa-users"></i>Users</a>
+                    <a class="app-link @(on("KycAdmin", null) ? "active" : "")" href="@Url.Action("Index","KycAdmin")"><i class="fas fa-user-check"></i>KYC Approval</a>
+                    <a class="app-link @(on("Package", null) || on("PackageComm","Index") ? "active" : "")" href="@Url.Action("Index","Package")"><i class="fas fa-layer-group"></i>Packages</a>
+                    <a class="app-link @(on("Operator", null) ? "active" : "")" href="@Url.Action("Index","Operator")"><i class="fas fa-tower-cell"></i>Operators</a>
+                    <a class="app-link @(on("Vendor", null) ? "active" : "")" href="@Url.Action("Index","Vendor")"><i class="fas fa-plug"></i>Vendors</a>
 
-                    @*<%-- Administration \u2014 SuperAdmin + Admin --%>*@
-                    @if (isSuperAdmin || isAdmin)
-                    {
-                        bool adminActive = anyActive(new[] { "User", "Package", "Operator", "Vendor", "ApiWallet", "BankAccount", "Services", "CommonRouting", "Switch", "KycAdmin" });
-                        <li class="nav-item dropdown @(adminActive ? "active" : "")">
-                            <a class="nav-link dropdown-toggle @(adminActive ? "active" : "")"
-                               href="#" id="ddAdmin" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-cogs me-1"></i>Administration
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="ddAdmin">
-                                <li><h6 class="dropdown-header">Manage</h6></li>
-                                <li>
-                                    <a class="dropdown-item @(currentController=="User" ? "active" : "")"
-                                       href="@Url.Action("Index","User")">
-                                        <i class="fas fa-users"></i> User Management
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item @(currentController=="KycAdmin" ? "active" : "")"
-                                       href="@Url.Action("Index","KycAdmin")">
-                                        <i class="fas fa-user-check"></i> KYC Approval
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item @(currentController=="Package" ? "active" : "")"
-                                       href="@Url.Action("Index","Package")">
-                                        <i class="fas fa-box-open"></i> Packages
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item @(currentController=="Operator" ? "active" : "")"
-                                       href="@Url.Action("Index","Operator")">
-                                        <i class="bx bx-mobile"></i> Operators
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item @(currentController=="Vendor" ? "active" : "")"
-                                       href="@Url.Action("Index","Vendor")">
-                                        <i class="fas fa-store"></i> Vendors (API)
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><h6 class="dropdown-header">Finance</h6></li>
-                                <li>
-                                    <a class="dropdown-item @(currentController=="BankAccount" ? "active" : "")"
-                                       href="@Url.Action("Index","BankAccount")">
-                                        <i class="fas fa-university"></i> Bank Accounts
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item @(currentController=="ApiWallet" ? "active" : "")"
-                                       href="@Url.Action("Index","ApiWallet")">
-                                        <i class="fas fa-wallet"></i> Vendor Wallet
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><h6 class="dropdown-header">Config</h6></li>
-                                <li>
-                                    <a class="dropdown-item @(currentController=="Services" ? "active" : "")"
-                                       href="@Url.Action("Index","Services")">
-                                        <i class="bx bx-mobile"></i> Services
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item @(currentController=="CommonRouting" ? "active" : "")"
-                                       href="@Url.Action("Index","CommonRouting")">
-                                        <i class="fas fa-route"></i> Route Settings
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item @(currentController=="Switch" ? "active" : "")"
-                                       href="@Url.Action("OperatorSwitch","Switch")">
-                                        <i class="fas fa-random"></i> Switch Settings
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    }
+                    <details class="app-group" @(anyOn(new[] { "Services", "CommonRouting", "Switch" }) ? "open" : "")>
+                        <summary><i class="fas fa-route lead-ic"></i>Routing<i class="fas fa-chevron-right chev"></i></summary>
+                        <div class="app-sub">
+                            <a class="app-link @(on("CommonRouting", null) ? "active" : "")" href="@Url.Action("Index","CommonRouting")">Route Settings</a>
+                            <a class="app-link @(on("Switch", null) ? "active" : "")" href="@Url.Action("OperatorSwitch","Switch")">Switch Settings</a>
+                            <a class="app-link @(on("Services", null) ? "active" : "")" href="@Url.Action("Index","Services")">Services</a>
+                        </div>
+                    </details>
+                }
 
-                    @*<%-- Recharge \u2014 Retailer only --%>*@
-                    @if (isRetailer)
-                    {
-                        <li class="nav-item @(currentController == "Recharge" ? "active" : "")">
-                            <a class="nav-link @(currentController == "Recharge" ? "active" : "")"
-                               href="@Url.Action("Index", "Recharge")">
-                                <i class="bx bx-mobile-alt me-1"></i>Recharge
-                            </a>
-                        </li>
-                    }
-                    @*<%-- Transaction \u2014 all roles --%>*@
-                    @{
-                        bool txnActive = currentController == "Transaction";
-                    }
-                    <li class="nav-item dropdown @(txnActive ? "active" : "")">
-                        <a class="nav-link dropdown-toggle @(txnActive ? "active" : "")"
-                           href="#" id="ddTxn" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="far fa-file-alt me-1"></i>Transactions
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="ddTxn">
-                            <li>
-                                <a class="dropdown-item @(txnActive && currentAction=="RechargeHistory" ? "active" : "")"
-                                   href="@Url.Action("RechargeHistory","Transaction")">
-                                    <i class="fas fa-history"></i> Recharge History
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(txnActive && currentAction=="TransactionHistory" ? "active" : "")"
-                                   href="@Url.Action("TransactionHistory","Transaction")">
-                                    <i class="fas fa-list-alt"></i> Transaction History
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(txnActive && currentAction=="OutStandingReport" ? "active" : "")"
-                                   href="@Url.Action("OutStandingReport","Transaction")">
-                                    <i class="fas fa-hand-holding-usd"></i> Outstanding Report
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(txnActive && currentAction=="ComplaintReport" ? "active" : "")"
-                                   href="@Url.Action("ComplaintReport","Transaction")">
-                                    <i class="fas fa-exclamation-circle"></i> Complaint Report
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    @*<%-- Payment \u2014 SuperAdmin + Admin --%>*@
-                    @if (isSuperAdmin || isAdmin)
-                    {
-                        bool walletActive = currentController == "Wallet";
-                        <li class="nav-item dropdown @(walletActive ? "active" : "")">
-                            <a class="nav-link dropdown-toggle @(walletActive ? "active" : "")"
-                               href="#" id="ddWallet" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-wallet me-1"></i>Payment
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="ddWallet">
-                                <li>
-                                    <a class="dropdown-item @(walletActive && currentAction=="Index" ? "active" : "")"
-                                       href="@Url.Action("Index","Wallet")">
-                                        <i class="fas fa-inbox"></i> Payment Requests
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item @(walletActive && currentAction == "AddMoney" ? "active" : "")"
-                                       href="@Url.Action("AddMoney", "Wallet")">
-                                        <i class="fas fa-plus-circle"></i> Add Money
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    }
-
-                    @*<%-- Reports \u2014 SuperAdmin + Admin --%>*@
-                    @if (isSuperAdmin || isAdmin)
-                    {
-                        bool rptActive = currentController == "Reports";
-                        <li class="nav-item dropdown @(rptActive ? "active" : "")">
-                            <a class="nav-link dropdown-toggle @(rptActive ? "active" : "")"
-                               href="#" id="ddReports" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bx bx-file me-1"></i>Reports
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="ddReports">
-                                <li>
-                                    <a class="dropdown-item @(rptActive && currentAction=="OperatorwiseReport" ? "active" : "")"
-                                       href="@Url.Action("OperatorwiseReport","Reports")">
-                                        <i class="fas fa-chart-bar"></i> Operatorwise Report
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="javascript:void(0);">
-                                        <i class="fas fa-file-invoice"></i> Payment Report
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    }
-
-                    @*<%-- Developer \u2014 SuperAdmin + ApiUser --%>*@
-                    @if (isSuperAdmin || isApiUser)
-                    {
-                        bool devActive = anyActive(new[] { "ApiDocument", "ApiSettings" });
-                        <li class="nav-item dropdown @(devActive ? "active" : "")">
-                            <a class="nav-link dropdown-toggle @(devActive ? "active" : "")"
-                               href="#" id="ddDev" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bx bxs-wrench me-1"></i>Developer
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="ddDev">
-                                <li>
-                                    <a class="dropdown-item @(currentController=="ApiSettings" ? "active" : "")"
-                                       href="@Url.Action("Index","ApiSettings")">
-                                        <i class="fas fa-key"></i> API Setting
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item @(currentController=="ApiDocument" ? "active" : "")"
-                                       href="@Url.Action("Index","ApiDocument")">
-                                        <i class="fas fa-code"></i> API Integration Tool
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    }
-
-                    @*<%-- Support \u2014 all roles --%>*@
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="ddSupport" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-headphones me-1"></i>Support
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="ddSupport">
-                            <li>
-                                <a class="dropdown-item" href="@Url.Action("ComplaintReport","Transaction")">
-                                    <i class="fas fa-exclamation-circle"></i> Dispute
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    </text>}
-
-                </ul><!-- /navbar-nav -->
-                <!-- ── Right-side: balance + user + logout ───────── -->
-                <div class="d-flex align-items-center gap-2 py-2 py-lg-0 ms-lg-3">
-
-                    <!-- Balance -->
-                    <span class="nav-balance d-none d-md-inline">
-                        <i class="fas fa-wallet me-1"></i>
-                        <i class="fa fa-rupee-sign"></i>@bal.ToString("N2")
-                    </span>
-
-                    <!-- User menu -->
-                    <div class="dropdown">
-                        <a href="#" class="nav-user-pill dropdown-toggle text-decoration-none" id="ddUser"
-                           role="button" data-bs-toggle="dropdown" aria-expanded="false" style="cursor:pointer;">
-                            <i class="fas fa-user-circle"></i>
-                            <span>Hello, @uname</span>
-                            <span class="badge ms-1 d-none d-md-inline"
-                                  style="background:rgba(255,255,255,.25);font-size:.65rem;">@roleName</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="ddUser">
-                            <li>
-                                <a class="dropdown-item @(currentController=="Setting" && currentAction=="UserProfile" ? "active" : "")"
-                                   href="@Url.Action("UserProfile","Setting")">
-                                    <i class="fas fa-user"></i> User Profile
-                                </a>
-                            </li>
-                            @*<%-- My Commission — all roles can view their own commission --%>*@
-                            <li>
-                                <a class="dropdown-item @(currentController=="PackageComm" && currentAction=="MyCommission" ? "active" : "")"
-                                   href="@Url.Action("MyCommission","PackageComm")">
-                                    <i class="fas fa-percent"></i> My Commission
-                                </a>
-                            </li>
-                            @if (!(isSuperAdmin || isAdmin))
-                            {
-                                <li>
-                                    <a class="dropdown-item @(currentController=="Kyc" ? "active" : "")"
-                                       href="@Url.Action("Index","Kyc")">
-                                        <i class="fas fa-user-shield"></i> KYC Status
-                                        @if (kycLocked)
-                                        {
-                                            <span class="badge bg-warning text-dark ms-auto" style="font-size:.62rem;">Pending</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-success ms-auto" style="font-size:.62rem;">Verified</span>
-                                        }
-                                    </a>
-                                </li>
-                            }
-                            <li>
-                                <a class="dropdown-item" href="@Url.Action("ComplaintReport","Transaction")">
-                                    <i class="fas fa-headphones"></i> Support
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(currentController=="Setting" && currentAction=="ChangePassword" ? "active" : "")"
-                                   href="@Url.Action("ChangePassword","Setting")">
-                                    <i class="fas fa-lock"></i> Password
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider" /></li>
-                            <li>
-                                <a class="dropdown-item" href="@Url.Action("Logout","Auth")">
-                                    <i class="fas fa-sign-out-alt"></i> Sign Out
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    </div>
-
-                </div><!-- /collapse -->
-            </div><!-- /container-fluid -->
+                if (isSuperAdmin || isApiUser)
+                {
+                    <div class="app-nav-label">Developer</div>
+                    <a class="app-link @(on("ApiSettings", null) ? "active" : "")" href="@Url.Action("Index","ApiSettings")"><i class="fas fa-key"></i>API Keys</a>
+                    <a class="app-link @(on("ApiDocument", null) ? "active" : "")" href="@Url.Action("Index","ApiDocument")"><i class="fas fa-code"></i>API Docs</a>
+                }
+            }
         </nav>
-        <!-- ═══════════════════ /TOP NAVBAR ═══════════════════ -->
-        <!-- Page Content -->
-        <div class="page-wrapper">
-            @RenderBody()
+
+        <div class="app-side-foot">
+            Signed in as <strong class="text-white">@uname</strong><br>@roleName
         </div>
+    </aside>
+    <div class="app-scrim" id="appScrim"></div>
 
-        <!-- jQuery -->
-        <script src="~/Content/js/jquery-3.7.0.min.js"></script>
-        <!-- Bootstrap JS -->
-        <script src="~/Content/js/bootstrap.bundle.min.js"></script>
+    <!-- ═══════════ Main ═══════════ -->
+    <div class="app-main">
+        <header class="app-top">
+            <button type="button" class="app-burger" id="appBurger" aria-label="Open menu"><i class="fas fa-bars"></i></button>
+            <h1 class="app-top-title">@(ViewBag.Title ?? "Dashboard")</h1>
 
-        <span id="ajaxAntiForgery" hidden>@Html.AntiForgeryToken()</span>
-        <script>
-            // Every form-encoded jQuery POST carries the anti-forgery token, so AJAX actions
-            // can use [ValidateAntiForgeryToken] like normal forms.
-            $.ajaxPrefilter(function (options) {
-                if ((options.type || '').toUpperCase() !== 'POST') return;
-                if (options.contentType && options.contentType.indexOf('application/x-www-form-urlencoded') !== 0) return;
-                if (options.data != null && typeof options.data !== 'string') return;   // FormData etc.
-                var token = $('#ajaxAntiForgery input[name="__RequestVerificationToken"]').val();
-                if (!token) return;
-                var pair = '__RequestVerificationToken=' + encodeURIComponent(token);
-                options.data = options.data ? options.data + '&' + pair : pair;
-            });
+            <span class="app-balance" title="Wallet balance"><i class="fas fa-wallet"></i>&#8377; @bal.ToString("N2")</span>
 
-            // Close dismissible alerts
-            document.querySelectorAll('[data-dismiss="alert"]').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    this.closest('.alert').style.display = 'none';
-                });
-            });
+            <div class="dropdown">
+                <a href="#" class="app-user" id="ddUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="app-avatar">@initials</span>
+                    <span class="app-user-meta">
+                        <span class="app-user-name d-block">@uname</span>
+                        <span class="app-user-role">@roleName</span>
+                    </span>
+                    <i class="fas fa-chevron-down text-muted" style="font-size:.65rem;"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="ddUser" style="min-width:220px;">
+                    <li><a class="dropdown-item @(on("Setting","UserProfile") ? "active" : "")" href="@Url.Action("UserProfile","Setting")"><i class="fas fa-user"></i>My profile</a></li>
+                    <li><a class="dropdown-item @(on("PackageComm","MyCommission") ? "active" : "")" href="@Url.Action("MyCommission","PackageComm")"><i class="fas fa-percent"></i>My commission</a></li>
+                    @if (!isAdminRole)
+                    {
+                        <li>
+                            <a class="dropdown-item @(on("Kyc", null) ? "active" : "")" href="@Url.Action("Index","Kyc")">
+                                <i class="fas fa-id-card"></i>KYC
+                                <span class="badge ms-auto @(kycLocked ? "bg-warning" : "bg-success")">@(kycLocked ? "Pending" : "Verified")</span>
+                            </a>
+                        </li>
+                    }
+                    <li><a class="dropdown-item @(on("Setting","ChangePassword") ? "active" : "")" href="@Url.Action("ChangePassword","Setting")"><i class="fas fa-lock"></i>Change password</a></li>
+                    <li><a class="dropdown-item" href="@Url.Action("ComplaintReport","Transaction")"><i class="fas fa-life-ring"></i>Support</a></li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li><a class="dropdown-item text-danger" href="@Url.Action("Logout","Auth")"><i class="fas fa-arrow-right-from-bracket text-danger"></i>Sign out</a></li>
+                </ul>
+            </div>
+        </header>
 
-            // Show / hide toggle for every password field (skips fields already in an input-group)
-            document.querySelectorAll('input[type="password"]').forEach(function (input) {
-                if (input.closest('.input-group') || input.hasAttribute('data-no-toggle')) return;
+        <main class="app-content">
+            @RenderBody()
+        </main>
 
-                var group = document.createElement('div');
-                group.className = 'input-group';
-                input.parentNode.insertBefore(group, input);
-                group.appendChild(input);
+        <footer class="app-foot">&copy; @DateTime.Now.Year Express Recharge</footer>
+    </div>
+</div>
 
-                var btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'btn btn-outline-secondary';
-                btn.title = 'Show / hide password';
-                btn.setAttribute('aria-label', 'Show password');
-                btn.innerHTML = '<i class="bi bi-eye"></i>';
-                group.appendChild(btn);
+<script src="~/Content/js/jquery-3.7.0.min.js"></script>
+<script src="~/Content/js/bootstrap.bundle.min.js"></script>
 
-                btn.addEventListener('click', function () {
-                    var show = input.type === 'password';
-                    input.type = show ? 'text' : 'password';
-                    btn.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
-                    btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-                });
-            });
-        </script>
-        @RenderSection("Scripts", required: false)
-    </body>
+<span id="ajaxAntiForgery" hidden>@Html.AntiForgeryToken()</span>
+<script>
+    // Every form-encoded jQuery POST carries the anti-forgery token, so AJAX actions
+    // can use [ValidateAntiForgeryToken] like normal forms.
+    $.ajaxPrefilter(function (options) {
+        if ((options.type || '').toUpperCase() !== 'POST') return;
+        if (options.contentType && options.contentType.indexOf('application/x-www-form-urlencoded') !== 0) return;
+        if (options.data != null && typeof options.data !== 'string') return;   // FormData etc.
+        var token = $('#ajaxAntiForgery input[name="__RequestVerificationToken"]').val();
+        if (!token) return;
+        var pair = '__RequestVerificationToken=' + encodeURIComponent(token);
+        options.data = options.data ? options.data + '&' + pair : pair;
+    });
+
+    // Mobile sidebar
+    (function () {
+        var app = document.getElementById('app');
+        document.getElementById('appBurger').addEventListener('click', function () { app.classList.add('side-open'); });
+        document.getElementById('appScrim').addEventListener('click', function () { app.classList.remove('side-open'); });
+    })();
+
+    // Close dismissible alerts
+    document.querySelectorAll('[data-dismiss="alert"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            this.closest('.alert').style.display = 'none';
+        });
+    });
+
+    // Show / hide toggle for every password field (skips fields already in an input-group)
+    document.querySelectorAll('input[type="password"]').forEach(function (input) {
+        if (input.closest('.input-group') || input.hasAttribute('data-no-toggle')) return;
+
+        var group = document.createElement('div');
+        group.className = 'input-group';
+        input.parentNode.insertBefore(group, input);
+        group.appendChild(input);
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-outline-secondary';
+        btn.title = 'Show / hide password';
+        btn.setAttribute('aria-label', 'Show password');
+        btn.innerHTML = '<i class="bi bi-eye"></i>';
+        group.appendChild(btn);
+
+        btn.addEventListener('click', function () {
+            var show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            btn.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+            btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+        });
+    });
+</script>
+@RenderSection("Scripts", required: false)
+</body>
 </html>

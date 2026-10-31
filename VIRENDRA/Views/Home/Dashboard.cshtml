@@ -1,511 +1,218 @@
-@{
+﻿@{
     ViewBag.Title = "Dashboard";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+
+    var stats  = ViewBag.Stats as VIRENDRA.Models.DashboardStats ?? new VIRENDRA.Models.DashboardStats();
+    var recent = ViewBag.RecentRecharges as List<VIRENDRA.Models.RechargeHistoryItem> ?? new List<VIRENDRA.Models.RechargeHistoryItem>();
+
+    byte roleId    = (byte)(Session["RoleId"] ?? (byte)0);
+    bool isAdmin   = roleId == 1 || roleId == 2;
+    bool isRetailer = roleId == 4;
+    string uname   = (Session["Username"] ?? "").ToString();
+
+    int hour = DateTime.Now.Hour;
+    string greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+    int settled = stats.SuccessCount + stats.FailedCount;
+    int successRate = settled > 0 ? (int)Math.Round(stats.SuccessCount * 100.0 / settled) : 0;
+    decimal change = stats.ClosingBalance - stats.OpeningBalance;
 }
 
-<div class="page-content">
-    <div class="container-fluid">
-        <!-- Start page title -->
-        <div class="row">
-            <div class="col-12">
-                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0 font-size-18">Dashboard</h4>
-                    <div class="page-title-right">
-                        <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a href="javascript: void(0);">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Overview</li>
-                        </ol>
-                    </div>
-                </div>
+<style>
+    .dash-hero { display:grid; grid-template-columns: 1.4fr 1fr; gap:16px; margin-bottom:16px; }
+    .dash-balance { background:var(--side-bg); color:#e2e8f0; border-radius:var(--radius); padding:22px 24px; position:relative; overflow:hidden; }
+    .dash-balance::after { content:""; position:absolute; right:-40px; bottom:-40px; width:180px; height:180px; border-radius:50%; border:28px solid rgba(94,234,212,.08); }
+    .dash-balance .lbl { font-size:.74rem; text-transform:uppercase; letter-spacing:.08em; color:#94a3b8; }
+    .dash-balance .amt { font-size:2.2rem; font-weight:800; color:#fff; letter-spacing:-.03em; margin:4px 0 10px; }
+    .dash-balance .row-mini { display:flex; gap:28px; font-size:.8rem; color:#94a3b8; }
+    .dash-balance .row-mini b { display:block; color:#e2e8f0; font-size:.95rem; }
+    .dash-delta { font-size:.78rem; font-weight:700; padding:2px 8px; border-radius:999px; }
+    .dash-delta.up { background:rgba(34,197,94,.15); color:#4ade80; }
+    .dash-delta.down { background:rgba(248,113,113,.15); color:#f87171; }
+    .dash-rate { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; display:flex; flex-direction:column; justify-content:space-between; }
+    .rate-bar { height:10px; border-radius:999px; background:var(--bad-soft); overflow:hidden; display:flex; }
+    .rate-bar span { background:var(--ok); }
+    .rate-legend { display:flex; gap:16px; font-size:.76rem; color:var(--muted); }
+    .rate-legend i { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:5px; }
+    .quick a { display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); color:var(--ink); text-decoration:none; font-weight:600; font-size:.84rem; }
+    .quick a:hover { border-color:var(--accent); color:var(--accent-ink); }
+    .quick a i { color:var(--accent-ink); }
+    .op-dot { width:28px; height:28px; border-radius:8px; display:grid; place-items:center; background:var(--soft); border:1px solid var(--line); font-size:.7rem; font-weight:800; color:var(--ink-2); }
+    @@media (max-width: 991.98px) { .dash-hero { grid-template-columns:1fr; } }
+</style>
+
+<div class="page-head">
+    <div>
+        <h4>@greeting@(string.IsNullOrEmpty(uname) ? "" : ", " + uname)</h4>
+        <div class="text-muted small">
+            Here's how today is going @(isAdmin ? "across all users" : "")
+            &middot; @DateTime.Now.ToString("dddd, dd MMM yyyy")
+        </div>
+    </div>
+    @if (isRetailer)
+    {
+        <a href="@Url.Action("Index","Recharge")" class="btn btn-dark"><i class="fas fa-bolt me-1"></i>New recharge</a>
+    }
+</div>
+
+<div class="dash-hero">
+    <div class="dash-balance">
+        <div class="d-flex align-items-center justify-content-between">
+            <span class="lbl">Wallet balance</span>
+            <span class="dash-delta @(change >= 0 ? "up" : "down")">
+                @(change >= 0 ? "+" : "−")&#8377;@Math.Abs(change).ToString("N2") today
+            </span>
+        </div>
+        <div class="amt">&#8377;@stats.ClosingBalance.ToString("N2")</div>
+        <div class="row-mini">
+            <span>Opening<b>&#8377;@stats.OpeningBalance.ToString("N2")</b></span>
+            <span>Credited today<b>&#8377;@stats.CreditBalance.ToString("N2")</b></span>
+            <span>Earned today<b>&#8377;@stats.TodayEarning.ToString("N2")</b></span>
+        </div>
+    </div>
+
+    <div class="dash-rate">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <div class="stat-label">Success rate today</div>
+                <div class="stat-value">@(settled > 0 ? successRate + "%" : "—")</div>
+            </div>
+            <div class="text-end">
+                <div class="stat-label">Pending</div>
+                <div class="stat-value" style="font-size:1.1rem;">@stats.PendingCount</div>
             </div>
         </div>
-        <!-- End page title -->
-
-        <!-- Success Alert -->
-        @if (TempData["LoginSuccess"] != null)
-        {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fa fa-check-circle"></i> Login Successful..
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        }
-
-        @{
-            var stats = ViewBag.Stats as VIRENDRA.Models.DashboardStats ?? new VIRENDRA.Models.DashboardStats();
-        }
-
-        <!-- Tab Navigation - Bootstrap Native Tabs -->
-        <ul class="nav nav-tabs-custom card-header-tabs border mt-4" role="tablist">
-            <li class="nav-item" role="presentation">
-                <a class="nav-link active" href="#overview-tab" data-bs-toggle="tab" role="tab" aria-selected="true">
-                    <span>Overview</span>
-                </a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" href="#statistics-tab" data-bs-toggle="tab" role="tab" aria-selected="false" tabindex="-1">
-                    <span>Statistics</span>
-                </a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" href="#transactions-tab" data-bs-toggle="tab" role="tab" aria-selected="false" tabindex="-1">
-                    <span>Transactions</span>
-                </a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" href="#reports-tab" data-bs-toggle="tab" role="tab" aria-selected="false" tabindex="-1">
-                    <span>Reports</span>
-                </a>
-            </li>
-        </ul>
-
-        <!-- Tab Content -->
-        <div class="tab-content">
-            <!-- Tab 1: Overview -->
-            <div id="overview-tab" class="tab-pane fade active show" role="tabpanel">
-                <div class="row mt-4 g-3">
-
-                    <!-- Opening Balance -->
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #2196F3;border-radius:10px;">
-                            <div class="card-body d-flex align-items-center gap-3">
-                                <div class="stat-icon rounded-lg p-3" style="background:#2196F320;">
-                                    <i class="fa fa-wallet fa-2x" style="color:#2196F3;"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted mb-1" style="font-size:.8rem;">Opening Balance</p>
-                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.OpeningBalance.ToString("0.##")</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Closing / Current Balance -->
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #9C27B0;border-radius:10px;">
-                            <div class="card-body d-flex align-items-center gap-3">
-                                <div class="stat-icon rounded-lg p-3" style="background:#9C27B020;">
-                                    <i class="fa fa-rupee-sign fa-2x" style="color:#9C27B0;"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted mb-1" style="font-size:.8rem;">Current Balance</p>
-                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.ClosingBalance.ToString("0.##")</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Success Transaction -->
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #4CAF50;border-radius:10px;">
-                            <div class="card-body d-flex align-items-center gap-3">
-                                <div class="stat-icon rounded-lg p-3" style="background:#4CAF5020;">
-                                    <i class="fa fa-check-circle fa-2x" style="color:#4CAF50;"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted mb-1" style="font-size:.8rem;">
-                                        Success Txn
-                                        <span class="badge ms-1" style="background:#4CAF5020;color:#4CAF50;font-size:.68rem;">@stats.SuccessCount</span>
-                                    </p>
-                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.SuccessAmount.ToString("0.##")</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Failed Transaction -->
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #F44336;border-radius:10px;">
-                            <div class="card-body d-flex align-items-center gap-3">
-                                <div class="stat-icon rounded-lg p-3" style="background:#F4433620;">
-                                    <i class="fa fa-times-circle fa-2x" style="color:#F44336;"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted mb-1" style="font-size:.8rem;">
-                                        Failed Txn
-                                        <span class="badge ms-1" style="background:#F4433620;color:#F44336;font-size:.68rem;">@stats.FailedCount</span>
-                                    </p>
-                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.FailedAmount.ToString("0.##")</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Refund Transaction -->
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #FF9800;border-radius:10px;">
-                            <div class="card-body d-flex align-items-center gap-3">
-                                <div class="stat-icon rounded-lg p-3" style="background:#FF980020;">
-                                    <i class="fa fa-undo fa-2x" style="color:#FF9800;"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted mb-1" style="font-size:.8rem;">Refund Txn</p>
-                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.RefundAmount.ToString("0.##")</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Credit Balance -->
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #00BCD4;border-radius:10px;">
-                            <div class="card-body d-flex align-items-center gap-3">
-                                <div class="stat-icon rounded-lg p-3" style="background:#00BCD420;">
-                                    <i class="fa fa-credit-card fa-2x" style="color:#00BCD4;"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted mb-1" style="font-size:.8rem;">Credit Balance</p>
-                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.CreditBalance.ToString("0.##")</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Today's Earning -->
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #8BC34A;border-radius:10px;">
-                            <div class="card-body d-flex align-items-center gap-3">
-                                <div class="stat-icon rounded-lg p-3" style="background:#8BC34A20;">
-                                    <i class="fa fa-chart-line fa-2x" style="color:#8BC34A;"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted mb-1" style="font-size:.8rem;">Today's Earning</p>
-                                    <h4 class="mb-0 fw-bold"><i class="fa fa-rupee-sign"></i> @stats.TodayEarning.ToString("0.##")</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Total Txn Count -->
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #607D8B;border-radius:10px;">
-                            <div class="card-body d-flex align-items-center gap-3">
-                                <div class="stat-icon rounded-lg p-3" style="background:#607D8B20;">
-                                    <i class="fa fa-list fa-2x" style="color:#607D8B;"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted mb-1" style="font-size:.8rem;">
-                                        Total Txn Count
-                                        <span class="badge ms-1" style="background:#607D8B20;color:#607D8B;font-size:.68rem;">@stats.PendingCount Pending</span>
-                                    </p>
-                                    <h4 class="mb-0 fw-bold">@stats.TotalTxnCount</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- Tab 2: Statistics -->
-            <div id="statistics-tab" class="tab-pane fade" role="tabpanel">
-                <div class="card mt-3">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Detailed Statistics</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <h6 class="font-weight-bold mb-3">Monthly Breakdown</h6>
-                                <ul class="list-group">
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>Total Transactions</span>
-                                        <strong>2845</strong>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>Success Rate</span>
-                                        <strong>98.5%</strong>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>Average Transaction</span>
-                                        <strong><i class="fa fa-rupee-sign"></i> 1,245.50</strong>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>Total Volume</span>
-                                        <strong><i class="fa fa-rupee-sign"></i> 35,42,500</strong>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6 mb-4">
-                                <h6 class="font-weight-bold mb-3">Performance Metrics</h6>
-                                <ul class="list-group">
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>API Response Time</span>
-                                        <strong>245ms</strong>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>System Uptime</span>
-                                        <strong>99.9%</strong>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>Failed Transactions</span>
-                                        <strong>42</strong>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>Pending Requests</span>
-                                        <strong>3</strong>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab 3: Recent Transactions (live from Recharge table) -->
-            <div id="transactions-tab" class="tab-pane fade" role="tabpanel">
-                @{
-                    var recentList = ViewBag.RecentRecharges as List<VIRENDRA.Models.RechargeHistoryItem>
-                                     ?? new List<VIRENDRA.Models.RechargeHistoryItem>();
-                }
-                <div class="card border-0 shadow-sm mt-3" style="border-radius:12px;overflow:hidden;">
-                    <!-- Card Header -->
-                    <div class="card-header border-0 py-3 px-4"
-                         style="background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
-                                     style="width:36px;height:36px;background:rgba(255,255,255,.2);">
-                                    <i class="fas fa-bolt text-white" style="font-size:.85rem;"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-0 text-white fw-bold">Recent Recharge Transactions</h6>
-                                    <small class="text-white-50">Latest 10 records from the Recharge table</small>
-                                </div>
-                            </div>
-                            <a href="@Url.Action("Index", "Transaction")" class="btn btn-sm btn-light fw-semibold">
-                                <i class="fas fa-list me-1"></i>View All
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="card-body p-0">
-                        @if (!recentList.Any())
-                        {
-                            <div class="text-center py-5 text-muted">
-                                <i class="fas fa-inbox fa-3x mb-3 d-block" style="opacity:.3;"></i>
-                                <p class="mb-0">No recharge transactions found.</p>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0" style="font-size:.86rem;">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th class="ps-4 text-center" style="width:50px;">#</th>
-                                            <th class="text-center" style="width:46px;">Status</th>
-                                            <th>Txn / Mobile</th>
-                                            <th>Reference</th>
-                                            <th>Operator</th>
-                                            <th class="text-end">Amount (<i class="fa fa-rupee-sign"></i>)</th>
-                                            <th class="text-end">Comm (<i class="fa fa-rupee-sign"></i>)</th>
-                                            <th>Date &amp; Time</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @{ int sno = 1; }
-                                        @foreach (var r in recentList)
-                                        {
-                                            // Status styling
-                                            string statusColor, statusIcon, badgeClass;
-                                            switch (r.Status)
-                                            {
-                                                case "Success":
-                                                    statusColor = "#4CAF50"; statusIcon = "fa-check-circle"; badgeClass = "bg-success";
-                                                    break;
-                                                case "Failed":
-                                                    statusColor = "#F44336"; statusIcon = "fa-times-circle"; badgeClass = "bg-danger";
-                                                    break;
-                                                default:
-                                                    statusColor = "#FF9800"; statusIcon = "fa-clock"; badgeClass = "bg-warning text-dark";
-                                                    break;
-                                            }
-
-                                            <tr>
-                                                <td class="ps-4 text-center text-muted fw-semibold">@sno</td>
-                                                <td class="text-center">
-                                                    <i class="fas @statusIcon fa-lg" style="color:@statusColor;" title="@r.Status @r.StatusMsg"></i>
-                                                </td>
-                                                <td>
-                                                    <div class="fw-semibold text-dark">@(r.TxnId ?? "\u2014")</div>
-                                                    <small class="text-muted">@r.Number</small>
-                                                </td>
-                                                <td>
-                                                    @if (!string.IsNullOrEmpty(r.OurRefTxnId))
-                                                    {
-                                                        <code class="text-dark" style="font-size:.78rem;">@r.OurRefTxnId</code>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="text-muted">&mdash;</span>
-                                                    }
-                                                    @if (!string.IsNullOrEmpty(r.ApiTxnId))
-                                                    {
-                                                        <div><small class="text-muted" style="font-size:.72rem;">@r.ApiTxnId</small></div>
-                                                    }
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <div class="rounded-circle d-flex align-items-center justify-content-center"
-                                                             style="width:28px;height:28px;background:#667eea15;flex-shrink:0;">
-                                                            <i class="fas fa-bolt" style="color:#667eea;font-size:.65rem;"></i>
-                                                        </div>
-                                                        <span>@r.Operator</span>
-                                                    </div>
-                                                </td>
-                                                <td class="text-end fw-semibold text-dark">
-                                                    <i class="fa fa-rupee-sign"></i> @r.Amount.ToString("0.00")
-                                                </td>
-                                                <td class="text-end">
-                                                    @if (r.Commission > 0)
-                                                    {
-                                                        <span class="text-success fw-semibold"><i class="fa fa-rupee-sign"></i> @r.Commission.ToString("0.##")</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="text-muted">&mdash;</span>
-                                                    }
-                                                </td>
-                                                <td>
-                                                    <div style="white-space:nowrap;">@r.Date.ToString("dd-MMM-yyyy")</div>
-                                                    <small class="text-muted">@r.Date.ToString("hh:mm:ss tt")</small>
-                                                </td>
-                                            </tr>
-                                            sno++;
-                                        }
-                                    </tbody>
-                                    <tfoot class="table-light">
-                                        <tr>
-                                            <td colspan="5" class="ps-4 fw-semibold text-muted" style="font-size:.8rem;">
-                                                Showing @recentList.Count record(s)
-                                            </td>
-                                            <td class="text-end fw-bold text-dark">
-                                                <i class="fa fa-rupee-sign"></i> @recentList.Sum(x => x.Amount).ToString("0.00")
-                                            </td>
-                                            <td class="text-end fw-bold text-success">
-                                                <i class="fa fa-rupee-sign"></i> @recentList.Sum(x => x.Commission).ToString("0.##")
-                                            </td>
-                                            <td></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab 4: Reports -->
-            <div id="reports-tab" class="tab-pane fade" role="tabpanel">
-                <div class="card mt-3">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">Reports & Analytics</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row mb-4">
-                            <div class="col-md-12">
-                                <h6 class="font-weight-bold mb-3">Export Options</h6>
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-outline-primary">
-                                        <i class="fa fa-file-pdf"></i> Export PDF
-                                    </button>
-                                    <button type="button" class="btn btn-outline-primary">
-                                        <i class="fa fa-file-excel"></i> Export Excel
-                                    </button>
-                                    <button type="button" class="btn btn-outline-primary">
-                                        <i class="fa fa-file-csv"></i> Export CSV
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6 class="font-weight-bold mb-3">Date Range</h6>
-                                <div class="form-group">
-                                    <label>From Date:</label>
-                                    <input type="date" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label>To Date:</label>
-                                    <input type="date" class="form-control">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="font-weight-bold mb-3">Report Type</h6>
-                                <div class="form-group">
-                                    <select class="form-control">
-                                        <option>All Transactions</option>
-                                        <option>Success Transactions</option>
-                                        <option>Failed Transactions</option>
-                                        <option>Pending Transactions</option>
-                                    </select>
-                                </div>
-                                <button class="btn btn-primary" style="margin-top: 1.5rem;">
-                                    <i class="fa fa-search"></i> Generate Report
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div>
+            <div class="rate-bar my-2"><span style="width:@(settled > 0 ? successRate : 0)%"></span></div>
+            <div class="rate-legend">
+                <span><i style="background:var(--ok)"></i>@stats.SuccessCount success</span>
+                <span><i style="background:var(--bad-soft);border:1px solid #fecaca"></i>@stats.FailedCount failed</span>
+                <span>@stats.TotalTxnCount total</span>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .stat-icon {
-        border-radius: 8px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 70px;
-        height: 70px;
-        font-size: 2rem;
-        margin-right: 15px;
-    }
+<div class="row g-3 mb-3">
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat">
+            <div class="d-flex justify-content-between"><span class="stat-label">Successful</span><span class="stat-ic ok"><i class="fas fa-check"></i></span></div>
+            <div class="stat-value">&#8377;@stats.SuccessAmount.ToString("N2")</div>
+            <div class="stat-note">@stats.SuccessCount recharge(s)</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat">
+            <div class="d-flex justify-content-between"><span class="stat-label">Failed</span><span class="stat-ic bad"><i class="fas fa-xmark"></i></span></div>
+            <div class="stat-value">&#8377;@stats.FailedAmount.ToString("N2")</div>
+            <div class="stat-note">@stats.FailedCount recharge(s), refunded to wallet</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat">
+            <div class="d-flex justify-content-between"><span class="stat-label">Refunds</span><span class="stat-ic warn"><i class="fas fa-rotate-left"></i></span></div>
+            <div class="stat-value">&#8377;@stats.RefundAmount.ToString("N2")</div>
+            <div class="stat-note">Credited back today</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat">
+            <div class="d-flex justify-content-between"><span class="stat-label">Commission</span><span class="stat-ic"><i class="fas fa-percent"></i></span></div>
+            <div class="stat-value">&#8377;@stats.TodayEarning.ToString("N2")</div>
+            <div class="stat-note">@(isAdmin ? "Paid to users on today's recharges" : "On today's successful recharges")</div>
+        </div>
+    </div>
+</div>
 
-    .card {
-        border: none;
-        border-radius: 8px;
-    }
+<div class="row g-3">
+    <div class="col-xl-9">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span>Latest recharges</span>
+                <a href="@Url.Action("RechargeHistory","Transaction")" class="btn btn-sm btn-light">View all</a>
+            </div>
+            @if (!recent.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>
+                    No recharges yet.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Number</th>
+                                <th>Operator</th>
+                                <th>Reference</th>
+                                <th class="text-end">Amount</th>
+                                <th class="text-end">Comm.</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in recent)
+                            {
+                                string st = (r.Status ?? "").ToLowerInvariant();
+                                string cls = st == "success" ? "status-success" : st == "failed" ? "status-failed" : "status-pending";
+                                string op = r.Operator ?? "-";
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@r.Number</div>
+                                        <small class="text-muted">@(r.TxnId ?? "—")</small>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="op-dot">@(op.Length > 1 ? op.Substring(0, 2).ToUpperInvariant() : op)</span>@op
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <code class="small">@(r.OurRefTxnId ?? "—")</code>
+                                        @if (!string.IsNullOrEmpty(r.ApiTxnId))
+                                        {
+                                            <div><small class="text-muted">@r.ApiTxnId</small></div>
+                                        }
+                                    </td>
+                                    <td class="text-end fw-semibold">&#8377;@r.Amount.ToString("N2")</td>
+                                    <td class="text-end">@(r.Commission > 0 ? "₹" + r.Commission.ToString("0.##") : "—")</td>
+                                    <td><span class="status-badge @cls" title="@r.StatusMsg">@r.Status</span></td>
+                                    <td class="text-nowrap">
+                                        <div>@r.Date.ToString("dd MMM")</div>
+                                        <small class="text-muted">@r.Date.ToString("hh:mm tt")</small>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
 
-    .badge {
-        padding: 0.5rem 0.75rem;
-        font-weight: 500;
-    }
-
-    .table tbody tr {
-        border-bottom: 1px solid #e9ecef;
-    }
-
-    .table tbody tr:hover {
-        background-color: #f8f9fa;
-    }
-
-    .list-group-item {
-        border-left: 3px solid #0066ff;
-    }
-
-    .nav-tabs-custom {
-        border-bottom: 2px solid #e9ecef;
-    }
-
-    .nav-tabs-custom .nav-link {
-        color: #495057;
-        border: none;
-        border-bottom: 3px solid transparent;
-        padding: 0.75rem 1.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .nav-tabs-custom .nav-link:hover {
-        color: #212529;
-        border-bottom-color: #dee2e6;
-    }
-
-    .nav-tabs-custom .nav-link.active {
-        color: #0066ff;
-        border-bottom-color: #0066ff;
-        background: transparent;
-    }
-</style>
+    <div class="col-xl-3">
+        <div class="card">
+            <div class="card-header">Shortcuts</div>
+            <div class="card-body quick d-grid gap-2">
+                @if (isRetailer)
+                {
+                    <a href="@Url.Action("Index","Recharge")"><i class="fas fa-bolt"></i>New recharge</a>
+                }
+                <a href="@Url.Action("RechargeHistory","Transaction")"><i class="fas fa-clock-rotate-left"></i>Recharge history</a>
+                <a href="@Url.Action("TransactionHistory","Transaction")"><i class="fas fa-receipt"></i>Wallet ledger</a>
+                <a href="@Url.Action("ComplaintReport","Transaction")"><i class="fas fa-flag"></i>Complaints</a>
+                @if (isAdmin)
+                {
+                    <a href="@Url.Action("AddMoney","Wallet")"><i class="fas fa-circle-plus"></i>Add money to a user</a>
+                    <a href="@Url.Action("Index","KycAdmin")"><i class="fas fa-user-check"></i>Review KYC</a>
+                }
+                else
+                {
+                    <a href="@Url.Action("MyCommission","PackageComm")"><i class="fas fa-percent"></i>My commission</a>
+                }
+            </div>
+        </div>
+    </div>
+</div>

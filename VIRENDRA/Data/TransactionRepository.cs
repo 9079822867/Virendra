@@ -18,7 +18,7 @@ namespace VIRENDRA.Data
                 ?? throw new ConfigurationErrorsException("sqlconn connection string is missing in Web.config");
         }
 
-        public DashboardStats GetDashboardStats(int userId)
+        public DashboardStats GetDashboardStats(int userId, bool allUsers = false)
         {
             const string sql = @"
                 DECLARE @Today    DATETIME = CAST(CAST(GETDATE() AS DATE) AS DATETIME);
@@ -45,13 +45,13 @@ namespace VIRENDRA.Data
 
                     -- Success amount today
                     ISNULL((SELECT SUM(Amount) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId = 1
+                            WHERE (@All = 1 OR UserId = @UserId) AND StatusId = 1
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS SuccessAmount,
 
                     -- Failed amount today
                     ISNULL((SELECT SUM(Amount) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId in (2,4)
+                            WHERE (@All = 1 OR UserId = @UserId) AND StatusId in (2,4)
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS FailedAmount,
 
@@ -66,33 +66,33 @@ namespace VIRENDRA.Data
 
                     -- Today's earning: commission on success recharges
                     ISNULL((SELECT SUM(Recharge_Commision) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId = 1
+                            WHERE (@All = 1 OR UserId = @UserId) AND StatusId = 1
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS TodayEarning,
 
                     -- Counts
                     ISNULL((SELECT COUNT(*) FROM Recharge
-                            WHERE UserId = @UserId
+                            WHERE (@All = 1 OR UserId = @UserId)
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS TotalTxnCount,
 
                     ISNULL((SELECT COUNT(*) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId = 1
+                            WHERE (@All = 1 OR UserId = @UserId) AND StatusId = 1
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS SuccessCount,
 
                     ISNULL((SELECT COUNT(*) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId in (2,4)
+                            WHERE (@All = 1 OR UserId = @UserId) AND StatusId in (2,4)
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS FailedCount,
 
                     ISNULL((SELECT COUNT(*) FROM Recharge
-                            WHERE UserId = @UserId AND StatusId in (3,5)
+                            WHERE (@All = 1 OR UserId = @UserId) AND StatusId in (3,5)
                               AND RequestTime >= @Today AND RequestTime < @Tomorrow), 0)
                         AS PendingCount";
 
             using (var conn = new SqlConnection(_connectionString))
-                return conn.QueryFirstOrDefault<DashboardStats>(sql, new { UserId = userId })
+                return conn.QueryFirstOrDefault<DashboardStats>(sql, new { UserId = userId, All = allUsers ? 1 : 0 })
                        ?? new DashboardStats();
         }
 

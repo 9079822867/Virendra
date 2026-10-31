@@ -15,9 +15,10 @@ namespace VIRENDRA.Controllers
             _txnRepo = txnRepo;
         }
 
+        // The old template landing page is not part of the app
         public ActionResult Index()
         {
-            return View();
+            return RedirectToAction("Dashboard");
         }
 
         public ActionResult About()
@@ -38,7 +39,8 @@ namespace VIRENDRA.Controllers
             byte roleId = (byte)(Session["RoleId"] ?? (byte)0);
             bool isAdmin = roleId == RoleConstants.SuperAdmin || roleId == RoleConstants.Admin;
 
-            ViewBag.Stats           = _txnRepo.GetDashboardStats(userId);
+            // Admins see recharge figures for all users; balances stay their own
+            ViewBag.Stats           = _txnRepo.GetDashboardStats(userId, allUsers: isAdmin);
             // API User / Retailer see only their own recharges
             ViewBag.RecentRecharges = _txnRepo.GetRecentRecharges(isAdmin ? (int?)null : userId, 10);
             return View();
