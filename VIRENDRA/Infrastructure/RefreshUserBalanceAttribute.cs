@@ -7,8 +7,8 @@ using Dapper;
 namespace VIRENDRA.Infrastructure
 {
     /// <summary>
-    /// Global filter: reloads Session["UserBal"] from the [User] table on every
-    /// request so the balance shown in the layout is always live.
+    /// Global filter: reloads Session["UserBal"] and Session["UserOutstanding"] from the
+    /// [User] table on every request so the figures shown in the layout are always live.
     /// </summary>
     public class RefreshUserBalanceAttribute : ActionFilterAttribute
     {
@@ -27,8 +27,14 @@ namespace VIRENDRA.Infrastructure
 
                 using (var c = new SqlConnection(conn))
                 {
-                    session["UserBal"] = c.ExecuteScalar<decimal>(
-                        "SELECT ISNULL(UserBal, 0) FROM [User] WHERE Id = @Id", new { Id = userId });
+                    var row = c.QueryFirstOrDefault(
+                        "SELECT ISNULL(UserBal, 0) AS Bal, ISNULL(UserOutStandingBal, 0) AS Outstanding FROM [User] WHERE Id = @Id",
+                        new { Id = userId });
+                    if (row != null)
+                    {
+                        session["UserBal"]         = (decimal)row.Bal;
+                        session["UserOutstanding"] = (decimal)row.Outstanding;
+                    }
                 }
             }
             catch

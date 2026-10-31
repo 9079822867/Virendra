@@ -107,11 +107,22 @@ code { color: var(--accent-ink); }
 }
 .app-top-title { font-weight: 700; font-size: 1rem; color: var(--ink); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .app-burger { display: none; border: 1px solid var(--line); background: #fff; border-radius: 8px; width: 36px; height: 36px; }
+.app-money { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .app-balance {
-    margin-left: auto; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+    display: flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 10px;
     background: var(--soft); border: 1px solid var(--line); font-weight: 700; font-size: .84rem; white-space: nowrap;
+    color: var(--ink); text-decoration: none; line-height: 1.15;
 }
+.app-balance small { display: block; font-size: .62rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 .app-balance i { color: var(--accent); }
+.app-outstanding:hover { border-color: var(--line-2); color: var(--ink); }
+.app-outstanding.due { background: var(--warn-soft); border-color: #fde68a; }
+.app-outstanding.due i { color: var(--warn); }
+@media (max-width: 575.98px) {
+    .app-balance small { display: none; }
+    .app-balance { padding: 6px 9px; font-size: .76rem; }
+    .app-top-title { display: none; }
+}
 .app-user { display: flex; align-items: center; gap: 10px; padding: 4px 6px 4px 4px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink); text-decoration: none; }
 .app-user:hover { border-color: var(--line-2); color: var(--ink); }
 .app-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: .8rem; }

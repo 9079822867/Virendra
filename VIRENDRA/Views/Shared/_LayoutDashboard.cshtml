@@ -5,6 +5,7 @@
     byte roleId = (byte)(Session["RoleId"] ?? (byte)0);
     string uname = (Session["Username"] ?? "User").ToString();
     decimal bal = (decimal)(Session["UserBal"] ?? 0m);
+    decimal outstanding = (decimal)(Session["UserOutstanding"] ?? 0m);
 
     bool isSuperAdmin = roleId == 1;
     bool isAdmin = roleId == 2;
@@ -45,7 +46,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <link href="~/Content/css/app-theme.css?v=1" rel="stylesheet">
+    <link href="~/Content/css/app-theme.css?v=2" rel="stylesheet">
 </head>
 <body>
 <div class="app" id="app">
@@ -128,7 +129,16 @@
             <button type="button" class="app-burger" id="appBurger" aria-label="Open menu"><i class="fas fa-bars"></i></button>
             <h1 class="app-top-title">@(ViewBag.Title ?? "Dashboard")</h1>
 
-            <span class="app-balance" title="Wallet balance"><i class="fas fa-wallet"></i>&#8377; @bal.ToString("N2")</span>
+            <div class="app-money">
+                <span class="app-balance" title="Wallet balance">
+                    <i class="fas fa-wallet"></i>
+                    <span><small>Balance</small>&#8377; @bal.ToString("N2")</span>
+                </span>
+                <a class="app-balance app-outstanding @(outstanding > 0 ? "due" : "")" href="@Url.Action("OutStandingReport","Transaction")" title="Outstanding (credit) amount — open report">
+                    <i class="fas fa-scale-unbalanced"></i>
+                    <span><small>Outstanding</small>&#8377; @outstanding.ToString("N2")</span>
+                </a>
+            </div>
 
             <div class="dropdown">
                 <a href="#" class="app-user" id="ddUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">

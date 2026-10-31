@@ -131,7 +131,8 @@ namespace VIRENDRA.Data
 
             var error   = p.Get<string>("@error") ?? "0";
             var log     = p.Get<string>("@Log")   ?? string.Empty;
-            var success = error == "0" || string.IsNullOrWhiteSpace(error);
+            // 0 = added, 7 = added with credit, 6 = outstanding debited — all successes
+            var success = string.IsNullOrWhiteSpace(error) || error == "0" || error == "6" || error == "7";
 
             return (success, error, log);
         }

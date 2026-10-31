@@ -26,6 +26,13 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
+    else if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible">
+            <i class="fas fa-check-circle me-1"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
     <div class="card">
         <div class="card-body">
@@ -41,17 +48,17 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Bank Account</label>
                             @Html.DropDownListFor(m => m.BankAccountId,
-                                     (SelectList)ViewBag.BankAccountList,
-                                     "-- Select Bank Account --",
-                                     new { @class = "form-select" })
+                                               (SelectList)ViewBag.BankAccountList,
+                                               "-- Select Bank Account --",
+                                               new { @class = "form-select" })
                         </div>
                         <!-- User -->
                         <div class="mb-3">
                             <label class="form-label fw-semibold">User <span class="text-danger">*</span></label>
                             @Html.DropDownListFor(m => m.UserId,
-                                     (SelectList)ViewBag.UserList,
-                                     "Select a User",
-                                     new { @class = "form-select", required = "required" })
+                                               (SelectList)ViewBag.UserList,
+                                               "Select a User",
+                                               new { @class = "form-select", required = "required" })
                             @Html.ValidationMessageFor(m => m.UserId, "", new { @class = "text-danger small" })
                         </div>
 
@@ -78,9 +85,9 @@
                             </div>
 
                             @*<div class="form-check">
-                @Html.CheckBoxFor(m => m.SMS, new { @class = "form-check-input" })
-                <label class="form-check-label fw-semibold" for="SMS">SMS</label>
-            </div>*@
+                                    @Html.CheckBoxFor(m => m.SMS, new { @class = "form-check-input" })
+                                    <label class="form-check-label fw-semibold" for="SMS">SMS</label>
+                                </div>*@
                         </div>
                     </div>
 
@@ -91,8 +98,8 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Transfer Type <span class="text-danger">*</span></label>
                             @Html.DropDownListFor(m => m.TransferType,
-                                (SelectList)ViewBag.TransferTypeList,
-                                new { @class = "form-select", required = "required" })
+                                          (SelectList)ViewBag.TransferTypeList,
+                                          new { @class = "form-select", required = "required" })
                             @Html.ValidationMessageFor(m => m.TransferType, "", new { @class = "text-danger small" })
                         </div>
 
@@ -100,16 +107,16 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Payment Date</label>
                             @Html.TextBoxFor(m => m.PaymentDate, "{0:yyyy-MM-dd}",
-                                new { @class = "form-control", type = "date" })
+                                          new { @class = "form-control", type = "date" })
                         </div>
 
-                      
+
 
                         <!-- Cheque/Ref Number -->
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Cheque / Ref Number <span class="text-danger">*</span></label>
                             @Html.TextBoxFor(m => m.ChequeRefNo,
-                                new { @class = "form-control", required = "required" })
+                                          new { @class = "form-control", required = "required" })
                             @Html.ValidationMessageFor(m => m.ChequeRefNo, "", new { @class = "text-danger small" })
                         </div>
 
@@ -117,7 +124,7 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Remark <span class="text-danger">*</span></label>
                             @Html.TextAreaFor(m => m.Remark,
-                                new { @class = "form-control", rows = 3, required = "required" })
+                                          new { @class = "form-control", rows = 3, required = "required" })
                             @Html.ValidationMessageFor(m => m.Remark, "", new { @class = "text-danger small" })
                         </div>
                     </div>

@@ -104,16 +104,15 @@ namespace VIRENDRA.Controllers
             try
             {
                 var result = _walletRepo.AddMoney(model);
+                string message = AddMoneyMessage(result.Error);
 
                 if (result.Success)
                 {
-                    TempData["SuccessMessage"] = !string.IsNullOrWhiteSpace(result.Log) && result.Log != "0"
-                        ? result.Log
-                        : "Payment request submitted successfully.";
+                    TempData["SuccessMessage"] = message;
                     return RedirectToAction("Index");
                 }
 
-                ModelState.AddModelError("", result.Error);
+                ModelState.AddModelError("", message);
                 PopulateDropdowns(model.UserId, model.BankAccountId,
                                   model.TransferType, model.WalletType);
                 return View(model);
@@ -124,6 +123,24 @@ namespace VIRENDRA.Controllers
                 PopulateDropdowns(model.UserId, model.BankAccountId,
                                   model.TransferType, model.WalletType);
                 return View(model);
+            }
+        }
+
+        // sp_AddUserWallet @error codes → message (0 / 6 / 7 are successes)
+        private static string AddMoneyMessage(string code)
+        {
+            switch ((code ?? "0").Trim())
+            {
+                case "":
+                case "0": return "Wallet has been updated.";
+                case "7": return "Wallet with credit has been updated.";
+                case "6": return "Outstanding balance debited.";
+                case "2": return "Duplicate cheque / ref number.";
+                case "3": return "Already approved.";
+                case "4": return "Duplicate transaction for the same wallet request.";
+                case "5": return "User's outstanding balance is too low.";
+                case "Rollback": return "Nothing was saved: the database rolled the transaction back.";
+                default:  return "Something went wrong (code " + code + ").";
             }
         }
 
