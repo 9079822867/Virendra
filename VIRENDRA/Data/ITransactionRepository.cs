@@ -8,7 +8,8 @@ namespace VIRENDRA.Data
     {
         DashboardStats GetDashboardStats(int userId);
 
-        List<RechargeHistoryItem> GetRecentRecharges(int top = 10);
+        // userId null = all users (admins only)
+        List<RechargeHistoryItem> GetRecentRecharges(int? userId, int top = 10);
 
         List<RechargeHistoryItem> GetRechargeHistory(
             int? userId, DateTime fromDate, DateTime toDate, string status, string searchText);

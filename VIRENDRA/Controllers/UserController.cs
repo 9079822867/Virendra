@@ -73,6 +73,7 @@ namespace VIRENDRA.Controllers
             }
 
             ValidateParent(user.ParentID, null);
+            ValidateRole(user.RoleId);
 
             if (!string.IsNullOrWhiteSpace(user.Username) &&
                 _userRepository.GetUserByUsername(user.Username.Trim()) != null)
@@ -122,6 +123,7 @@ namespace VIRENDRA.Controllers
             {
                 return HttpNotFound();
             }
+            if (!CanManage(user)) return Forbidden();
 
             PopulateLists(user.RoleId, user.PackageId, user.ParentID, user.Id);
             return View(user);
@@ -137,6 +139,7 @@ namespace VIRENDRA.Controllers
             {
                 return HttpNotFound();
             }
+            if (!CanManage(user)) return Forbidden();
 
             if (string.IsNullOrWhiteSpace(model.Username))
             {
@@ -153,6 +156,7 @@ namespace VIRENDRA.Controllers
             {
                 ModelState.AddModelError("RoleId", "Role is required.");
             }
+            ValidateRole(model.RoleId);
 
             // Keeping the existing parent is always allowed, even if it is no longer eligible.
             if (model.ParentID != user.ParentID)
@@ -178,8 +182,8 @@ namespace VIRENDRA.Controllers
             user.IsActive = model.IsActive;
             user.IsLocked = model.IsLocked;
             user.PackageId = model.PackageId;
-            user.UserBal = model.UserBal;
-            user.UserOutStandingBal = model.UserOutStandingBal;
+            // UserBal / UserOutStandingBal are ledger-driven (TxnLedger trigger, Add Money);
+            // they are shown on the form but never written from it.
             user.ParentID = model.ParentID;
             user.LoginIP = model.LoginIP;
             user.CallbackURL = model.CallbackURL;
@@ -221,6 +225,7 @@ namespace VIRENDRA.Controllers
             {
                 return HttpNotFound();
             }
+            if (!CanManage(user)) return Forbidden();
 
             return View(user);
         }
@@ -229,6 +234,18 @@ namespace VIRENDRA.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
+            User user = _userRepository.GetUserById(id);
+            if (user == null || user.IsDeleted)
+            {
+                return HttpNotFound();
+            }
+            if (!CanManage(user)) return Forbidden();
+            if (user.Id == CurrentUserId())
+            {
+                TempData["ErrorMessage"] = "You cannot delete your own account.";
+                return RedirectToAction("Index");
+            }
+
             _userRepository.DeleteUser(id);
             TempData["SuccessMessage"] = "User deleted successfully.";
 
@@ -252,6 +269,20 @@ namespace VIRENDRA.Controllers
             return Session["UserId"] == null ? (int?)null : Convert.ToInt32(Session["UserId"]);
         }
 
+        private bool IsSuperAdmin => Session["RoleId"] is byte r && r == RoleConstants.SuperAdmin;
+
+        // Admin may not touch SuperAdmin accounts (no password reset, role change or delete).
+        private bool CanManage(User target) => IsSuperAdmin || target.RoleId != RoleConstants.SuperAdmin;
+
+        // Only a SuperAdmin can create or promote a SuperAdmin.
+        private void ValidateRole(byte? roleId)
+        {
+            if (roleId == RoleConstants.SuperAdmin && !IsSuperAdmin)
+                ModelState.AddModelError("RoleId", "Only a Super Admin can assign the Super Admin role.");
+        }
+
+        private ActionResult Forbidden() => View("Unauthorized");
+
         // ParentID is optional; when given it must be an active, non-deleted
         // SuperAdmin / Admin / API User, and never the user being edited.
         private void ValidateParent(int? parentId, int? editingUserId)
@@ -274,7 +305,9 @@ namespace VIRENDRA.Controllers
                                    int? selectedParentId, int? editingUserId = null)
         {
             ViewBag.RoleList = new SelectList(
-                _userRepository.GetAllRoles(), "Id", "RoleName", selectedRoleId);
+                _userRepository.GetAllRoles()
+                    .Where(r => IsSuperAdmin || Convert.ToInt32(r.Id) != RoleConstants.SuperAdmin),
+                "Id", "RoleName", selectedRoleId);
 
             ViewBag.PackageList = new SelectList(
                 _packageRepository.GetAllPackages(), "Id", "PackageName", selectedPackageId);

@@ -226,6 +226,50 @@ namespace VIRENDRA.Data
                 conn.Execute("DELETE FROM WalletRequest WHERE Id = @Id", new { Id = id });
         }
 
+        /// <summary>
+        /// Approves a held request through sp_AddUserWallet (IsPullOut = 'Approve'): the SP credits
+        /// the user's TxnLedger (+ package flat commission) and sets the request to 6 = Approved.
+        /// SP error codes: 2 duplicate cheque/ref, 3 not on hold (already approved), 4 already in ledger.
+        /// </summary>
+        public (bool Success, string Error) ApproveRequest(int id, int approvedById)
+        {
+            var req = GetWalletRequestById(id);
+            if (req == null) return (false, "Request not found.");
+            if (req.StatusId == 6) return (false, "Request is already approved.");
+            if (req.StatusId == 7) return (false, "Request is rejected.");
+
+            var p = new DynamicParameters();
+            p.Add("@IsPullOut",     "Approve");
+            p.Add("@IsDebit",       "No");
+            p.Add("@IsCredit",      "No");
+            p.Add("@UserId",        req.UserId);
+            p.Add("@Amount",        req.Amount);
+            p.Add("@Remark",        req.Comment ?? "Approved");
+            p.Add("@AddedById",     approvedById);
+            p.Add("@WRID",          id.ToString());
+            p.Add("@IsCreditClear", "0");
+            p.Add("@TrTypeId",      req.TrTypeId ?? 1);
+            p.Add("@BankAccountId", req.BankAccountId ?? 0);
+            p.Add("@gateWay",       1);
+            p.Add("@ChequeNo",      req.Chequeno);
+            p.Add("@PaymentDate",   req.PaymentDate);
+            p.Add("@error", dbType: DbType.String, direction: ParameterDirection.Output, size: 100);
+            p.Add("@Log",   dbType: DbType.String, direction: ParameterDirection.Output, size: 250);
+
+            using (var conn = new SqlConnection(_connectionString))
+                conn.Execute("sp_AddUserWallet", p, commandType: CommandType.StoredProcedure);
+
+            string error = p.Get<string>("@error") ?? "0";
+            switch (error)
+            {
+                case "0": return (true, null);
+                case "2": return (false, "Duplicate cheque/ref number.");
+                case "3": return (false, "Only requests on Hold can be approved (or it is already approved).");
+                case "4": return (false, "This request is already credited in the ledger.");
+                default:  return (false, "Approve failed (" + error + ").");
+            }
+        }
+
         public void UpdateRequestStatus(int id, int statusId, int updatedById)
         {
             using (var conn = new SqlConnection(_connectionString))

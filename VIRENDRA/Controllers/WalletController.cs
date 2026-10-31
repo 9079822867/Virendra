@@ -7,7 +7,9 @@ using VIRENDRA.Models;
 
 namespace VIRENDRA.Controllers
 {
-    [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin, RoleConstants.Retailer)]
+    // Add Money credits / debits a user's wallet directly (sp_AddUserWallet), so the whole
+    // controller is SuperAdmin / Admin only.
+    [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
     public class WalletController : Controller
     {
         private readonly IWalletRepository _walletRepo;
@@ -133,6 +135,11 @@ namespace VIRENDRA.Controllers
         {
             var req = _walletRepo.GetWalletRequestById(id);
             if (req == null) return HttpNotFound();
+            if (req.StatusId == StatusApproved)
+            {
+                TempData["ErrorMessage"] = "Approved requests are already in the ledger and can't be edited.";
+                return RedirectToAction("Index");
+            }
 
             PopulateDropdowns(req.UserId, req.BankAccountId,
                               req.TransferType ?? req.TrTypeName,
@@ -153,6 +160,12 @@ namespace VIRENDRA.Controllers
             }
 
             model.UpdatedById = (int?)Session["UserId"];
+
+            if (_walletRepo.GetWalletRequestById(model.Id)?.StatusId == StatusApproved)
+            {
+                TempData["ErrorMessage"] = "Approved requests are already in the ledger and can't be edited.";
+                return RedirectToAction("Index");
+            }
 
             try
             {
@@ -176,6 +189,13 @@ namespace VIRENDRA.Controllers
         [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
         public ActionResult Delete(int id)
         {
+            if (_walletRepo.GetWalletRequestById(id)?.StatusId == StatusApproved)
+            {
+                // Deleting would hide a credit that stays in TxnLedger
+                TempData["ErrorMessage"] = "Approved requests are already in the ledger and can't be deleted.";
+                return RedirectToAction("Index");
+            }
+
             try
             {
                 _walletRepo.DeleteWalletRequest(id);
@@ -190,15 +210,22 @@ namespace VIRENDRA.Controllers
 
         // ─── Approve / Reject (AJAX) ─────────────────────────────────────────────
 
+        // StatusType: 3 = pending, 5 = Hold, 6 = Approved, 7 = Reject
+        private const int StatusApproved = 6;
+        private const int StatusRejected = 7;
+
         [HttpPost]
-        [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
+        [ValidateAntiForgeryToken]
         public JsonResult Approve(int id)
         {
             try
             {
                 int userId = (int)(Session["UserId"] ?? 0);
-                _walletRepo.UpdateRequestStatus(id, 2, userId);   // 2 = Approved
-                return Json(new { success = true, message = "Request approved." });
+                // Credits the wallet through sp_AddUserWallet; only then is the request Approved
+                var (ok, error) = _walletRepo.ApproveRequest(id, userId);
+                return Json(ok
+                    ? new { success = true,  message = "Request approved and wallet credited." }
+                    : new { success = false, message = error });
             }
             catch (Exception ex)
             {
@@ -207,13 +234,19 @@ namespace VIRENDRA.Controllers
         }
 
         [HttpPost]
-        [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
+        [ValidateAntiForgeryToken]
         public JsonResult Reject(int id)
         {
             try
             {
+                var req = _walletRepo.GetWalletRequestById(id);
+                if (req == null)
+                    return Json(new { success = false, message = "Request not found." });
+                if (req.StatusId == StatusApproved)
+                    return Json(new { success = false, message = "Approved requests can't be rejected." });
+
                 int userId = (int)(Session["UserId"] ?? 0);
-                _walletRepo.UpdateRequestStatus(id, 3, userId);   // 3 = Rejected
+                _walletRepo.UpdateRequestStatus(id, StatusRejected, userId);
                 return Json(new { success = true, message = "Request rejected." });
             }
             catch (Exception ex)

@@ -12,6 +12,7 @@ namespace VIRENDRA.Data
     public class UserRepository : IUserRepository
     {
         private readonly string _connectionString;
+        public const int MaxLoginRetry = 5;
 
         public UserRepository()
         {
@@ -216,8 +217,12 @@ namespace VIRENDRA.Data
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
                 db.Open();
-                db.Execute("UPDATE [User] SET RetryCount = @RetryCount WHERE Id = @UserId",
-                    new { RetryCount = retryCount, UserId = userId });
+                // 5 failed logins (web or app) lock the account until an admin unlocks it
+                db.Execute(@"UPDATE [User]
+                             SET RetryCount = @RetryCount,
+                                 IsLocked   = CASE WHEN @RetryCount >= @MaxRetry THEN 1 ELSE IsLocked END
+                             WHERE Id = @UserId",
+                    new { RetryCount = retryCount, UserId = userId, MaxRetry = MaxLoginRetry });
             }
         }
     }

@@ -193,7 +193,7 @@
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger"
                                                 title="Delete"
-                                                onclick="confirmDelete(@b.Id, '@Html.Raw((b.BankName + " – " + b.HolderName).Replace("'", "\\'"))')">
+                                                onclick="confirmDelete(@b.Id, '@HttpUtility.JavaScriptStringEncode(b.BankName + " – " + b.HolderName)')">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>

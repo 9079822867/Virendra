@@ -413,8 +413,8 @@
                         </ul>
                     </li>
 
-                    @*<%-- Payment \u2014 SuperAdmin + Admin + Retailer --%>*@
-                    @if (isSuperAdmin || isAdmin || isRetailer || isApiUser)
+                    @*<%-- Payment \u2014 SuperAdmin + Admin --%>*@
+                    @if (isSuperAdmin || isAdmin)
                     {
                         bool walletActive = currentController == "Wallet";
                         <li class="nav-item dropdown @(walletActive ? "active" : "")">
@@ -430,21 +430,18 @@
                                         <i class="fas fa-inbox"></i> Payment Requests
                                     </a>
                                 </li>
-                                @if (isSuperAdmin || isAdmin)
-                                {
-                                    <li>
-                                        <a class="dropdown-item @(walletActive && currentAction == "AddMoney" ? "active" : "")"
-                                           href="@Url.Action("AddMoney", "Wallet")">
-                                            <i class="fas fa-plus-circle"></i> Add Money
-                                        </a>
-                                    </li>
-                                }
+                                <li>
+                                    <a class="dropdown-item @(walletActive && currentAction == "AddMoney" ? "active" : "")"
+                                       href="@Url.Action("AddMoney", "Wallet")">
+                                        <i class="fas fa-plus-circle"></i> Add Money
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                     }
 
                     @*<%-- Reports \u2014 SuperAdmin + Admin --%>*@
-                    @if (isSuperAdmin || isAdmin || isRetailer || isApiUser)
+                    @if (isSuperAdmin || isAdmin)
                     {
                         bool rptActive = currentController == "Reports";
                         <li class="nav-item dropdown @(rptActive ? "active" : "")">
@@ -597,7 +594,20 @@
         <!-- Bootstrap JS -->
         <script src="~/Content/js/bootstrap.bundle.min.js"></script>
 
+        <span id="ajaxAntiForgery" hidden>@Html.AntiForgeryToken()</span>
         <script>
+            // Every form-encoded jQuery POST carries the anti-forgery token, so AJAX actions
+            // can use [ValidateAntiForgeryToken] like normal forms.
+            $.ajaxPrefilter(function (options) {
+                if ((options.type || '').toUpperCase() !== 'POST') return;
+                if (options.contentType && options.contentType.indexOf('application/x-www-form-urlencoded') !== 0) return;
+                if (options.data != null && typeof options.data !== 'string') return;   // FormData etc.
+                var token = $('#ajaxAntiForgery input[name="__RequestVerificationToken"]').val();
+                if (!token) return;
+                var pair = '__RequestVerificationToken=' + encodeURIComponent(token);
+                options.data = options.data ? options.data + '&' + pair : pair;
+            });
+
             // Close dismissible alerts
             document.querySelectorAll('[data-dismiss="alert"]').forEach(function (btn) {
                 btn.addEventListener('click', function () {

@@ -147,6 +147,7 @@ namespace VIRENDRA.Controllers
         // ── Toggle Active (AJAX) ─────────────────────────────────────
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public JsonResult ToggleActive(int id, bool isActive)
         {
             try

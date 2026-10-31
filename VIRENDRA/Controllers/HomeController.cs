@@ -35,8 +35,12 @@ namespace VIRENDRA.Controllers
         public ActionResult Dashboard()
         {
             int userId = (int)(Session["UserId"] ?? 0);
+            byte roleId = (byte)(Session["RoleId"] ?? (byte)0);
+            bool isAdmin = roleId == RoleConstants.SuperAdmin || roleId == RoleConstants.Admin;
+
             ViewBag.Stats           = _txnRepo.GetDashboardStats(userId);
-            ViewBag.RecentRecharges = _txnRepo.GetRecentRecharges(10);
+            // API User / Retailer see only their own recharges
+            ViewBag.RecentRecharges = _txnRepo.GetRecentRecharges(isAdmin ? (int?)null : userId, 10);
             return View();
         }
     }

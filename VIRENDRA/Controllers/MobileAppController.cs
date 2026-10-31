@@ -193,7 +193,10 @@ namespace VIRENDRA.Controllers
                     return Reply(Signup("4", "3", "Try Again !!"));
 
                 if (string.IsNullOrEmpty(user.OTP) || !OtpMatches(user.OTP, req.OTP.Trim()))
+                {
+                    if (!string.IsNullOrEmpty(user.OTP)) _appRepo.RecordOtpFailure(user.Id);
                     return Reply(Signup("3", "3", "Sorry OTP is InValid !!"));
+                }
 
                 if (!DateTime.TryParseExact(user.ResetCode, "yyyyMMddHHmmss", CultureInfo.InvariantCulture,
                         DateTimeStyles.None, out DateTime expiry) || expiry < DateTime.Now)

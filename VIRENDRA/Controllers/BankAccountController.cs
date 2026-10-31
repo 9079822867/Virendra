@@ -87,6 +87,7 @@ namespace VIRENDRA.Controllers
 
         // POST: /BankAccount/ToggleBlock  (AJAX)
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public JsonResult ToggleBlock(int id, bool blockUser)
         {
             try

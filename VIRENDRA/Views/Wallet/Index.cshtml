@@ -234,11 +234,14 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                        @if (w.StatusId != 6)
+                                        {
                                         <a href="@Url.Action("Edit", new { id = w.Id })"
                                            class="btn btn-sm btn-outline-info" title="Edit">
                                             <i class="fas fa-pencil-alt"></i>
                                         </a>
-                                        @if (w.StatusId == null || w.StatusId == 3)
+                                        }
+                                        @if (w.StatusId == null || w.StatusId == 3 || w.StatusId == 5)
                                         {
                                             <button type="button"
                                                     class="btn btn-sm btn-outline-success btn-approve"
@@ -251,12 +254,15 @@
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         }
+                                        @if (w.StatusId != 6)
+                                        {
                                         <button type="button"
                                                 class="btn btn-sm btn-outline-danger"
                                                 title="Delete"
-                                                onclick="confirmDelete(@w.Id, '@Html.Raw((w.UserName ?? w.UserId.ToString()).Replace("'","\'"))', '@w.Amount.ToString("N2")')">
+                                                onclick="confirmDelete(@w.Id, '@HttpUtility.JavaScriptStringEncode(w.UserName ?? w.UserId.ToString())', '@w.Amount.ToString("N2")')">
                                             <i class="fas fa-trash"></i>
                                         </button>
+                                        }
                                     </div>
                                 </td>
                             </tr>

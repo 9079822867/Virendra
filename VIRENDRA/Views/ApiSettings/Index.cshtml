@@ -157,7 +157,7 @@
                             @if (!string.IsNullOrEmpty(Model.CallbackUrl))
                             {
                                 <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 flex-shrink-0"
-                                        onclick="copyText('@Html.Raw(Model.CallbackUrl)', this)" title="Copy URL">
+                                        onclick="copyText('@HttpUtility.JavaScriptStringEncode(Model.CallbackUrl)', this)" title="Copy URL">
                                     <i class="fas fa-copy" style="font-size:.75rem;"></i>
                                 </button>
                             }

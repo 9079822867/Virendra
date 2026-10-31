@@ -36,6 +36,17 @@ namespace VIRENDRA.Infrastructure
 
         protected override void HandleUnauthorizedRequest(AuthorizationContext filterContext)
         {
+            var session = filterContext.HttpContext.Session;
+            if (filterContext.HttpContext.User.Identity.IsAuthenticated &&
+                (session == null || session["RoleId"] == null))
+            {
+                // Session expired but the forms cookie survived (Remember me): sign in again
+                // instead of showing "Unauthorized" forever.
+                System.Web.Security.FormsAuthentication.SignOut();
+                base.HandleUnauthorizedRequest(filterContext);
+                return;
+            }
+
             if (filterContext.HttpContext.User.Identity.IsAuthenticated)
             {
                 // Logged in but wrong role → 403 page

@@ -88,9 +88,26 @@ namespace VIRENDRA.Data
                 c.Execute(@"
                     UPDATE [User]
                     SET Password = @Password, OTP = NULL, ResetCode = NULL,
+                        IsLocked = CASE WHEN RetryCount >= 5 THEN 0 ELSE IsLocked END,   -- lifts a retry lock only
                         RetryCount = 0, UpdatedDate = GETDATE(), UpdatedById = @UserId
                     WHERE Id = @UserId",
                     new { UserId = userId, Password = password });
+        }
+
+        /// <summary>
+        /// Wrong OTP: counts the attempt and burns the OTP after 5 tries, so a 6-digit code
+        /// can't be brute-forced. A fresh OTP has to be requested after that.
+        /// </summary>
+        public void RecordOtpFailure(int userId)
+        {
+            using (var c = new SqlConnection(_conn))
+                c.Execute(@"
+                    UPDATE [User]
+                    SET RetryCount = RetryCount + 1,
+                        OTP        = CASE WHEN RetryCount + 1 >= 5 THEN NULL ELSE OTP END,
+                        ResetCode  = CASE WHEN RetryCount + 1 >= 5 THEN NULL ELSE ResetCode END
+                    WHERE Id = @UserId",
+                    new { UserId = userId });
         }
 
         /// <summary>Stores the OTP in User.OTP and its expiry (yyyyMMddHHmmss) in User.ResetCode.</summary>

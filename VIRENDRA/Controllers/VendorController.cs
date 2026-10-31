@@ -119,6 +119,7 @@ namespace VIRENDRA.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult Delete(int id)
         {
             _vendorRepo.DeleteVendor(id);
@@ -127,6 +128,7 @@ namespace VIRENDRA.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public JsonResult ToggleActive(int id, bool isActive)
         {
             try

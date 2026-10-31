@@ -497,8 +497,18 @@ namespace VIRENDRA.Controllers
             if (!string.Equals(user.TokenAPI, token.Trim(), StringComparison.Ordinal))
                                                     { errMsg = "Invalid token";               return null; }
             if (!IpOk(user))                        { errMsg = "IP address not allowed";      return null; }
+            if (KycBlocked(user))                   { errMsg = "KYC approval pending";        return null; }
 
             return user;
+        }
+
+        // Same rule as the portal (KycGateAttribute) and the mobile app: non-admin users need
+        // approved KYC before they can use the API. Fails closed.
+        private static bool KycBlocked(User user)
+        {
+            if (user.RoleId == RoleConstants.SuperAdmin || user.RoleId == RoleConstants.Admin) return false;
+            try { return !new KycRepository().IsApproved(user.Id); }
+            catch { return true; }
         }
 
         private bool IpOk(User user)

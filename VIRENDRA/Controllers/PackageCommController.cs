@@ -12,7 +12,8 @@ namespace VIRENDRA.Controllers
 
         public PackageCommController(IPackageRepository repo) { _repo = repo; }
 
-        // Show all operators for a package with their commission
+        // Show all operators for a package with their commission — SuperAdmin / Admin only
+        [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
         public ActionResult Index(int packageId)
         {
             var pkg = _repo.GetPackageById(packageId);
@@ -24,6 +25,7 @@ namespace VIRENDRA.Controllers
 
         // Bulk save commissions from the grid form
         [HttpPost, ValidateAntiForgeryToken]
+        [RoleAuthorize(RoleConstants.SuperAdmin, RoleConstants.Admin)]
         public ActionResult SaveAll(int packageId, int[] operatorId, string[] commType, decimal[] commValue, bool[] isActive)
         {
             for (int i = 0; i < operatorId.Length; i++)

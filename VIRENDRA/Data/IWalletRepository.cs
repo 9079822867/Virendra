@@ -20,5 +20,6 @@ namespace VIRENDRA.Data
         void UpdateWalletRequest(WalletRequest req);
         void DeleteWalletRequest(int id);
         void UpdateRequestStatus(int id, int statusId, int updatedById);
+        (bool Success, string Error) ApproveRequest(int id, int approvedById);
     }
 }

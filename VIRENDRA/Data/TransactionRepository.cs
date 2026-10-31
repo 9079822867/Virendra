@@ -96,7 +96,7 @@ namespace VIRENDRA.Data
                        ?? new DashboardStats();
         }
 
-        public List<RechargeHistoryItem> GetRecentRecharges(int top = 10)
+        public List<RechargeHistoryItem> GetRecentRecharges(int? userId, int top = 10)
         {
             const string sql = @"
                 SELECT TOP (@Top)
@@ -117,10 +117,11 @@ namespace VIRENDRA.Data
                     r.RequestTime AS Date
                 FROM Recharge r
                 LEFT JOIN [Operator] o ON o.Id = r.OpId
+                WHERE (@UserId IS NULL OR r.UserId = @UserId)
                 ORDER BY r.RequestTime DESC";
 
             using (var conn = new SqlConnection(_connectionString))
-                return conn.Query<RechargeHistoryItem>(sql, new { Top = top }).ToList();
+                return conn.Query<RechargeHistoryItem>(sql, new { Top = top, UserId = userId }).ToList();
         }
 
         public List<RechargeHistoryItem> GetRechargeHistory(

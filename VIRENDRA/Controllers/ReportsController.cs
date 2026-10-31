@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Data.SqlClient;
 using System.Linq;
+using Dapper;
 using System.Web.Mvc;
 using VIRENDRA.Infrastructure;
 using VIRENDRA.Models;
@@ -29,15 +32,30 @@ namespace VIRENDRA.Controllers
             return View(model);
         }
 
+        // Successful recharges of the day grouped by operator (was hard-coded sample rows).
+        // A negative Recharge_Commision is a surcharge.
         private static List<OperatorwiseReportItem> GetOperatorwiseReport(DateTime reportDate)
         {
-            return new List<OperatorwiseReportItem>
-            {
-                new OperatorwiseReportItem { SrNo = 1, Operator = "VI - Vodafone & Idea", Count = 10, Amount = 2590.00m, Commission = 103.60m, Surcharge = 0.00m },
-                new OperatorwiseReportItem { SrNo = 2, Operator = "BSNL SPECIAL (STV)", Count = 1, Amount = 147.00m, Commission = 8.09m, Surcharge = 0.00m },
-                new OperatorwiseReportItem { SrNo = 3, Operator = "Reliance Jio", Count = 11, Amount = 2391.00m, Commission = 23.91m, Surcharge = 0.00m },
-                new OperatorwiseReportItem { SrNo = 4, Operator = "Airtel DTH", Count = 1, Amount = 300.00m, Commission = 12.00m, Surcharge = 0.00m }
-            };
+            const string sql = @"
+                SELECT
+                    ROW_NUMBER() OVER (ORDER BY SUM(r.Amount) DESC) AS SrNo,
+                    ISNULL(o.Name, '-') AS Operator,
+                    COUNT(*)            AS Count,
+                    SUM(r.Amount)       AS Amount,
+                    SUM(CASE WHEN ISNULL(r.Recharge_Commision, 0) > 0 THEN r.Recharge_Commision ELSE 0 END)  AS Commission,
+                    SUM(CASE WHEN ISNULL(r.Recharge_Commision, 0) < 0 THEN -r.Recharge_Commision ELSE 0 END) AS Surcharge
+                FROM Recharge r
+                LEFT JOIN [Operator] o ON o.Id = r.OpId
+                WHERE r.StatusId = 1
+                  AND r.RequestTime >= @Day AND r.RequestTime < DATEADD(DAY, 1, @Day)
+                GROUP BY o.Name
+                ORDER BY SUM(r.Amount) DESC";
+
+            string cs = ConfigurationManager.ConnectionStrings["sqlconn"]?.ConnectionString
+                ?? throw new ConfigurationErrorsException("sqlconn connection string is missing in Web.config");
+
+            using (var c = new SqlConnection(cs))
+                return c.Query<OperatorwiseReportItem>(sql, new { Day = reportDate.Date }).ToList();
         }
     }
 }

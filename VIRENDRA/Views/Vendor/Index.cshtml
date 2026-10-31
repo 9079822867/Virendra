@@ -78,7 +78,7 @@
                                             <i class="fas fa-pencil-alt"></i>
                                         </a>
                                         <button type="button" class="btn btn-danger btn-sm" title="Delete"
-                                                onclick="confirmDelete(@v.Id, '@Html.Raw(v.ApiName?.Replace("'", "\\'"))')">
+                                                onclick="confirmDelete(@v.Id, '@HttpUtility.JavaScriptStringEncode(v.ApiName)')">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                         <a href="@Url.Action("Edit", new { id = v.Id })" class="btn btn-primary btn-sm" title="URL Settings">
