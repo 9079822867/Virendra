@@ -24,7 +24,7 @@ namespace VIRENDRA.Data
         {
             using (IDbConnection db = new SqlConnection(_conn))
                 return db.Query<Package>(
-                    "SELECT Id, PackageName, DefaultComm, LockAmount, PTypeId, AddedDate FROM [Package] ORDER BY PackageName"
+                    "SELECT Id, PackageName, DefaultComm, LockAmount, PTypeId, AddedDate FROM [Package] where PTypeId = 1 ORDER BY PackageName"
                 ).ToList();
         }
 

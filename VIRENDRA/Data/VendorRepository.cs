@@ -311,7 +311,7 @@ namespace VIRENDRA.Data
                                 INSERT INTO [Package]
                                     (PackageName, DefaultComm, LockAmount, PTypeId, AddedById, AddedDate)
                                 VALUES
-                                    (@Name, 0, 0, 1, @Uid, GETDATE());
+                                    (@Name, 0, 0, 0, @Uid, GETDATE());
                                 SELECT CAST(SCOPE_IDENTITY() AS INT);",
                                 new { Name = packName, Uid = userId }, tx);
 
