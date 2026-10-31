@@ -1,4 +1,4 @@
-@model VIRENDRA.Models.BankAccount
+﻿@model VIRENDRA.Models.BankAccount
 
 @{
     ViewBag.Title = "Edit Bank Account";
@@ -61,7 +61,7 @@
         <!-- Meta Info Strip -->
         <div class="row mt-3">
             <div class="col-12">
-                <div class="d-flex flex-wrap gap-3 px-1" style="font-size:.78rem;color:#888;">
+                <div class="d-flex flex-wrap gap-3 px-1" style="font-size:.78rem;color:var(--muted);">
                     <span><i class="fas fa-fingerprint me-1"></i>ID: <strong>#@Model.Id</strong></span>
                     @if (Model.AddedDate.HasValue)
                     {

@@ -5,8 +5,10 @@
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
     bool canChangeStatus = ViewBag.CanChangeStatus == true;
     bool showVendor = ViewBag.ShowVendor == true;
-    int colCount = showVendor ? 10 : 9;
-    int leadCols = showVendor ? 5 : 4;   // columns before Amount
+    bool showUser = ViewBag.ShowUser == true;
+    int extra = (showVendor ? 1 : 0) + (showUser ? 1 : 0);
+    int colCount = 9 + extra;
+    int leadCols = 4 + extra;   // columns before Amount
 }
 
 <div class="history-page">
@@ -52,7 +54,7 @@
                 </select>
             </div>
             <div class="col-lg-3 col-md-6">
-                <input type="text" name="searchText" class="form-control" value="@Model.SearchText" placeholder="Txn ID, number, operator" />
+                <input type="text" name="searchText" class="form-control" value="@Model.SearchText" placeholder="@(showUser ? "Txn ID, number, operator, user" : "Txn ID, number, operator")" />
             </div>
             <div class="col-lg-1 col-md-3">
                 <button type="submit" class="btn btn-history-search w-100">Search</button>
@@ -71,6 +73,10 @@
                 <tr>
                     <th>Sr.No</th>
                     <th>Txn ID</th>
+                    @if (showUser)
+                    {
+                        <th>User</th>
+                    }
                     <th>Number</th>
                     <th>Operator</th>
                     @if (showVendor)
@@ -90,6 +96,16 @@
                     <tr>
                         <td>@item.SrNo</td>
                         <td>@item.TxnId</td>
+                        @if (showUser)
+                        {
+                            <td>
+                                <div class="fw-semibold">@item.UserName</div>
+                                @if (!string.IsNullOrEmpty(item.UserMobile) && item.UserMobile != item.UserName)
+                                {
+                                    <small class="text-muted">@item.UserMobile</small>
+                                }
+                            </td>
+                        }
                         <td>@item.Number</td>
                         <td>@item.Operator</td>
                         @if (showVendor)

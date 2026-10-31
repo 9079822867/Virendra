@@ -150,7 +150,7 @@
                 OP1
             </label>
             @Html.TextBoxFor(m => m.RouteOP1,
-                new { @class = "form-control", style = "background:#fffde7;border-color:#ffe082;",
+                new { @class = "form-control", style = "background:var(--warn-soft);border-color:var(--warn);",
                       placeholder = "Optional parameter 1" })
         </div>
 
@@ -175,7 +175,7 @@
         </div>
 
         <!-- IsActive -->
-        <div class="mb-2 p-3 rounded" style="background:#f8f9fa;">
+        <div class="mb-2 p-3 rounded" style="background:var(--soft);">
             <div class="form-check form-switch">
                 @Html.CheckBoxFor(m => m.IsActive,
                     new { @class = "form-check-input", style = "width:44px;height:22px;" })

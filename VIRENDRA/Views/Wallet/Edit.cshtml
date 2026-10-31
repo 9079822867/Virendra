@@ -1,4 +1,4 @@
-@model VIRENDRA.Models.WalletRequest
+﻿@model VIRENDRA.Models.WalletRequest
 
 @{
     ViewBag.Title = "Edit Payment Request";
@@ -139,7 +139,7 @@
                         </div>
 
                         <!-- Transaction Flags -->
-                        <div class="mb-2 p-3 rounded" style="background:#f8f9fa;">
+                        <div class="mb-2 p-3 rounded" style="background:var(--soft);">
                             <div class="form-label fw-semibold mb-2">Transaction Flags</div>
                             <div class="form-check mb-2">
                                 @Html.CheckBoxFor(m => m.IsCredit, new { @class = "form-check-input" })

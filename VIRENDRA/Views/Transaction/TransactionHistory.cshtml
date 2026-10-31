@@ -1,7 +1,8 @@
-@model VIRENDRA.Models.TransactionHistoryViewModel
+﻿@model VIRENDRA.Models.TransactionHistoryViewModel
 @{
     ViewBag.Title = "Transaction History";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+    bool showUser = ViewBag.ShowUser == true;
 }
 
 <div class="history-page">
@@ -33,7 +34,7 @@
                 </select>
             </div>
             <div class="col-lg-3 col-md-6">
-                <input type="text" name="searchText" class="form-control" value="@Model.SearchText" placeholder="Txn ID, type, description" />
+                <input type="text" name="searchText" class="form-control" value="@Model.SearchText" placeholder="@(showUser ? "Txn ID, description, user" : "Txn ID, type, description")" />
             </div>
             <div class="col-lg-1 col-md-3">
                 <button type="submit" class="btn btn-history-search w-100">Search</button>
@@ -52,6 +53,10 @@
                 <tr>
                     <th>Sr.No</th>
                     <th>Txn ID</th>
+                    @if (showUser)
+                    {
+                        <th>User</th>
+                    }
                     <th>Type</th>
                     <th>Description</th>
                     <th class="text-end">Credit</th>
@@ -66,6 +71,16 @@
                     <tr>
                         <td>@item.SrNo</td>
                         <td>@item.TxnId</td>
+                        @if (showUser)
+                        {
+                            <td>
+                                <div class="fw-semibold">@item.UserName</div>
+                                @if (!string.IsNullOrEmpty(item.UserMobile) && item.UserMobile != item.UserName)
+                                {
+                                    <small class="text-muted">@item.UserMobile</small>
+                                }
+                            </td>
+                        }
                         <td><span class="type-badge type-@item.Type.ToLower()">@item.Type</span></td>
                         <td>@item.Description</td>
                         <td class="text-end text-success">@item.Credit.ToString("0.00")</td>
@@ -77,7 +92,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="4" class="text-success fw-semibold">Row Count @Model.TotalCount</td>
+                    <td colspan="@(showUser ? 5 : 4)" class="text-success fw-semibold">Row Count @Model.TotalCount</td>
                     <td class="text-end text-success">&#8377; @Model.TotalCredit.ToString("0.00")</td>
                     <td class="text-end text-danger">&#8377; @Model.TotalDebit.ToString("0.00")</td>
                     <td colspan="2"></td>

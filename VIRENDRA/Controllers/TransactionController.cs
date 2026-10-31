@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Web.Mvc;
 using VIRENDRA.Data;
@@ -49,6 +49,7 @@ namespace VIRENDRA.Controllers
 
             // Vendor (API source) names are internal: only SuperAdmin/Admin may see them
             ViewBag.ShowVendor = isAdmin;
+            ViewBag.ShowUser   = isAdmin;   // whose recharge — admins see every user
             if (!isAdmin)
                 rows.ForEach(r => r.VendorName = null);
 
@@ -76,6 +77,7 @@ namespace VIRENDRA.Controllers
             int? userId = GetScopedUserId();
 
             var rows = _txnRepo.GetTransactionHistory(userId, from, to, type, searchText);
+            ViewBag.ShowUser = IsAdmin();   // whose entry — admins see every user
 
             var model = new TransactionHistoryViewModel
             {

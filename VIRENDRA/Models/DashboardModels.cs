@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace VIRENDRA.Models
@@ -125,6 +125,8 @@ namespace VIRENDRA.Models
         public string Number { get; set; }         // CustomerNo
         public string Operator { get; set; }
         public string VendorName { get; set; }     // ApiSource.ApiName — shown to SuperAdmin/Admin only
+        public string UserName { get; set; }       // UserProfile.FullName, else Username
+        public string UserMobile { get; set; }     // UserProfile.MobileNumber, else a numeric Username
         public decimal Amount { get; set; }
         public decimal Commission { get; set; }
         public string Status { get; set; }         // Success | Failed | Pending
@@ -166,6 +168,8 @@ namespace VIRENDRA.Models
         public decimal Credit { get; set; }
         public decimal Debit { get; set; }
         public decimal Balance { get; set; }
+        public string UserName { get; set; }
+        public string UserMobile { get; set; }
         public DateTime Date { get; set; }
     }
 

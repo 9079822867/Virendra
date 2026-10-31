@@ -43,7 +43,7 @@
     .kyc-hero { border-radius: 14px; overflow: hidden; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: #fff; }
     .kyc-hero .hero-icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 1.7rem; }
     .kyc-hero .progress { height: 8px; background: rgba(255,255,255,.25); border-radius: 10px; }
-    .kyc-hero .progress-bar { background: #fff; border-radius: 10px; }
+    .kyc-hero .progress-bar { background: var(--surface); border-radius: 10px; }
     .kyc-steps span { background: rgba(255,255,255,.18); border-radius: 20px; padding: .3rem .8rem; font-size: .78rem; }
 
     .kyc-tile { border-radius: 14px; overflow: hidden; transition: transform .15s, box-shadow .15s; height: 100%; }
@@ -54,15 +54,15 @@
     .kyc-tile.is-approved .tile-head { background: linear-gradient(135deg,#11998e 0%,#38ef7d 100%); }
     .kyc-tile.is-rejected .tile-head { background: linear-gradient(135deg,#eb3349 0%,#f45c43 100%); }
 
-    .kyc-preview { height: 170px; border-radius: 10px; background: #f6f7fb; border: 2px dashed #d5d9f2; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
-    .kyc-preview img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+    .kyc-preview { height: 170px; border-radius: 10px; background: var(--soft); border: 2px dashed var(--line-2); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
+    .kyc-preview img { width: 100%; height: 100%; object-fit: contain; background: var(--surface); }
     .kyc-preview .placeholder { text-align: center; color: #9aa0c3; font-size: .82rem; }
     .kyc-preview .placeholder i { font-size: 2.2rem; display: block; margin-bottom: .4rem; color: #667eea; opacity: .6; }
     .kyc-preview.has-file { border-style: solid; border-color: #667eea; }
     .kyc-preview .pdf-box { text-align: center; color: #dc3545; }
     .kyc-preview .pdf-box i { font-size: 2.6rem; }
     .kyc-preview .new-tag { position: absolute; top: 8px; left: 8px; background: #667eea; color: #fff; font-size: .68rem; padding: .15rem .5rem; border-radius: 10px; }
-    .kyc-tile .file-name { font-size: .75rem; color: #6c757d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.1rem; }
+    .kyc-tile .file-name { font-size: .75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.1rem; }
     .btn-kyc { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: #fff; border: none; }
     .btn-kyc:hover, .btn-kyc:focus { color: #fff; opacity: .92; }
     .btn-kyc:disabled { opacity: .55; color: #fff; }

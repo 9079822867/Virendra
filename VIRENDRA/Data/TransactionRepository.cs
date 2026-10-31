@@ -143,11 +143,14 @@ namespace VIRENDRA.Data
                     r.Amount,
                     ISNULL(r.Recharge_Commision, 0) AS Commission,
                     CASE r.StatusId WHEN 1 THEN 'Success' WHEN 2 THEN 'Failed' WHEN 3 THEN 'Pending' ELSE 'Hold' END AS Status,
-                    r.StatusMsg,
-                    r.RequestTime AS Date
+                    r.StatusMsg,                    COALESCE(NULLIF(up.FullName, ''), u.Username) AS UserName,
+                    COALESCE(NULLIF(up.MobileNumber, ''),
+                             CASE WHEN u.Username NOT LIKE '%[^0-9]%' THEN u.Username END) AS UserMobile,                    r.RequestTime AS Date
                 FROM Recharge r
                 LEFT JOIN [Operator] o ON o.Id = r.OpId
                 LEFT JOIN ApiSource a  ON a.Id = r.ApiId
+                LEFT JOIN [User] u     ON u.Id = r.UserId
+                OUTER APPLY (SELECT TOP 1 FullName, MobileNumber FROM UserProfile WHERE UserId = r.UserId) up
                 WHERE r.RequestTime >= @FromDate
                   AND r.RequestTime <  DATEADD(DAY, 1, @ToDate)
                   AND (@UserId IS NULL OR r.UserId = @UserId)
@@ -156,7 +159,10 @@ namespace VIRENDRA.Data
                   AND (@Search IS NULL OR
                        r.UserTxnId  LIKE '%' + @Search + '%' OR
                        r.CustomerNo LIKE '%' + @Search + '%' OR
-                       o.Name       LIKE '%' + @Search + '%')
+                       o.Name       LIKE '%' + @Search + '%' OR
+                       u.Username   LIKE '%' + @Search + '%' OR
+                       up.FullName  LIKE '%' + @Search + '%' OR
+                       up.MobileNumber LIKE '%' + @Search + '%')
                 ORDER BY r.RequestTime DESC";
 
             using (var conn = new SqlConnection(_connectionString))
@@ -204,17 +210,23 @@ namespace VIRENDRA.Data
                     ISNULL(t.Remark, '-') AS Description,
                     t.CR_Amt AS Credit,
                     t.DB_Amt AS Debit,
-                    t.CL_Bal AS Balance,
-                    t.TxnDate AS Date
+                    t.CL_Bal AS Balance,                    COALESCE(NULLIF(up.FullName, ''), u.Username) AS UserName,
+                    COALESCE(NULLIF(up.MobileNumber, ''),
+                             CASE WHEN u.Username NOT LIKE '%[^0-9]%' THEN u.Username END) AS UserMobile,                    t.TxnDate AS Date
                 FROM TxnLedger t
                 LEFT JOIN TxnType tt ON tt.Id = t.TxnTypeId
+                LEFT JOIN [User]  u  ON u.Id  = t.UserId
+                OUTER APPLY (SELECT TOP 1 FullName, MobileNumber FROM UserProfile WHERE UserId = t.UserId) up
                 WHERE t.TxnDate >= @FromDate
                   AND t.TxnDate <  DATEADD(DAY, 1, @ToDate)
                   AND (@UserId IS NULL OR t.UserId = @UserId)
                   AND (@Type   IS NULL OR tt.TypeName = @Type)
                   AND (@Search IS NULL OR
                        t.RefTxnId LIKE '%' + @Search + '%' OR
-                       t.Remark   LIKE '%' + @Search + '%')
+                       t.Remark   LIKE '%' + @Search + '%' OR
+                       u.Username LIKE '%' + @Search + '%' OR
+                       up.FullName LIKE '%' + @Search + '%' OR
+                       up.MobileNumber LIKE '%' + @Search + '%')
                 ORDER BY t.TxnDate DESC";
 
             using (var conn = new SqlConnection(_connectionString))
@@ -256,7 +268,10 @@ namespace VIRENDRA.Data
                   AND (@AmtTypeId IS NULL OR t.AmtTypeId = @AmtTypeId)
                   AND (@Search IS NULL OR
                        t.RefTxnId LIKE '%' + @Search + '%' OR
-                       t.Remark   LIKE '%' + @Search + '%')
+                       t.Remark   LIKE '%' + @Search + '%' OR
+                       u.Username LIKE '%' + @Search + '%' OR
+                       up.FullName LIKE '%' + @Search + '%' OR
+                       up.MobileNumber LIKE '%' + @Search + '%')
                 ORDER BY t.TxnDate DESC, t.Id DESC";
 
             using (var conn = new SqlConnection(_connectionString))

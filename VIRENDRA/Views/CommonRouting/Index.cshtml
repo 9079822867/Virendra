@@ -1,4 +1,4 @@
-@model IEnumerable<VIRENDRA.Models.CommonRouting>
+﻿@model IEnumerable<VIRENDRA.Models.CommonRouting>
 @{
     ViewBag.Title = "Common Route Settings";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
@@ -117,7 +117,7 @@
                             <th>RO%</th>
                             <th>Priority</th>
                             <th>Block UIDs</th>
-                            <th style="background:#fffde7;">OP1</th>
+                            <th style="background:var(--warn-soft) !important;">OP1</th>
                             <th>OP2</th>
                             <th>Wait (min)</th>
                             <th>Updated On</th>
@@ -171,7 +171,7 @@
                                     <span class="badge bg-light text-dark border fw-bold">@r.Priority</span>
                                 </td>
                                 <td>@(r.BlockUser ?? "\u2014")</td>
-                                <td style="background:#fffde7;">
+                                <td style="background:var(--warn-soft);">
                                     <strong class="text-warning-emphasis">@(r.RouteOP1 ?? "\u2014")</strong>
                                 </td>
                                 <td>@(r.RouteOP2 ?? "\u2014")</td>
