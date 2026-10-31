@@ -124,6 +124,7 @@ namespace VIRENDRA.Models
         public string ApiTxnId { get; set; }       // API-side transaction ID
         public string Number { get; set; }         // CustomerNo
         public string Operator { get; set; }
+        public string VendorName { get; set; }     // ApiSource.ApiName — shown to SuperAdmin/Admin only
         public decimal Amount { get; set; }
         public decimal Commission { get; set; }
         public string Status { get; set; }         // Success | Failed | Pending

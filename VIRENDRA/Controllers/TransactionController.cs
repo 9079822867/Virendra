@@ -44,7 +44,13 @@ namespace VIRENDRA.Controllers
 
             var rows = _txnRepo.GetRechargeHistory(userId, from, to, status, searchText);
 
-            ViewBag.CanChangeStatus = IsAdmin();
+            bool isAdmin = IsAdmin();
+            ViewBag.CanChangeStatus = isAdmin;
+
+            // Vendor (API source) names are internal: only SuperAdmin/Admin may see them
+            ViewBag.ShowVendor = isAdmin;
+            if (!isAdmin)
+                rows.ForEach(r => r.VendorName = null);
 
             var model = new RechargeHistoryViewModel
             {
@@ -151,7 +157,7 @@ namespace VIRENDRA.Controllers
                 : RedirectToAction("RechargeHistory");
 
             if (statusId != RechargeStatusCodes.SUCCESS &&
-                statusId != RechargeStatusCodes.PROCESS &&
+                statusId != RechargeStatusCodes.PENDING &&
                 statusId != RechargeStatusCodes.FAILED)
             {
                 TempData["ErrorMessage"] = "Invalid status selected.";

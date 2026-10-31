@@ -4,7 +4,9 @@
     ViewBag.Title = "Recharge History";
     Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
     bool canChangeStatus = ViewBag.CanChangeStatus == true;
-    int colCount = 9;
+    bool showVendor = ViewBag.ShowVendor == true;
+    int colCount = showVendor ? 10 : 9;
+    int leadCols = showVendor ? 5 : 4;   // columns before Amount
 }
 
 <div class="history-page">
@@ -71,6 +73,10 @@
                     <th>Txn ID</th>
                     <th>Number</th>
                     <th>Operator</th>
+                    @if (showVendor)
+                    {
+                        <th>Vendor</th>
+                    }
                     <th class="text-end">Amount</th>
                     <th class="text-end">Commission</th>
                     <th>Status</th>
@@ -86,6 +92,10 @@
                         <td>@item.TxnId</td>
                         <td>@item.Number</td>
                         <td>@item.Operator</td>
+                        @if (showVendor)
+                        {
+                            <td>@item.VendorName</td>
+                        }
                         <td class="text-end">@item.Amount.ToString("0.00")</td>
                         <td class="text-end">@item.Commission.ToString("0.00")</td>
                         <td><span class="status-badge status-@item.Status.ToLower()">@item.Status</span></td>
@@ -128,10 +138,10 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="4" class="text-success fw-semibold">Row Count @Model.TotalCount</td>
+                    <td colspan="@leadCols" class="text-success fw-semibold">Row Count @Model.TotalCount</td>
                     <td class="text-end">&#8377; @Model.TotalAmount.ToString("0.00")</td>
                     <td class="text-end text-success">&#8377; @Model.TotalCommission.ToString("0.00")</td>
-                    <td colspan="@(colCount - 6)"></td>
+                    <td colspan="@(colCount - leadCols - 2)"></td>
                 </tr>
             </tfoot>
         </table>
@@ -184,7 +194,7 @@
                         <label class="form-label" for="csStatus">New Status</label>
                         <select name="statusId" id="csStatus" class="form-select" required>
                             <option value="@RechargeStatusCodes.SUCCESS">Success</option>
-                            <option value="@RechargeStatusCodes.PROCESS">Pending</option>
+                            <option value="@RechargeStatusCodes.PENDING">Pending</option>
                             <option value="@RechargeStatusCodes.FAILED">Failed (refund to wallet)</option>
                         </select>
                     </div>

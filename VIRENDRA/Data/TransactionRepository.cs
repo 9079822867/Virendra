@@ -138,6 +138,7 @@ namespace VIRENDRA.Data
                     r.ApiTxnId,
                     r.CustomerNo AS Number,
                     ISNULL(o.Name, '-') AS Operator,
+                    ISNULL(a.ApiName, '-') AS VendorName,
                     r.Amount,
                     ISNULL(r.Recharge_Commision, 0) AS Commission,
                     CASE r.StatusId WHEN 1 THEN 'Success' WHEN 2 THEN 'Failed' WHEN 3 THEN 'Pending' ELSE 'Hold' END AS Status,
@@ -145,6 +146,7 @@ namespace VIRENDRA.Data
                     r.RequestTime AS Date
                 FROM Recharge r
                 LEFT JOIN [Operator] o ON o.Id = r.OpId
+                LEFT JOIN ApiSource a  ON a.Id = r.ApiId
                 WHERE r.RequestTime >= @FromDate
                   AND r.RequestTime <  DATEADD(DAY, 1, @ToDate)
                   AND (@UserId IS NULL OR r.UserId = @UserId)

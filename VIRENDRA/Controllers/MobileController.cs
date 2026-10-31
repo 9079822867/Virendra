@@ -374,7 +374,7 @@ namespace VIRENDRA.Controllers
                 catch (Exception ex) { response = "HTTP_ERROR:" + ex.Message; }
 
                 // ── Log ─────────────────────────────────────────────────────
-                try { _rcRepo.AddUpdateReqRes(helper.RecId, apiUrl, response, route.ApiId); }
+                try { _rcRepo.AddUpdateReqRes(helper.RecId, apiUrl, response, cr.UrlId); }
                 catch { /* non-fatal */ }
 
                 // ── Parse response ───────────────────────────────────────────
@@ -415,13 +415,13 @@ namespace VIRENDRA.Controllers
                     };
                 }
 
-                if (respStatus == RechargeStatusCodes.PROCESS)
+                if (respStatus == RechargeStatusCodes.PENDING)
                 {
                     bool dl = false, rf = false; string spLog = string.Empty;
                     try
                     {
                         UpdateStatusWithCheck(
-                            helper.RecId, rm.UserId, RechargeStatusCodes.PROCESS,
+                            helper.RecId, rm.UserId, RechargeStatusCodes.PENDING,
                             operRef, string.Empty, truncMsg, "API Pending",
                             ref dl, ref rf, ref spLog,
                             0, null, rm.OpId ?? 0, 0, 0);
@@ -679,7 +679,7 @@ namespace VIRENDRA.Controllers
             string lower = response.ToLowerInvariant();
             if (lower.Contains("success"))                                    return RechargeStatusCodes.SUCCESS;
             if (lower.Contains("pending") || lower.Contains("process") ||
-                lower.Contains("queue")   || lower.Contains("inprogress"))    return RechargeStatusCodes.PROCESS;
+                lower.Contains("queue")   || lower.Contains("inprogress"))    return RechargeStatusCodes.PENDING;
             return RechargeStatusCodes.FAILED;
         }
 

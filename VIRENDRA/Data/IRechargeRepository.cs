@@ -84,10 +84,13 @@ namespace VIRENDRA.Data
             string circleFilter  = null);
 
         /// <summary>Insert or update the RequestResponse log row for a recharge attempt.</summary>
-        void AddUpdateReqRes(long recId, string reqTxt, string respTxt, int apiId);
+        void AddUpdateReqRes(long recId, string reqTxt, string respTxt, int urlId);
 
         /// <summary>Retrieve tag-value filter rules used to classify an API response.</summary>
         List<FilterTag> GetFilterTags(int apiId);
+
+        /// <summary>TagValue rows (Vendor > URL > Setting) for one API URL, with Tag.Name.</summary>
+        List<TagValueRow> GetTagValues(int apiId, int urlId);
 
         /// <summary>
         /// Call usp_UpdateRechargeStatus. The SP updates the Recharge row and handles

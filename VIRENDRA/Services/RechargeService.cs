@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Web;
 using VIRENDRA.Data;
 using VIRENDRA.Models;
 
@@ -261,18 +262,18 @@ namespace VIRENDRA.Services
                 try { apiRes = MakeHttpCall(url, cr.Method, postData, cr.ContentType); }
                 catch (Exception ex) { apiRes = string.Empty; lastMsg = "API error: " + ex.Message; }
 
-                try { _repo.AddUpdateReqRes(helper.RecId, url + (string.IsNullOrEmpty(postData) ? "" : " | " + postData), apiRes, route.ApiId); }
+                try { _repo.AddUpdateReqRes(helper.RecId, url + (string.IsNullOrEmpty(postData) ? "" : " | " + postData), apiRes, cr.UrlId); }
                 catch { /* non-critical */ }
 
                 // ── Handle response ─────────────────────────────────────────
-                var fResp = FilterRespTagValue(route.ApiId, apiRes);
+                var fResp = FilterRespTagValue(route.ApiId, cr.UrlId, cr.ResType, apiRes);
                 string statusMsg = "p" + helper.CurrentPriorityId + "-v" + helper.CurrentApiId + "-" + fResp.Message;
 
                 if (fResp.StatusId == RechargeStatusCodes.FAILED)
                 {
                     lastMsg = fResp.Message;
                     UpdateStatus(helper, model, RechargeStatusCodes.FAILED, fResp.ApiTxnId,
-                        statusMsg, "Response", ref anyRefund);
+                        statusMsg, "Response", ref anyRefund, fResp.OperatorTxnId);
 
                     // Switch > Stop Route Message: this failure must not be retried on another vendor
                     if (IsStopRouteMessage(apiRes, route.ApiId, model.OpId ?? 0))
@@ -284,7 +285,7 @@ namespace VIRENDRA.Services
                 if (fResp.StatusId == RechargeStatusCodes.SUCCESS)
                 {
                     UpdateStatus(helper, model, RechargeStatusCodes.SUCCESS, fResp.ApiTxnId,
-                        statusMsg, "StatusWithCheck", ref anyRefund);
+                        statusMsg, "StatusWithCheck", ref anyRefund, fResp.OperatorTxnId);
 
                     return new RechargeResult
                     {
@@ -298,8 +299,8 @@ namespace VIRENDRA.Services
                 }
 
                 // Process (or response not matched by any tag) → keep debit
-                UpdateStatus(helper, model, RechargeStatusCodes.PROCESS, fResp.ApiTxnId,
-                    statusMsg, "StatusWithCheck", ref anyRefund);
+                UpdateStatus(helper, model, RechargeStatusCodes.PENDING, fResp.ApiTxnId,
+                    statusMsg, "StatusWithCheck", ref anyRefund, fResp.OperatorTxnId);
                 return Pending(helper, model, fResp.ApiTxnId, "Recharge is processing. " + fResp.Message);
             }
 
@@ -344,13 +345,13 @@ namespace VIRENDRA.Services
         }
 
         private void UpdateStatus(RechargeHelperDto helper, RechargeModel model, int statusId,
-            string apiTxnId, string statusMsg, string updateType, ref bool anyRefund)
+            string apiTxnId, string statusMsg, string updateType, ref bool anyRefund, string optTxnId = null)
         {
             if (helper.RecId <= 0) return;
             try
             {
                 _repo.UpdateRechargeStatus(helper.RecId, model.UserId, statusId,
-                    apiTxnId, string.Empty, statusMsg, "Auto",
+                    apiTxnId, optTxnId ?? string.Empty, statusMsg, "Auto",
                     out bool isDownline, out bool isRefund, out string spLog,
                     model.OpId ?? 0, 0, updateType);
 
@@ -363,11 +364,12 @@ namespace VIRENDRA.Services
 
         #region Response Filter (FilterRespTag)
 
-        // Tag StatusId uses RechargeStatusCodes. When the vendor has tags but none match,
-        // the recharge stays Process (same as STC). Keyword fallback only when no tags exist.
-        private FilterResponseModel FilterRespTagValue(int apiId, string apiRes)
+        // Parses the vendor response with the TagValue rows of the API URL that was called
+        // (Vendor > URL > Setting). Status stays Process when no SUCCESS/FAILED value matches.
+        // URLs without TagValue rows fall back to FilterRespTag / keywords.
+        private FilterResponseModel FilterRespTagValue(int apiId, int urlId, string resType, string apiRes)
         {
-            var res = new FilterResponseModel { StatusId = RechargeStatusCodes.PROCESS };
+            var res = new FilterResponseModel { StatusId = RechargeStatusCodes.PENDING };
 
             if (string.IsNullOrWhiteSpace(apiRes))
             {
@@ -375,6 +377,148 @@ namespace VIRENDRA.Services
                 return res;
             }
 
+            List<TagValueRow> tagValues = null;
+            if (urlId > 0)
+            {
+                try { tagValues = _repo.GetTagValues(apiId, urlId); }
+                catch { /* fallback below */ }
+            }
+
+            if (tagValues != null && tagValues.Count > 0)
+            {
+                ApplyTagValues(tagValues, resType, apiRes, res);
+                if (string.IsNullOrEmpty(res.ApiTxnId)) res.ApiTxnId = ExtractApiTxnId(apiRes);
+
+                res.Message = Cut("status=" + res.Status + " and msg=" + res.Message, 200);
+                return res;
+            }
+
+            return FilterRespTagFallback(apiId, apiRes, res);
+        }
+
+        private static void ApplyTagValues(List<TagValueRow> tagValues, string resType, string apiRes,
+                                           FilterResponseModel res)
+        {
+            bool split = (resType ?? string.Empty).ToLower().Contains("split");
+
+            foreach (var tg in tagValues)
+            {
+                // Split responses: TagIndex is 1-based; rows without an index are skipped
+                int index = (tg.TagIndex ?? 0) - 1;
+                if (split && index < 0) continue;
+
+                var cmpList = string.IsNullOrEmpty(tg.CompareTxt)
+                    ? new List<string>()
+                    : tg.CompareTxt.Replace(" ", string.Empty).Split(',').Where(x => x != string.Empty).ToList();
+
+                string sval;
+                try
+                {
+                    string part = split ? GetSplitStringByIndex(apiRes, tg.ResSeparator, index) : apiRes;
+                    sval = GetSubstring(part, tg.PreTxt, tg.PostText, tg.PreMargin ?? 0, tg.PostMargin ?? 0);
+                }
+                catch
+                {
+                    continue;   // value not present in this response
+                }
+
+                bool matched = cmpList.Any(s => s.Trim().ToLower() == sval.Trim().ToLower());
+
+                switch (NormalizeTagName(tg.TagName))
+                {
+                    case "SUCCESS":
+                        res.Status = sval;
+                        if (matched) res.StatusId = RechargeStatusCodes.SUCCESS;
+                        break;
+                    case "FAILED":
+                        res.Status = sval;
+                        if (matched) res.StatusId = RechargeStatusCodes.FAILED;
+                        break;
+                    case "PENDING":
+                    case "PROCESSING":
+                        res.Status = sval;
+                        if (matched) res.StatusId = RechargeStatusCodes.PENDING;
+                        break;
+                    case "APITXNID":
+                        res.ApiTxnId = Cut(sval.Trim(), 50);
+                        break;
+                    case "OPERATORTXNID":
+                        res.OperatorTxnId = Cut(HttpUtility.UrlDecode(sval).Trim(), 50);
+                        break;
+                    case "MESSAGE":
+                        res.Message = Cut(sval, 198);
+                        break;
+                    case "REQUESTTXNID":
+                        res.RequestTxnId = Cut(sval, 50);
+                        break;
+                    case "BALANCE":
+                    case "VENDORCLBAL":
+                        res.VendorClBal = ToDecimal(sval);
+                        break;
+                    case "VENDOROPBAL":
+                        res.VendorOpBal = ToDecimal(sval);
+                        break;
+                    case "LAPUNO":
+                        res.LapuNo = Cut(sval, 50);
+                        break;
+                    case "COMPLAINTID":
+                        res.ComplaintId = Cut(sval, 50);
+                        break;
+                    case "ROFFER":
+                        res.ROffer = ToDecimal(sval);
+                        break;
+                }
+            }
+        }
+
+        // Tag.Name → key: "RequestTxnID" → "REQUESTTXNID", "VENDOR_CL_BAL" → "VENDORCLBAL"
+        private static string NormalizeTagName(string name)
+            => Regex.Replace(name ?? string.Empty, "[^A-Za-z0-9]", string.Empty).ToUpperInvariant();
+
+        private static string GetSplitStringByIndex(string text, string separator, int index)
+        {
+            if (string.IsNullOrEmpty(separator)) return text;
+            return text.Split(new[] { separator }, StringSplitOptions.None)[index];
+        }
+
+        // Text between PreTxt (+PreMargin chars) and PostText (+PostMargin chars); same rule as the
+        // Response Setting tester. Throws when PreTxt / PostText is not in the text.
+        private static string GetSubstring(string text, string preTxt, string postTxt, int preMargin, int postMargin)
+        {
+            int start = 0;
+            if (!string.IsNullOrEmpty(preTxt))
+            {
+                int p = text.IndexOf(preTxt, StringComparison.Ordinal);
+                if (p < 0) throw new InvalidOperationException("PreTxt not found");
+                start = p + preTxt.Length;
+            }
+            start += preMargin;
+
+            int end = text.Length;
+            if (!string.IsNullOrEmpty(postTxt))
+            {
+                int q = text.IndexOf(postTxt, Math.Max(start, 0), StringComparison.Ordinal);
+                if (q < 0) throw new InvalidOperationException("PostText not found");
+                end = q;
+            }
+            end += postMargin;
+
+            if (start < 0 || end > text.Length || end < start)
+                throw new InvalidOperationException("Margins out of range");
+
+            return text.Substring(start, end - start).Trim();
+        }
+
+        private static decimal? ToDecimal(string value)
+            => decimal.TryParse(Cut(value.Trim(), 50), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal d)
+                ? d : (decimal?)null;
+
+        private static string Cut(string value, int max)
+            => value != null && value.Length > max ? value.Substring(0, max) : value;
+
+        // Old rule set: FilterRespTag rows of the API, else keywords
+        private FilterResponseModel FilterRespTagFallback(int apiId, string apiRes, FilterResponseModel res)
+        {
             res.Message  = apiRes.Length > 200 ? apiRes.Substring(0, 200) : apiRes;
             res.ApiTxnId = ExtractApiTxnId(apiRes);
 
@@ -391,7 +535,7 @@ namespace VIRENDRA.Services
 
                     if (t.StatusId == RechargeStatusCodes.SUCCESS ||
                         t.StatusId == RechargeStatusCodes.FAILED  ||
-                        t.StatusId == RechargeStatusCodes.PROCESS)
+                        t.StatusId == RechargeStatusCodes.PENDING)
                     {
                         res.StatusId = t.StatusId;
                         break;
@@ -540,9 +684,17 @@ namespace VIRENDRA.Services
 
         private class FilterResponseModel
         {
-            public int    StatusId { get; set; }
-            public string Message  { get; set; }
-            public string ApiTxnId { get; set; }
+            public int      StatusId      { get; set; }
+            public string   Status        { get; set; }   // raw status value read from the response
+            public string   Message       { get; set; }
+            public string   ApiTxnId      { get; set; }
+            public string   OperatorTxnId { get; set; }
+            public string   RequestTxnId  { get; set; }
+            public decimal? VendorClBal   { get; set; }
+            public decimal? VendorOpBal   { get; set; }
+            public string   LapuNo        { get; set; }
+            public string   ComplaintId   { get; set; }
+            public decimal? ROffer        { get; set; }
         }
 
         #endregion

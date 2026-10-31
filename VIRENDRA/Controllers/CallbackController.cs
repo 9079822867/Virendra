@@ -175,14 +175,14 @@ namespace VIRENDRA.Controllers
                 if (v.Contains("success")) return RechargeStatusCodes.SUCCESS;
                 if (v.Contains("fail") || v.Contains("revers") || v.Contains("refund"))
                     return RechargeStatusCodes.FAILED;
-                return RechargeStatusCodes.PROCESS;   // unknown value → never guess a final status
+                return RechargeStatusCodes.PENDING;   // unknown value → never guess a final status
             }
 
             // No status field at all → keyword scan, defaulting to pending
             string lower = (raw ?? string.Empty).ToLowerInvariant();
             if (lower.Contains("success")) return RechargeStatusCodes.SUCCESS;
             if (lower.Contains("fail"))    return RechargeStatusCodes.FAILED;
-            return RechargeStatusCodes.PROCESS;
+            return RechargeStatusCodes.PENDING;
         }
 
         // ── Forward to the API user's callback URL (docs: ApiDocument/FilesCallbackInfo) ──

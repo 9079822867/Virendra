@@ -563,8 +563,10 @@ namespace VIRENDRA.Data
             };
         }
 
-        public void AddUpdateReqRes(long recId, string reqTxt, string respTxt, int apiId)
+        public void AddUpdateReqRes(long recId, string reqTxt, string respTxt, int urlId)
         {
+            int? urlIdValue = urlId > 0 ? urlId : (int?)null;
+
             using (var c = new SqlConnection(_conn))
             {
                 // Pull userId / txnId from the Recharge row so we can INSERT if needed
@@ -584,9 +586,9 @@ namespace VIRENDRA.Data
                 {
                     c.Execute(@"
                         UPDATE RequestResponse
-                        SET RequestTxt = @Req, ResponseText = @Resp, AddedDate = GETDATE()
+                        SET UrlId = @UrlId, RequestTxt = @Req, ResponseText = @Resp, AddedDate = GETDATE()
                         WHERE RecId = @RecId",
-                        new { RecId=recId, Req=reqTxt, Resp=respTxt });
+                        new { RecId=recId, UrlId=urlIdValue, Req=reqTxt, Resp=respTxt });
                 }
                 else
                 {
@@ -595,9 +597,9 @@ namespace VIRENDRA.Data
                             (UserId, UrlId, RecId, RefId, RequestTxt, ResponseText,
                              AddedDate, UserTxnId, CustomerNo)
                         VALUES
-                            (@UserId, @ApiId, @RecId, @RefId, @Req, @Resp,
+                            (@UserId, @UrlId, @RecId, @RefId, @Req, @Resp,
                              GETDATE(), @TxnId, @CustNo)",
-                        new { UserId=userId, ApiId=apiId, RecId=recId, RefId=userTxnId,
+                        new { UserId=userId, UrlId=urlIdValue, RecId=recId, RefId=userTxnId,
                               Req=reqTxt, Resp=respTxt, TxnId=userTxnId, CustNo=custNo });
                 }
             }
@@ -612,6 +614,19 @@ namespace VIRENDRA.Data
                       WHERE ApiId = @ApiId AND IsActive = 1
                       ORDER BY Id",
                     new { ApiId = apiId }).ToList();
+        }
+
+        public List<TagValueRow> GetTagValues(int apiId, int urlId)
+        {
+            using (var c = new SqlConnection(_conn))
+                return c.Query<TagValueRow>(
+                    @"SELECT v.Id, ISNULL(v.TagId, 0) AS TagId, g.Name AS TagName, v.CompareTxt,
+                             v.PreTxt, v.PostText, v.PreMargin, v.PostMargin, v.TagMsg, v.ResSeparator, v.TagIndex
+                      FROM TagValue v
+                      LEFT JOIN Tag g ON g.Id = v.TagId
+                      WHERE v.ApiId = @ApiId AND v.UrlId = @UrlId
+                      ORDER BY v.Id",
+                    new { ApiId = apiId, UrlId = urlId }).ToList();
         }
 
         public int? GetRechargeStatusId(long recId)
