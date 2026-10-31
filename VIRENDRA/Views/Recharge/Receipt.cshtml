@@ -1,0 +1,146 @@
+﻿@model VIRENDRA.Models.RechargeReceipt
+@{
+    ViewBag.Title = "Recharge receipt";
+    Layout = "~/Views/Shared/_LayoutDashboard.cshtml";
+
+    string st = Model.Status;                     // Success | Pending | Failed
+    string tone = st == "Success" ? "ok" : st == "Failed" ? "bad" : "warn";
+    string icon = st == "Success" ? "fa-check" : st == "Failed" ? "fa-xmark" : "fa-hourglass-half";
+    string headline = st == "Success" ? "Recharge successful"
+                    : st == "Failed"  ? "Recharge failed"
+                    : "Recharge is processing";
+    string sub = st == "Success" ? "The operator has confirmed the recharge."
+               : st == "Failed"  ? (Model.RecId > 0 ? "The amount has been returned to your wallet." : "No money was taken from your wallet.")
+               : "The operator hasn't confirmed yet. It usually settles within a few minutes.";
+}
+
+<style>
+    .rc-wrap { max-width: 560px; margin: 8px auto 0; }
+    .rc-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+    .rc-top { padding: 28px 24px 22px; text-align: center; border-bottom: 1px dashed var(--line-2); position: relative; }
+    .rc-top::before, .rc-top::after {
+        content: ""; position: absolute; bottom: -9px; width: 18px; height: 18px; border-radius: 50%;
+        background: var(--canvas); border: 1px solid var(--line);
+    }
+    .rc-top::before { left: -10px; }
+    .rc-top::after  { right: -10px; }
+    .rc-badge { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 12px; font-size: 1.5rem; }
+    .rc-badge.ok   { background: var(--ok-soft);   color: var(--ok); }
+    .rc-badge.bad  { background: var(--bad-soft);  color: var(--bad); }
+    .rc-badge.warn { background: var(--warn-soft); color: var(--warn); }
+    .rc-badge.warn i { animation: rc-spin 2.4s linear infinite; }
+    @@keyframes rc-spin { to { transform: rotate(360deg); } }
+    .rc-head { font-size: 1.15rem; font-weight: 800; margin: 0; }
+    .rc-sub { color: var(--muted); font-size: .84rem; margin-top: 4px; }
+    .rc-amount { font-size: 2.4rem; font-weight: 800; letter-spacing: -.03em; margin-top: 14px; }
+    .rc-amount.bad { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 2px; }
+    .rc-msg { margin: 14px auto 0; max-width: 420px; font-size: .8rem; border-radius: 8px; padding: 8px 10px; background: var(--soft); color: var(--ink-2); border: 1px solid var(--line); }
+
+    .rc-body { padding: 20px 24px 8px; }
+    .rc-op { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .rc-op .op-mark { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--ink); color: #fff; font-weight: 800; }
+    .rc-row { display: flex; justify-content: space-between; gap: 16px; padding: 9px 0; font-size: .86rem; border-bottom: 1px solid var(--line); }
+    .rc-row:last-child { border-bottom: 0; }
+    .rc-row span { color: var(--muted); white-space: nowrap; }
+    .rc-row b { font-weight: 600; text-align: right; word-break: break-all; }
+    .rc-row code { font-size: .8rem; }
+    .rc-copy { border: 0; background: none; color: var(--muted); padding: 0 0 0 6px; }
+    .rc-copy:hover { color: var(--accent-ink); }
+
+    .rc-actions { padding: 16px 24px 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .rc-actions .btn { padding: .6rem; }
+    @@media print {
+        .app-side, .app-top, .app-foot, .rc-actions, .rc-noprint { display: none !important; }
+        .app-main { margin: 0 !important; }
+        .rc-card { border: 0; }
+    }
+</style>
+
+<div class="rc-wrap">
+    <div class="rc-card">
+        <div class="rc-top">
+            <div class="rc-badge @tone"><i class="fas @icon"></i></div>
+            <h2 class="rc-head">@headline</h2>
+            <div class="rc-sub">@sub</div>
+            <div class="rc-amount @(st == "Failed" ? "bad" : "")">&#8377;@Model.Amount.ToString("N2")</div>
+            @if (!string.IsNullOrWhiteSpace(Model.Message) && st != "Success")
+            {
+                <div class="rc-msg"><i class="fas fa-circle-info me-1"></i>@Model.Message</div>
+            }
+        </div>
+
+        <div class="rc-body">
+            <div class="rc-op">
+                <span class="op-mark">@(string.IsNullOrEmpty(Model.Operator) ? "?" : Model.Operator.Substring(0, 1).ToUpperInvariant())</span>
+                <div>
+                    <div class="fw-bold">@Model.Operator</div>
+                    <div class="small text-muted">@(Model.OperatorType ?? "Recharge")@(string.IsNullOrEmpty(Model.Circle) ? "" : " · " + Model.Circle)</div>
+                </div>
+            </div>
+
+            <div class="rc-row"><span>@(Model.OperatorType == "DTH" ? "Subscriber ID" : "Mobile number")</span><b>@Model.CustomerNo</b></div>
+            <div class="rc-row"><span>Date &amp; time</span><b>@Model.RequestTime.ToString("dd MMM yyyy, hh:mm:ss tt")</b></div>
+            @if (Model.RecId > 0)
+            {
+                <div class="rc-row"><span>Recharge ID</span><b>#@Model.RecId</b></div>
+            }
+            @if (!string.IsNullOrEmpty(Model.UserTxnId))
+            {
+                <div class="rc-row">
+                    <span>Your reference</span>
+                    <b><code>@Model.UserTxnId</code><button type="button" class="rc-copy rc-noprint" data-copy="@Model.UserTxnId" title="Copy"><i class="far fa-copy"></i></button></b>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.OptTxnId))
+            {
+                <div class="rc-row">
+                    <span>Operator reference</span>
+                    <b><code>@Model.OptTxnId</code><button type="button" class="rc-copy rc-noprint" data-copy="@Model.OptTxnId" title="Copy"><i class="far fa-copy"></i></button></b>
+                </div>
+            }
+            @if (st == "Success" && Model.Commission > 0)
+            {
+                <div class="rc-row"><span>Commission earned</span><b class="text-success">&#8377;@Model.Commission.ToString("N2")</b></div>
+            }
+            @if (Model.BalanceAfter.HasValue)
+            {
+                <div class="rc-row"><span>Wallet balance after</span><b>&#8377;@Model.BalanceAfter.Value.ToString("N2")</b></div>
+            }
+        </div>
+
+        <div class="rc-actions">
+            <a href="@Url.Action("Index","Recharge")" class="btn btn-dark"><i class="fas fa-bolt me-1"></i>New recharge</a>
+            @if (st == "Pending" && Model.RecId > 0)
+            {
+                <a href="@Url.Action("Receipt","Recharge", new { id = Model.RecId })" class="btn btn-light"><i class="fas fa-rotate me-1"></i>Check status</a>
+            }
+            else if (st == "Success")
+            {
+                <button type="button" class="btn btn-light" onclick="window.print()"><i class="fas fa-print me-1"></i>Print receipt</button>
+            }
+            else
+            {
+                <a href="@Url.Action("Index","Recharge")" class="btn btn-light"><i class="fas fa-rotate-right me-1"></i>Try again</a>
+            }
+            <a href="@Url.Action("RechargeHistory","Transaction")" class="btn btn-light" style="grid-column:1 / -1;"><i class="fas fa-clock-rotate-left me-1"></i>Recharge history</a>
+        </div>
+    </div>
+
+    @if (st == "Success")
+    {
+        <p class="text-center text-muted small mt-3 rc-noprint">Customer says it wasn't credited? Raise a complaint from Recharge history.</p>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.rc-copy').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var text = b.getAttribute('data-copy');
+                if (navigator.clipboard) navigator.clipboard.writeText(text);
+                b.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(function () { b.innerHTML = '<i class="far fa-copy"></i>'; }, 1200);
+            });
+        });
+    </script>
+}

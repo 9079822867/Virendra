@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Web;
 using System.Web.Mvc;
 using VIRENDRA.Data;
 using VIRENDRA.Infrastructure;
@@ -60,6 +61,22 @@ namespace VIRENDRA.Controllers
                 LoadStates(model.StateID);
                 return View(model);
             }
+        }
+
+        // ── Menu layout (per user, overrides Web.config MenuLayout) ─────────
+
+        [HttpGet]
+        public ActionResult MenuLayout(string mode, string returnUrl)
+        {
+            if (mode == "side" || mode == "top")
+            {
+                Response.Cookies.Add(new HttpCookie("menu_layout", mode)
+                {
+                    Expires  = DateTime.Now.AddYears(1),
+                    HttpOnly = true
+                });
+            }
+            return Url.IsLocalUrl(returnUrl) ? (ActionResult)Redirect(returnUrl) : RedirectToAction("Dashboard", "Home");
         }
 
         // ── Change Password ─────────────────────────────────────────────────

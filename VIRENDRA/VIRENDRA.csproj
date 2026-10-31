@@ -358,6 +358,7 @@
     <Content Include="Views\Services\Create.cshtml" />
     <Content Include="Views\Services\Edit.cshtml" />
     <Content Include="Views\Recharge\Index.cshtml" />
+    <Content Include="Views\Recharge\Receipt.cshtml" />
     <Content Include="Views\Reports\OperatorwiseReport.cshtml" />
     <Content Include="Views\Transaction\Index.cshtml" />
     <Content Include="Views\Transaction\Details.cshtml" />

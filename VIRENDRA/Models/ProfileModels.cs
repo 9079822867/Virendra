@@ -26,8 +26,9 @@ namespace VIRENDRA.Models
         [Display(Name = "Mobile No")]
         public string Mobileno { get; set; }
 
-        [RegularExpression(@"^[0-9+\- ]{6,15}$", ErrorMessage = "Enter a valid phone number")]
-        [Display(Name = "Alternate Contact No")]
+        // Stored in UserProfile.PhoneNumber (the old "Alternate Contact No")
+        [RegularExpression(@"^[6-9]\d{9}$", ErrorMessage = "Enter a valid 10-digit WhatsApp number")]
+        [Display(Name = "WhatsApp Number")]
         public string Contactno { get; set; }
 
         [StringLength(150)]

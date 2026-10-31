@@ -99,6 +99,9 @@ namespace VIRENDRA.Data
         /// <summary>Current Recharge.StatusId, or null when the record does not exist.</summary>
         int? GetRechargeStatusId(long recId);
 
+        /// <summary>Receipt for one recharge; userId null = any user (admins).</summary>
+        RechargeReceipt GetRechargeReceipt(long recId, int? userId);
+
         void UpdateRechargeStatus(long recId, int userId, int statusId,
             string apiTxnId, string optTxnId, string statusMsg, string remark,
             out bool isDownline, out bool isRefund, out string spLog,

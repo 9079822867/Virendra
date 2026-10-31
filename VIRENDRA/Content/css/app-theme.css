@@ -145,6 +145,38 @@ code { color: var(--accent-ink); }
     .app-user-meta { display: none; }
 }
 
+/* ── Top-menu mode (Web.config MenuLayout=top, or the user's own switch) ── */
+.app-top-brand, .app-topnav { display: none; }
+.app-top-brand { align-items: center; gap: 8px; font-weight: 800; color: var(--ink); text-decoration: none; letter-spacing: .02em; margin-right: 6px; white-space: nowrap; }
+.app-top-brand .app-brand-mark { width: 30px; height: 30px; font-size: .85rem; }
+.app-top-brand:hover { color: var(--ink); }
+.app-toplink {
+    display: flex; align-items: center; gap: 7px; padding: 8px 11px; border-radius: 8px; white-space: nowrap;
+    color: var(--ink-2); text-decoration: none; font-weight: 600; font-size: .83rem;
+}
+.app-toplink i { color: var(--muted); font-size: .82rem; }
+.app-toplink:hover { background: var(--soft); color: var(--ink); }
+.app-toplink.active { background: var(--accent-soft); color: var(--accent-ink); }
+.app-toplink.active i { color: var(--accent-ink); }
+.app-toplink.dropdown-toggle::after { margin-left: 2px; border-top-width: .3em; vertical-align: .15em; opacity: .6; }
+
+@media (min-width: 992px) {
+    .app.menu-top .app-side, .app.menu-top .app-scrim { display: none; }
+    .app.menu-top .app-main { margin-left: 0; }
+    .app.menu-top .app-top-title { display: none; }
+    .app.menu-top .app-top-brand { display: flex; }
+    .app.menu-top .app-topnav { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; min-width: 0; }
+    .app.menu-top .app-top { gap: 10px; padding-top: 8px; padding-bottom: 8px; }
+    .app.menu-top .app-content { max-width: 1440px; width: 100%; margin: 0 auto; }
+}
+/* Many menus + balances on a mid-size screen: drop the chip labels to save room */
+@media (min-width: 992px) and (max-width: 1399.98px) {
+    .app.menu-top .app-balance small, .app.menu-top .app-user-meta { display: none; }
+    .app.menu-top .app-balance { padding: 6px 9px; font-size: .78rem; }
+    .app.menu-top .app-toplink { padding: 7px 8px; font-size: .8rem; }
+    .app.menu-top .app-toplink > i { display: none; }
+}
+
 /* ── Page header (also styles the old .page-title-box markup) ──────────── */
 .page-title-box, .page-head {
     display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 10px;

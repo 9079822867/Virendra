@@ -95,7 +95,10 @@
                             </div>
                             <div class="col-md-6">
                                 @Html.LabelFor(m => m.Contactno, new { @class = "form-label" })
-                                @Html.TextBoxFor(m => m.Contactno, new { @class = "form-control", maxlength = "15" })
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fab fa-whatsapp" style="color:#16a34a;"></i></span>
+                                    @Html.TextBoxFor(m => m.Contactno, new { @class = "form-control", maxlength = "10", inputmode = "numeric", placeholder = "10-digit WhatsApp number" })
+                                </div>
                                 @Html.ValidationMessageFor(m => m.Contactno, "", new { @class = "text-danger small" })
                             </div>
                         </div>

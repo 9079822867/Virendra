@@ -49,10 +49,55 @@ namespace VIRENDRA.Controllers
 
             var result = _rechargeSvc.ProcessRecharge(req, userId, addedById);
 
-            var vm = BuildViewModel(result);
-            vm.Request = req;
-            return View(vm);
+            // Post → Redirect → Get: refreshing the receipt never re-submits the recharge
+            TempData["RechargeResult"] = result;
+            TempData["RechargeInput"]  = req;
+            return result.RecId > 0
+                ? RedirectToAction("Receipt", new { id = result.RecId })
+                : RedirectToAction("Receipt");
         }
+
+        // Result page after "Proceed → Confirm". With an id it reads the recharge from the
+        // database (owner or admin only); without one it shows a request that was rejected
+        // before a recharge row was created (e.g. low balance), from TempData.
+        [HttpGet]
+        public ActionResult Receipt(long? id)
+        {
+            var result = TempData["RechargeResult"] as RechargeResult;
+            var input  = TempData["RechargeInput"] as RechargeRequestModel;
+
+            RechargeReceipt receipt = null;
+            if (id > 0)
+            {
+                receipt = _rechargeRepo.GetRechargeReceipt(id.Value, IsAdmin ? (int?)null : CurrentUserId);
+                if (receipt == null) return HttpNotFound();
+            }
+            else if (result != null && input != null)
+            {
+                var op = _rechargeRepo.GetActiveOperators().FirstOrDefault(o => o.Id == input.OperatorId);
+                var ci = _rechargeRepo.GetCircles().FirstOrDefault(c => c.Id == input.CircleId);
+                receipt = new RechargeReceipt
+                {
+                    UserTxnId   = result.UserTxnId ?? input.UserTxnId,
+                    CustomerNo  = input.CustomerNo,
+                    Operator    = op?.Name ?? "-",
+                    Circle      = ci?.Name,
+                    Amount      = input.Amount,
+                    StatusId    = result.IsPending ? 3 : (result.Success ? 1 : 2),
+                    RequestTime = DateTime.Now
+                };
+            }
+            else
+            {
+                return RedirectToAction("Index");
+            }
+
+            receipt.Message = result?.Message;
+            return View(receipt);
+        }
+
+        private int  CurrentUserId => Session["UserId"] is int uid ? uid : 0;
+        private bool IsAdmin => Session["RoleId"] is byte r && (r == RoleConstants.SuperAdmin || r == RoleConstants.Admin);
 
         // ────────────────────────────────────────────────────────────────────
         // FETCH OPERATOR — auto-detect operator + circle from a 10-digit number

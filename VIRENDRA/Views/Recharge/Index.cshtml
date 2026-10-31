@@ -28,67 +28,60 @@
     .pay-wrap { max-width: 1180px; margin: 0 auto; }
 
     /* ── Service tabs ───────────────────────────────────────── */
-    .svc-tabs { display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .svc-tabs { display:flex; gap:.6rem; flex-wrap:wrap; margin-bottom:1rem; }
     .svc-tab {
-        flex:1; min-width:150px; cursor:pointer; border:2px solid #e8eaf2;
-        border-radius:14px; padding:1rem 1.1rem; background:#fff;
-        display:flex; align-items:center; gap:.8rem; transition:all .18s;
-        box-shadow:0 1px 4px rgba(0,0,0,.03);
+        flex:1; min-width:150px; cursor:pointer; border:1px solid var(--line);
+        border-radius:var(--radius); padding:.8rem 1rem; background:var(--surface);
+        display:flex; align-items:center; gap:.75rem; transition:border-color .15s, box-shadow .15s;
     }
-    .svc-tab:hover { border-color:#bcdcff; transform:translateY(-2px); }
-    .svc-tab.active {
-        border-color:#00baf2;
-        background:linear-gradient(135deg,#eef9ff 0%,#e9f3ff 100%);
-        box-shadow:0 6px 18px rgba(0,186,242,.18);
-    }
+    .svc-tab:hover { border-color:var(--line-2); }
+    .svc-tab.active { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-ring); }
     .svc-tab .ico {
-        width:46px; height:46px; border-radius:12px; flex-shrink:0;
-        display:flex; align-items:center; justify-content:center;
-        color:#fff; font-size:1.25rem;
+        width:40px; height:40px; border-radius:10px; flex-shrink:0;
+        display:grid; place-items:center; font-size:1.05rem;
+        background:var(--soft) !important; color:var(--ink-2); border:1px solid var(--line);
     }
-    .svc-tab .t-title { font-weight:700; color:#1a1f36; font-size:.98rem; line-height:1.1; }
-    .svc-tab .t-sub   { font-size:.74rem; color:#8a90a6; }
+    .svc-tab.active .ico { background:var(--accent-soft) !important; color:var(--accent-ink); border-color:#99f6e4; }
+    .svc-tab .t-title { font-weight:700; color:var(--ink); font-size:.92rem; line-height:1.1; }
+    .svc-tab .t-sub   { font-size:.74rem; color:var(--muted); }
 
-    /* ── Recharge card ──────────────────────────────────────── */
-    .pay-card { border:none; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.06); overflow:hidden; }
-    .pay-card-head {
-        background:linear-gradient(135deg,#002970 0%,#00baf2 130%);
-        color:#fff; padding:1.1rem 1.4rem;
-    }
-    .pay-card-head h5 { margin:0; font-weight:700; font-size:1.05rem; }
-    .pay-card-head small { opacity:.85; }
+    /* ── Cards ──────────────────────────────────────────────── */
+    .pay-card { overflow:hidden; }
+    .pay-card-head { background:var(--surface) !important; color:var(--ink); padding:1rem 1.25rem; border-bottom:1px solid var(--line); }
+    .pay-card-head h5 { margin:0; font-weight:700; font-size:1rem; color:var(--ink); }
+    .pay-card-head small { color:var(--muted); }
+    .pay-card-head i { color:var(--accent-ink); }
 
     /* ── Operator chips ─────────────────────────────────────── */
-    .op-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(118px,1fr)); gap:.6rem; }
+    .op-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:.55rem; }
     .op-chip {
-        cursor:pointer; border:2px solid #eceef5; border-radius:12px;
-        padding:.7rem .5rem; text-align:center; transition:all .15s; background:#fff;
+        cursor:pointer; border:1px solid var(--line); border-radius:var(--radius);
+        padding:.7rem .5rem; text-align:center; transition:border-color .15s, box-shadow .15s; background:#fff;
     }
-    .op-chip:hover { border-color:#bcdcff; background:#f6fbff; }
-    .op-chip.active { border-color:#00baf2; background:#eef9ff; box-shadow:0 3px 10px rgba(0,186,242,.18); }
+    .op-chip:hover { border-color:var(--line-2); }
+    .op-chip.active { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-ring); }
     .op-avatar {
-        width:42px; height:42px; border-radius:50%; margin:0 auto .4rem;
-        display:flex; align-items:center; justify-content:center;
-        color:#fff; font-weight:700; font-size:1.05rem;
+        width:38px; height:38px; border-radius:10px; margin:0 auto .4rem;
+        display:grid; place-items:center; color:#fff; font-weight:800; font-size:.95rem;
     }
-    .op-name { font-size:.78rem; font-weight:600; color:#3a3f55; line-height:1.15; }
+    .op-name { font-size:.78rem; font-weight:600; color:var(--ink-2); line-height:1.15; }
 
-    .field-label { font-weight:600; font-size:.84rem; color:#3a3f55; margin-bottom:.3rem; }
-    .amt-input { font-size:1.5rem; font-weight:700; }
+    .field-label { font-weight:600; font-size:.8rem; color:var(--ink-2); margin-bottom:.3rem; }
+    .amt-input { font-size:1.4rem; font-weight:800; }
     .amt-input::-webkit-outer-spin-button,
     .amt-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
-    .quick-amt { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.5rem; }
-    .quick-amt span {
-        cursor:pointer; border:1px solid #d7dbea; border-radius:20px;
-        padding:.25rem .85rem; font-size:.82rem; font-weight:600; color:#00569c; background:#f3f9ff;
-    }
-    .quick-amt span:hover { background:#e1f1ff; }
-    .btn-pay {
-        background:linear-gradient(135deg,#002970 0%,#00baf2 130%); border:none;
-        color:#fff; font-weight:700; border-radius:10px; padding:.7rem 1rem; width:100%;
-    }
-    .btn-pay:hover { color:#fff; opacity:.94; }
-    .empty-ops { text-align:center; color:#9aa0b4; padding:2.2rem 1rem; }
+    .btn-pay { background:var(--ink); border:1px solid var(--ink); color:#fff; font-weight:700; border-radius:var(--radius-sm); padding:.75rem 1rem; width:100%; }
+    .btn-pay:hover { background:#1e293b; color:#fff; }
+    .empty-ops { text-align:center; color:var(--muted); padding:2.2rem 1rem; }
+
+    /* ── Confirm popup ──────────────────────────────────────── */
+    .cf-amount { font-size:2.2rem; font-weight:800; letter-spacing:-.03em; text-align:center; margin:.25rem 0 1rem; }
+    .cf-op { display:flex; align-items:center; gap:.75rem; padding:.75rem; border:1px solid var(--line); border-radius:var(--radius); margin-bottom:.75rem; }
+    .cf-rows { border:1px solid var(--line); border-radius:var(--radius); }
+    .cf-row { display:flex; justify-content:space-between; padding:.6rem .85rem; font-size:.86rem; border-bottom:1px solid var(--line); }
+    .cf-row:last-child { border-bottom:0; }
+    .cf-row span { color:var(--muted); }
+    .cf-row b.low { color:var(--bad); }
 </style>
 
 <div class="container-fluid pay-wrap">
@@ -96,7 +89,7 @@
     <!-- Title -->
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
         <div>
-            <h4 class="mb-1 fw-bold text-dark"><i class="fas fa-bolt text-info me-2"></i>Recharge &amp; Bill Pay</h4>
+            <h4 class="mb-1 fw-bold">Recharge &amp; bill pay</h4>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0" style="font-size:.82rem;">
                     <li class="breadcrumb-item"><a href="@Url.Action("Dashboard","Home")">Dashboard</a></li>
@@ -106,32 +99,18 @@
         </div>
     </div>
 
-    <!-- Result alert -->
-    @if (Model.Result != null)
-    {
-        var alertClass = Model.Result.Success ? "alert-success" : (Model.Result.IsPending ? "alert-warning" : "alert-danger");
-        <div class="alert @alertClass alert-dismissible fade show" role="alert" style="border-radius:12px;">
-            <strong>@Model.Result.Status:</strong> @Model.Result.Message
-            @if (!string.IsNullOrEmpty(Model.Result.ApiTxnId))
-            { <span> | API Txn: <strong>@Model.Result.ApiTxnId</strong></span> }
-            @if (!string.IsNullOrEmpty(Model.Result.UserTxnId))
-            { <span> | Ref: <strong>@Model.Result.UserTxnId</strong></span> }
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-
     <!-- Service tabs -->
     <div class="svc-tabs">
         <div class="svc-tab active" data-type="1">
-            <div class="ico" style="background:linear-gradient(135deg,#00baf2,#0098d4);"><i class="fas fa-mobile-alt"></i></div>
+            <div class="ico"><i class="fas fa-mobile-alt"></i></div>
             <div><div class="t-title">Prepaid</div><div class="t-sub">Mobile recharge</div></div>
         </div>
         <div class="svc-tab" data-type="2">
-            <div class="ico" style="background:linear-gradient(135deg,#7b53e0,#5e35b1);"><i class="fas fa-file-invoice"></i></div>
+            <div class="ico"><i class="fas fa-file-invoice"></i></div>
             <div><div class="t-title">Postpaid</div><div class="t-sub">Bill payment</div></div>
         </div>
         <div class="svc-tab" data-type="3">
-            <div class="ico" style="background:linear-gradient(135deg,#ff8a00,#e35100);"><i class="fas fa-satellite-dish"></i></div>
+            <div class="ico"><i class="fas fa-satellite-dish"></i></div>
             <div><div class="t-title">DTH</div><div class="t-sub">TV recharge</div></div>
         </div>
     </div>
@@ -207,7 +186,7 @@
                             <div class="col-md-6">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="field-label">Amount <span class="text-danger">*</span></div>
-                                    <a href="javascript:void(0);" id="btnBrowsePlans" class="small fw-semibold text-decoration-none" style="color:#00569c;">
+                                    <a href="javascript:void(0);" id="btnBrowsePlans" class="small fw-semibold text-decoration-none">
                                         <i class="fas fa-th-list me-1"></i>Browse Plans
                                     </a>
                                 </div>
@@ -233,7 +212,7 @@
         <!-- Recent recharges -->
         <div class="col-lg-5">
             <div class="card pay-card">
-                <div class="pay-card-head" style="background:linear-gradient(135deg,#3a3f55 0%,#5c6bc0 130%);">
+                <div class="pay-card-head">
                     <h5><i class="fas fa-history me-2"></i>Recent Recharges</h5>
                     <small>Your last transactions</small>
                 </div>
@@ -278,13 +257,51 @@
     </div>
 </div>
 
+<!-- ── Confirm Recharge Modal ─────────────────────────────────── -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm recharge</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center text-muted small">You're about to pay</div>
+                <div class="cf-amount">&#8377;<span id="cfAmount">0</span></div>
+
+                <div class="cf-op">
+                    <span class="op-avatar m-0" id="cfOpAvatar"></span>
+                    <div>
+                        <div class="fw-bold" id="cfOpName"></div>
+                        <div class="small text-muted" id="cfService"></div>
+                    </div>
+                </div>
+
+                <div class="cf-rows">
+                    <div class="cf-row"><span id="cfNumLabel">Mobile number</span><b id="cfNumber"></b></div>
+                    <div class="cf-row" id="cfCircleRow"><span>Circle</span><b id="cfCircle"></b></div>
+                    <div class="cf-row"><span>Wallet balance</span><b>&#8377;<span id="cfBal"></span></b></div>
+                    <div class="cf-row"><span>Balance after</span><b id="cfAfter"></b></div>
+                </div>
+                <div class="small text-danger mt-2 d-none" id="cfLow">
+                    <i class="fas fa-circle-exclamation me-1"></i>Your wallet balance is lower than this amount.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Edit details</button>
+                <button type="button" class="btn btn-dark px-4" id="cfConfirm"><i class="fas fa-lock me-1"></i>Confirm &amp; pay</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ── Browse Plans Modal ─────────────────────────────────────── -->
 <div class="modal fade" id="plansModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;">
-            <div class="modal-header text-white" style="background:linear-gradient(135deg,#002970 0%,#00baf2 130%);">
+            <div class="modal-header">
                 <h5 class="modal-title"><i class="fas fa-th-list me-2"></i>Browse Plans <span id="plansOpName" class="badge bg-light text-dark ms-1"></span></h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-0">
                 <!-- amount-wise search -->
@@ -583,12 +600,51 @@
                 applyPlanSearch('');
             });
 
-            // ── Validate operator chosen before submit ─────
+            // ── Proceed → confirm popup → submit ───────────
+            var walletBal = @(((decimal)(Session["UserBal"] ?? 0m)).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
+            var confirmed = false;
+            var confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            function money(n) { return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
             $('#rechargeForm').on('submit', function (e) {
-                if (!$('#OperatorId').val() || $('#OperatorId').val() === '0') {
-                    e.preventDefault();
+                if (confirmed) return;             // second pass: really submit
+                e.preventDefault();
+
+                var $op = $('.op-pane:visible .op-chip.active');
+                if (!$('#OperatorId').val() || $('#OperatorId').val() === '0' || !$op.length) {
                     alert('Please select an operator.');
+                    return;
                 }
+                if (!this.checkValidity()) { this.reportValidity(); return; }
+
+                var amount = parseFloat($('#Amount').val()) || 0;
+                var type   = currentType();
+                var circleShown = $('#circleWrap').is(':visible') && $('#CircleId').val();
+
+                $('#cfAmount').text(money(amount));
+                $('#cfOpAvatar').text($op.find('.op-avatar').text()).css('background', $op.find('.op-avatar').css('background-color'));
+                $('#cfOpName').text($op.data('opname'));
+                $('#cfService').text(svcMeta[type].title);
+                $('#cfNumLabel').text(svcMeta[type].numLabel);
+                $('#cfNumber').text($('#CustomerNo').val());
+                $('#cfCircleRow').toggle(!!circleShown);
+                $('#cfCircle').text(circleShown ? $('#CircleId option:selected').text() : '');
+                $('#cfBal').text(money(walletBal));
+
+                var after = walletBal - amount;
+                $('#cfAfter').text('₹' + money(after)).toggleClass('low', after < 0);
+                $('#cfLow').toggleClass('d-none', after >= 0);
+                $('#cfConfirm').prop('disabled', after < 0);
+
+                confirmModal.show();
+            });
+
+            $('#cfConfirm').on('click', function () {
+                confirmed = true;
+                // block double clicks while the vendor is called
+                $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Processing…');
+                $('#confirmModal .btn-light, #confirmModal .btn-close').prop('disabled', true);
+                document.getElementById('rechargeForm').submit();   // native submit, skips this handler
             });
         });
     </script>

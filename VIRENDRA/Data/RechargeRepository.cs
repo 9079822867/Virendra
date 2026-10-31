@@ -629,6 +629,24 @@ namespace VIRENDRA.Data
                     new { ApiId = apiId, UrlId = urlId }).ToList();
         }
 
+        public RechargeReceipt GetRechargeReceipt(long recId, int? userId)
+        {
+            using (var c = new SqlConnection(_conn))
+                return c.QueryFirstOrDefault<RechargeReceipt>(@"
+                    SELECT r.Id AS RecId, r.UserId, r.UserTxnId, r.OurRefTxnId, r.ApiTxnId, r.OptTxnId,
+                           r.CustomerNo, ISNULL(o.Name, '-') AS Operator, t.TypeName AS OperatorType,
+                           ci.CircleName AS Circle, r.Amount,
+                           ISNULL(r.Recharge_Commision, 0) AS Commission,
+                           ISNULL(r.StatusId, 3) AS StatusId, r.RequestTime, r.ResponseTime,
+                           r.UserBal AS BalanceAfter
+                    FROM Recharge r
+                    LEFT JOIN [Operator]   o  ON o.Id  = r.OpId
+                    LEFT JOIN OperatorType t  ON t.Id  = o.OpTypeId
+                    LEFT JOIN Circle       ci ON ci.Id = r.CircleId
+                    WHERE r.Id = @RecId AND (@UserId IS NULL OR r.UserId = @UserId)",
+                    new { RecId = recId, UserId = userId });
+        }
+
         public int? GetRechargeStatusId(long recId)
         {
             using (var c = new SqlConnection(_conn))

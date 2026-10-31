@@ -70,7 +70,7 @@
                     </div>
                     <div>
                         <div class="text-muted" style="font-size:.75rem;">Active</div>
-                        <div class="fw-bold fs-5 text-dark">@Model.Count()</div>
+                        <div class="fw-bold fs-5 text-dark" id="cntActive">@Model.Count(b => !string.IsNullOrEmpty(b.BlockUser))</div>
                     </div>
                 </div>
             </div>
@@ -84,7 +84,7 @@
                     </div>
                     <div>
                         <div class="text-muted" style="font-size:.75rem;">Blocked</div>
-                        <div class="fw-bold fs-5 text-dark">@Model.Count()</div>
+                        <div class="fw-bold fs-5 text-dark" id="cntBlocked">@Model.Count(b => string.IsNullOrEmpty(b.BlockUser))</div>
                     </div>
                 </div>
             </div>
@@ -260,6 +260,11 @@
                         label.text(active ? 'Active' : 'Blocked')
                              .removeClass('text-success text-danger')
                              .addClass(active ? 'text-success' : 'text-danger');
+
+                        // keep the Active / Blocked tiles in step without a reload
+                        var a = parseInt($('#cntActive').text(), 10) || 0, b = parseInt($('#cntBlocked').text(), 10) || 0;
+                        $('#cntActive').text(active ? a + 1 : a - 1);
+                        $('#cntBlocked').text(active ? b - 1 : b + 1);
                     }
                 });
             });

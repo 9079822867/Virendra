@@ -247,6 +247,32 @@ namespace VIRENDRA.Models
         public const int TYPE_DTH      = 3;
     }
 
+    /// <summary>One recharge as shown on the Recharge/Receipt page.</summary>
+    public class RechargeReceipt
+    {
+        public long     RecId        { get; set; }
+        public int      UserId       { get; set; }
+        public string   UserTxnId    { get; set; }
+        public string   OurRefTxnId  { get; set; }
+        public string   ApiTxnId     { get; set; }
+        public string   OptTxnId     { get; set; }    // operator's reference
+        public string   CustomerNo   { get; set; }
+        public string   Operator     { get; set; }
+        public string   OperatorType { get; set; }    // Prepaid / Postpaid / DTH
+        public string   Circle       { get; set; }
+        public decimal  Amount       { get; set; }
+        public decimal  Commission   { get; set; }
+        public int      StatusId     { get; set; }
+        public DateTime RequestTime  { get; set; }
+        public DateTime? ResponseTime { get; set; }
+        public decimal? BalanceAfter { get; set; }    // Recharge.UserBal
+
+        public string Status => StatusId == 1 ? "Success" : StatusId == 2 || StatusId == 4 ? "Failed" : "Pending";
+
+        // Friendly message from the service right after submit (not stored in the table)
+        public string Message { get; set; }
+    }
+
     public class RechargeResult
     {
         public bool   Success    { get; set; }
